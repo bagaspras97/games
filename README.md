@@ -19,6 +19,16 @@ Puffy si ikan buntal menyelam makin dalam. **Tap / klik / Spasi**: Puffy **menge
 
 ![deep](docs/deep.png)
 
+## 🗺️ Mode Petualangan (level)
+Selain **♾️ Mode Bebas** (endless), ada **20 level** (5 per zona) dengan garis **FINISH** dan progress bar.
+- Setiap level punya **susunan tetap** (seed), jadi bisa dihafal dan diulang untuk bintang lebih banyak.
+- Level ke-5 tiap zona adalah **Ujian** (lebih panjang & sulit, tombol ungu).
+- ★ sampai finish · ★★ + kumpulkan ≥70% mutiara · ★★★ + tanpa terkena bahaya (tanpa perisai pecah/lanjutkan).
+- Hadiah mutiara untuk setiap bintang baru (10 + 2×nomor level). Level berikutnya terbuka setelah level sebelumnya selesai.
+- Data level ada di `src/levels.js`. Uji cepat layar selesai: `?finish=25` (semua level jadi 25 m).
+
+![adventure](docs/adventure.png)
+
 ## Latar laut yang hidup
 Prinsip: **latar mendukung, bukan bersaing.** Hiasan dibuat lebih jarang dan sedikit transparan, awal permainan sengaja tenang, sehingga bahaya, mutiara, dan karakter selalu paling menonjol.
 

@@ -16,9 +16,10 @@ import { updateMoments, drawMoment, resetMoments } from "./moments.js";
 const MOMENT_REWARD = 5;
 import { DEATHS, deathFor } from "./deaths.js";
 import * as missions from "./missions.js";
+import { LEVELS, STAR_PEARL_RATIO, rewardPerStar, worldOptions, isUnlocked, totalStars } from "./levels.js";
 import {
   W, H, PX_PER_M, ZONES, zoneIndex, createWorld, extend, prune, surfaceUnder, updateWorld, hitsHazard, isHarmless,
-  drawBackground, drawTerrain, drawDarkness, drawHazards, drawPickups,
+  drawBackground, drawTerrain, drawDarkness, drawHazards, drawPickups, drawFinish, useSeed,
 } from "./world.js";
 
 const canvas = document.getElementById("game");
@@ -46,6 +47,9 @@ let save = { best: 0, pearls: 0, char: "puffy", owned: ["puffy"], dex: [] };
 let state = "menu";            // menu | play | over | ad | shop | dex
 let panelReturn = null;        // panel to show again when shop/dex closes
 let runs = 0, lastAdAt = 0, revived = false;
+let mode = "endless";          // endless | level
+let lvl = null;                // current Adventure level
+let lvlPearls = 0;             // pearls picked up in this level attempt
 let player, world, scroll, speed, depth, last, time = 0, zone = 0;
 let shake = 0;
 let shopCanvases = [];         // animated character previews in the shop
@@ -57,11 +61,24 @@ function reset(withShield = false) {
     shield: withShield, invuln: 0, mood: "normal", moodT: 0, tilt: 0,
     pulse: 0, flash: 0, near: 0, sonarT: 3, flips: 0,
   };
-  scroll = START_M * PX_PER_M;
-  world = createWorld(save.dex, scroll);
-  speed = 400; depth = START_M; zone = zoneIndex(START_M);
+  if (mode === "level") {
+    useSeed(lvl.seed); // same layout on every attempt
+    const { startX, opts } = worldOptions(lvl);
+    scroll = startX;
+    world = createWorld(save.dex, scroll, opts);
+    speed = 390 + lvl.difficulty * 90;
+    zone = lvl.zone;
+  } else {
+    useSeed(null);
+    scroll = START_M * PX_PER_M;
+    world = createWorld(save.dex, scroll);
+    speed = 400;
+    zone = zoneIndex(START_M);
+  }
+  depth = Math.floor(scroll / PX_PER_M);
   extend(world, scroll + W * 2);
   revived = false;
+  lvlPearls = 0;
 }
 
 const box = () => hero().box(player.up);
@@ -233,7 +250,89 @@ function startRun(withShield = false) {
   fx.clear();
   startMusic();
   platform.gameplayStart();
-  banner(`${ZONES[zone].icon} ${ZONES[zone].name}`);
+  if (mode === "level") banner(`🗺️ Level ${lvl.n}: ${lvl.name}`);
+  else banner(`${ZONES[zone].icon} ${ZONES[zone].name}`);
+  show($("progress"), mode === "level");
+}
+
+// ---------- Adventure mode ----------
+function startLevel(n) {
+  mode = "level";
+  lvl = LEVELS[n - 1];
+  show($("levels"), false); show($("level-done"), false);
+  startRun();
+}
+
+function startEndless() {
+  mode = "endless";
+  lvl = null;
+  startRun();
+}
+
+function renderLevels() {
+  $("levels-stars").textContent = `${totalStars(save)} / ${LEVELS.length * 3}`;
+  const grid = $("levels-grid");
+  grid.innerHTML = "";
+  ZONES.forEach((z, zi) => {
+    const row = document.createElement("div");
+    row.className = "lv-zone";
+    row.innerHTML = `<div class="lv-zone-name">${z.icon} ${z.name}</div><div class="lv-row"></div>`;
+    for (const L of LEVELS.filter((l) => l.zone === zi)) {
+      const stars = (save.levels || {})[L.n] || 0;
+      const open = isUnlocked(save, L.n);
+      const b = document.createElement("button");
+      b.className = "lv" + (open ? "" : " locked") + (L.exam ? " exam" : "") + (stars ? " cleared" : "");
+      b.title = L.name;
+      b.innerHTML = open
+        ? `<b>${L.n}</b><span>${"★".repeat(stars)}${"☆".repeat(3 - stars)}</span>`
+        : `<b>🔒</b><span>${L.n}</span>`;
+      b.onclick = () => { if (open) { sfx.click(); startLevel(L.n); } else sfx.denied(); };
+      row.querySelector(".lv-row").append(b);
+    }
+    grid.append(row);
+  });
+}
+
+function levelComplete() {
+  state = "done";
+  show($("progress"), false);
+  stopMusic();
+  platform.gameplayStop();
+  runs++;
+  const pearlOk = world.pearlTotal === 0 || lvlPearls >= Math.ceil(world.pearlTotal * STAR_PEARL_RATIO);
+  const clean = !player.hit && !revived;
+  const stars = 1 + (pearlOk ? 1 : 0) + (pearlOk && clean ? 1 : 0);
+  if (!save.levels) save.levels = {};
+  const before = save.levels[lvl.n] || 0;
+  const gained = Math.max(0, stars - before);
+  const reward = gained * rewardPerStar(lvl);
+  save.levels[lvl.n] = Math.max(before, stars);
+  save.pearls += reward;
+  platform.save(save);
+  mission("depth", depth);
+  mission("flips", player.flips);
+  sfx.discover();
+  for (let i = 0; i < 4; i++) fx.sparkle(scroll + player.x + 40, player.y, ["#ffe27a", "#7ff0ff", "#ff9ab5", "#fff"][i]);
+
+  $("done-title").textContent = `Level ${lvl.n} selesai!`;
+  $("done-name").textContent = lvl.name;
+  $("done-stars").innerHTML = [1, 2, 3].map((i) => `<span class="star ${i <= stars ? "on" : ""}" style="animation-delay:${i * 0.25}s">★</span>`).join("");
+  $("done-info").innerHTML = `
+    <div>${pearlOk ? "✅" : "▫️"} Mutiara ${lvlPearls} / ${world.pearlTotal} (butuh ${Math.round(STAR_PEARL_RATIO * 100)}%)</div>
+    <div>${clean ? "✅" : "▫️"} Tanpa terkena bahaya</div>
+    <div class="done-reward">${reward ? `+${reward} 🦪 untuk ${gained} bintang baru!` : "Coba raih bintang yang belum didapat!"}</div>`;
+  const next = LEVELS[lvl.n];
+  show($("done-next"), !!next);
+  show($("level-done"), true);
+}
+
+async function nextLevel() {
+  show($("level-done"), false);
+  if (runs % INTERSTITIAL_EVERY === 0 && Date.now() - lastAdAt > MIN_AD_GAP_MS) {
+    await withAd(() => platform.interstitial());
+    lastAdAt = Date.now();
+  }
+  startLevel(lvl.n + 1);
 }
 
 function addShake(amount) { shake = Math.max(shake, amount); }
@@ -281,6 +380,7 @@ function heroSprite(tint, alpha = 0.6) {
 
 function finishGameOver() {
   state = "over";
+  show($("progress"), false);
   runs++;
   if (dying) {
     mission("ko_" + dying.key);
@@ -288,8 +388,15 @@ function finishGameOver() {
   }
   mission("depth", depth);
   mission("flips", player.flips);
-  save.best = Math.max(save.best, depth);
+  if (mode === "endless") save.best = Math.max(save.best, depth);
   platform.save(save);
+  show($("over-stats"), mode === "endless");
+  show($("over-level"), mode === "level");
+  show($("over-map"), mode === "level");
+  if (mode === "level") {
+    const done = Math.max(0, Math.round((scroll + player.x - (world.finishX - lvl.meters * PX_PER_M)) / PX_PER_M));
+    $("over-level").textContent = `🗺️ Level ${lvl.n}: ${lvl.name} — ${Math.min(done, lvl.meters)} / ${lvl.meters} m`;
+  }
   $("over-title").textContent = `Aduh, ${hero().name}!`;
   $("over-cause").textContent = dying ? dying.label : "";
   ui.final.textContent = depth;
@@ -318,6 +425,7 @@ async function retry() {
 
 // Rewarded: start the run already protected by a shield bubble.
 async function startWithShield(from) {
+  if (from === ui.menu) { mode = "endless"; lvl = null; } // the menu's shield button is for Free mode
   show(from, false);
   const earned = await withAd(() => platform.rewarded());
   if (earned) { startRun(true); sfx.shield(); return; }
@@ -359,7 +467,7 @@ async function revive() {
 // ---------- Skin shop ----------
 function openPanel(panel, from, render) {
   panelReturn = from;
-  state = panel === ui.shop ? "shop" : panel === ui.dex ? "dex" : "missions";
+  state = panel === ui.shop ? "shop" : panel === ui.dex ? "dex" : panel.id;
   show(ui.menu, false); show(ui.over, false);
   show(ui.banner, false); show(ui.toast, false); // keep panels uncluttered
   render();
@@ -567,6 +675,7 @@ function useAbility(h) {
 }
 
 function popShield() {
+  player.hit = true;
   mission("shield_pop");
   player.shield = false;
   player.invuln = 1.2;
@@ -576,15 +685,16 @@ function popShield() {
 }
 
 function update(dt) {
-  speed += dt * 7;
+  if (mode === "endless") speed += dt * 7;
   scroll += speed * dt;
+  if (world.finishX && scroll + player.x >= world.finishX) return levelComplete();
   depth = Math.floor(scroll / PX_PER_M);
   extend(world, scroll + W * 2);
   updateWorld(world, dt, scroll, time);
   prune(world, scroll);
 
   const z = zoneIndex(depth);
-  if (z !== zone) {
+  if (z !== zone && mode === "endless") {
     zone = z;
     banner(`${ZONES[z].icon} ${ZONES[z].name} · ${ZONES[z].from} m`);
     sfx.zone();
@@ -656,6 +766,7 @@ function update(dt) {
     p.taken = true;
     if (p.kind === "pearl") {
       save.pearls++;
+      lvlPearls++;
       mission("pearls");
       sfx.pearl();
       fx.sparkle(p.x, p.y);
@@ -722,6 +833,7 @@ function draw(dt) {
   drawAmbient(ctx, time, Math.min(1, Math.max(0, (depth - 500) / 1200)));
   drawTerrain(ctx, world, scroll, depth, time, dt, player.x, player.y);
   drawDarkness(ctx, depth, player.x, player.y, hero().light);
+  drawFinish(ctx, world, scroll, time);
   drawHazards(ctx, world, scroll, time);
   drawPickups(ctx, world, scroll, time, getCreature);
   fx.draw(ctx, scroll);
@@ -734,7 +846,13 @@ function draw(dt) {
   } else if (state !== "over" && state !== "ad") drawPlayer();
   ctx.restore();
 
-  ui.hud.textContent = state === "menu" ? "" : `${depth} m  •  🦪 ${save.pearls}${player.shield ? "  •  🫧" : ""}`;
+  if (state === "menu") ui.hud.textContent = "";
+  else if (mode === "level") {
+    const startX = world.finishX - lvl.meters * PX_PER_M;
+    const k = Math.max(0, Math.min(1, (scroll + player.x - startX) / (world.finishX - startX)));
+    ui.hud.textContent = `Lv ${lvl.n}  •  🦪 ${lvlPearls}/${world.pearlTotal}${player.shield ? "  •  🫧" : ""}`;
+    $("progress-fill").style.width = `${k * 100}%`;
+  } else ui.hud.textContent = `${depth} m  •  🦪 ${save.pearls}${player.shield ? "  •  🫧" : ""}`;
 }
 
 function loop(now) {
@@ -807,7 +925,13 @@ async function boot() {
   muteLabel();
   muteBtn.onclick = (e) => { e.stopPropagation(); toggleMute(); muteLabel(); muteBtn.blur(); };
 
-  ui.play.onclick = () => { sfx.click(); startRun(); };
+  ui.play.onclick = () => { sfx.click(); startEndless(); };
+  document.querySelectorAll(".open-levels").forEach((b) => { b.onclick = () => openPanel($("levels"), b.closest(".panel"), renderLevels); });
+  $("levels-close").onclick = () => closePanel($("levels"));
+  $("done-next").onclick = nextLevel;
+  $("done-retry").onclick = () => startLevel(lvl.n);
+  $("done-map").onclick = () => { show($("level-done"), false); state = "menu"; openPanel($("levels"), ui.menu, renderLevels); };
+  $("over-map").onclick = () => openPanel($("levels"), ui.menu, renderLevels);
   ui.retry.onclick = retry;
   ui.revive.onclick = revive;
   document.querySelectorAll(".shield-start").forEach((b) => { b.onclick = () => startWithShield(b.closest(".panel")); });

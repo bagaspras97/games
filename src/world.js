@@ -24,8 +24,21 @@ export function zoneIndex(depth) {
   return z;
 }
 
-const rand = (a, b) => a + Math.random() * (b - a);
-const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+// Gameplay generation goes through rnd() so Adventure levels can use a fixed seed
+// (same layout every attempt); endless mode keeps Math.random.
+let rnd = Math.random;
+export function useSeed(seed) {
+  if (seed == null) { rnd = Math.random; return; }
+  let a = seed >>> 0;
+  rnd = () => { // mulberry32
+    a = (a + 0x6d2b79f5) >>> 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const rand = (a, b) => a + rnd() * (b - a);
+const pick = (arr) => arr[Math.floor(rnd() * arr.length)];
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
 // Hazards unlocked per zone (cumulative): 1 = natural, 2 = moving creatures, 3 = human-made.
@@ -36,10 +49,12 @@ const HAZARDS_BY_ZONE = [
   ["urchin", "coral", "icicle", "jelly", "jelly", "hook", "sword", "sword", "net", "bag"],
 ];
 
-export function createWorld(dex = [], startX = 0) {
+// opts (Adventure levels): { zone, difficulty 0..1, length px } — a finish line at startX + length.
+export function createWorld(dex = [], startX = 0, opts = {}) {
   const world = {
     segs: [], hazards: [], pickups: [], end: startX,
-    floor: BASE_FLOOR, ceil: BASE_CEIL, lastPit: true, dex,
+    floor: BASE_FLOOR, ceil: BASE_CEIL, lastPit: true, dex, opts,
+    finishX: opts.length ? startX + opts.length : null, pearlTotal: 0,
   };
   const start = addSeg(world, 1400, BASE_FLOOR, BASE_CEIL); // flat, safe, calm start
   start.deco = start.deco.filter((_, i) => i % 2 === 0);
@@ -59,17 +74,22 @@ function addSeg(world, w, floor, ceil) {
 export function extend(world, untilX) {
   while (world.end < untilX) {
     const depth = world.end / PX_PER_M;
-    const zone = zoneIndex(depth);
-    const level = clamp(depth / 2000, 0, 1);
+    const zone = world.opts.zone ?? zoneIndex(depth);
+    const level = world.opts.difficulty ?? clamp(depth / 2000, 0, 1);
+    if (world.finishX && world.end >= world.finishX - 200) { // calm water past the finish line
+      world.floor = BASE_FLOOR; world.ceil = BASE_CEIL;
+      addSeg(world, 600, BASE_FLOOR, BASE_CEIL);
+      continue;
+    }
 
     const pitChance = world.lastPit ? 0 : 0.16 + level * 0.22;
-    if (Math.random() < pitChance) {
-      const bottom = Math.random() < 0.6;
+    if (rnd() < pitChance) {
+      const bottom = rnd() < 0.6;
       const w = rand(170, 230 + level * 90);
       const seg = addSeg(world, w, bottom ? null : world.floor, bottom ? world.ceil : null);
       seg.pit = bottom ? "bottom" : "top";
-      seg.eyes = Math.random() < 0.6; // something watching from the trench...
-      world.pickups.push({ kind: "pearl", x: seg.x + w / 2, y: bottom ? world.ceil + 50 : world.floor - 50, r: 12 });
+      seg.eyes = rnd() < 0.6; // something watching from the trench...
+      addPearl(world, seg.x + w / 2, bottom ? world.ceil + 50 : world.floor - 50);
       world.lastPit = true;
       continue;
     }
@@ -81,23 +101,28 @@ export function extend(world, untilX) {
     const seg = addSeg(world, w, world.floor, world.ceil);
     world.lastPit = false;
 
-    if (Math.random() < 0.6 + level * 0.35) spawnHazard(world, seg, pick(HAZARDS_BY_ZONE[zone]));
+    if (rnd() < 0.6 + level * 0.35) spawnHazard(world, seg, pick(HAZARDS_BY_ZONE[zone]));
 
     // pearls: small arcs of 3
-    if (Math.random() < 0.55) {
+    if (rnd() < 0.55) {
       const cx = seg.x + rand(80, w - 120), cy = rand(seg.ceil + 70, seg.floor - 70);
-      for (let i = 0; i < 3; i++) world.pickups.push({ kind: "pearl", x: cx + i * 40, y: cy - Math.sin((i / 2) * Math.PI) * 20, r: 12 });
+      for (let i = 0; i < 3; i++) addPearl(world, cx + i * 40, cy - Math.sin((i / 2) * Math.PI) * 20);
     }
-    if (Math.random() < 0.05) {
+    if (rnd() < 0.05) {
       world.pickups.push({ kind: "shield", x: seg.x + w / 2, y: (seg.ceil + seg.floor) / 2, r: 22 });
     }
-    if (Math.random() < 0.05) {
+    if (rnd() < 0.05) {
       const pool = CREATURES.filter((c) => c.zone === zone);
       const fresh = pool.filter((c) => !world.dex.includes(c.id));
       const c = pick(fresh.length ? fresh : pool);
       world.pickups.push({ kind: "creature", id: c.id, x: seg.x + w * 0.6, y: rand(seg.ceil + 80, seg.floor - 80), baseY: 0, r: 26 });
     }
   }
+}
+
+function addPearl(world, x, y) {
+  world.pickups.push({ kind: "pearl", x, y, r: 12 });
+  if (!world.finishX || x < world.finishX) world.pearlTotal++;
 }
 
 // Dev helper (?hazard=jelly): every hazard becomes this type, to test abilities.
@@ -116,7 +141,7 @@ function spawnHazard(world, seg, type) {
     case "hook": Object.assign(h, { top: seg.ceil, len: rand(110, 210), y: seg.ceil, r: 14 }); break;
     case "sword": Object.assign(h, { y: rand(seg.ceil + 60, seg.floor - 60), active: false, speed: rand(420, 560) }); break;
     case "net": {
-      const fromTop = Math.random() < 0.5;
+      const fromTop = rnd() < 0.5;
       Object.assign(h, { w: 90, h: rand(100, 140), fromTop, base: fromTop ? seg.ceil : seg.floor });
       break;
     }
@@ -350,6 +375,37 @@ export function drawTerrain(ctx, world, scroll, depth, t, dt = 0, px = -999, py 
       ctx.fillRect(x, 0, w, 220);
     }
   }
+}
+
+// Finish line of an Adventure level: two glowing kelp posts, a checkered banner
+// and a curtain of rising bubbles.
+export function drawFinish(ctx, world, scroll, t) {
+  if (!world.finishX) return;
+  const x = world.finishX - scroll;
+  if (x < -120 || x > W + 120) return;
+  const top = 70, bottom = H - 70;
+  ctx.save();
+  ctx.fillStyle = "rgba(255,240,150,0.12)";
+  ctx.fillRect(x - 30, 0, 60, H);
+  ctx.strokeStyle = "rgba(255,255,255,0.7)"; ctx.lineWidth = 1.5;
+  for (let i = 0; i < 14; i++) {
+    const k = (t * 0.5 + i / 14) % 1;
+    ctx.beginPath(); ctx.arc(x + Math.sin(i * 2.3 + t) * 22, bottom - k * (bottom - top), 3 + (i % 3), 0, Math.PI * 2); ctx.stroke();
+  }
+  for (const side of [-1, 1]) { // posts
+    ctx.strokeStyle = "#3fbf6a"; ctx.lineWidth = 8; ctx.lineCap = "round";
+    ctx.beginPath(); ctx.moveTo(x + side * 34, bottom);
+    for (let k = 1; k <= 8; k++) ctx.lineTo(x + side * 34 + Math.sin(t * 2 + k) * 4, bottom - ((bottom - top) * k) / 8);
+    ctx.stroke();
+  }
+  const by = top + 20 + Math.sin(t * 2) * 4; // checkered banner
+  for (let i = 0; i < 8; i++) for (let j = 0; j < 2; j++) {
+    ctx.fillStyle = (i + j) % 2 ? "#111" : "#fff";
+    ctx.fillRect(x - 40 + i * 10, by + j * 10, 10, 10);
+  }
+  ctx.fillStyle = "#ffe27a"; ctx.font = "bold 22px system-ui"; ctx.textAlign = "center";
+  ctx.fillText("FINISH", x, by + 46);
+  ctx.restore();
 }
 
 // Darken the scene with depth, leaving a pool of light around Puffy.
