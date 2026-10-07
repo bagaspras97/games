@@ -25,7 +25,8 @@ for (let z = 0; z < 4; z++) {
       name: NAMES[z][i],
       seed: n * 7919 + 13,
       meters: 160 + i * 30 + z * 40 + (exam ? 60 : 0),
-      difficulty: Math.min(1, z * 0.22 + i * 0.05 + (exam ? 0.08 : 0)),
+      // exams are a bit lighter on regular hazards — the boss is the challenge
+      difficulty: Math.min(1, z * 0.22 + (exam ? 0.05 : i * 0.05)),
     });
   }
 }

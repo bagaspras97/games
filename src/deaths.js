@@ -237,6 +237,10 @@ export function deathFor(cause, h, playerY) {
     ? { key: "surface", label: "Terlempar keluar dari air!" }
     : { key: "abyss", label: "Tersedot ke dalam palung… ada yang menunggu di sana!" };
   switch (h && h.type) {
+    case "boss_crab": return { key: "sword", label: "Dijepit capit Kepiting Raksasa!" };
+    case "boss_shark": return { key: "sword", label: "Diseruduk Hiu Martil!" };
+    case "boss_kraken": return { key: "hook", label: "Ditarik tentakel Gurita Raksasa!" };
+    case "boss_angler": return { key: "abyss", label: "Dilahap Anglerfish Raksasa!" };
     case "urchin": return { key: "spike", label: "Tertusuk bulu babi! Psssh…" };
     case "coral": return { key: "spike", label: "Tergores karang tajam!" };
     case "icicle": return { key: "spike", label: "Tertusuk es runcing!" };

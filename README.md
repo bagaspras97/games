@@ -25,6 +25,19 @@ Selain **♾️ Mode Bebas** (endless), ada **20 level** (5 per zona) dengan gar
 - Level ke-5 tiap zona adalah **Ujian** (lebih panjang & sulit, tombol ungu).
 - ★ sampai finish · ★★ + kumpulkan ≥70% mutiara · ★★★ + tanpa terkena bahaya (tanpa perisai pecah/lanjutkan).
 - Hadiah mutiara untuk setiap bintang baru (10 + 2×nomor level). Level berikutnya terbuka setelah level sebelumnya selesai.
+- **Bos di setiap level Ujian** (`src/bosses.js`): tidak bisa dilawan, tujuannya **bertahan sampai 🏁**. Setiap serangan menyasar **lajur atas atau bawah**; lajur itu **berkedip merah** dulu (~1 detik) → pindah ke sisi lain!
+
+  | Level | Bos | Serangan |
+  |---|---|---|
+  | 5 | 🦀 Kepiting Raksasa | Capit raksasa menyapu dari kanan |
+  | 10 | 🦈 Hiu Martil | Menyeruduk dari belakang |
+  | 15 | 🐙 Gurita Raksasa | Tentakel muncul dari atas/bawah tepat di depan (ditandai gelembung) |
+  | 20 | 🎣 Anglerfish Raksasa | Menerkam dari belakang dengan rahang terbuka |
+
+  Serangan makin sering mendekati finish. Rintangan biasa di level Ujian dikurangi supaya bos jadi tantangan utamanya.
+
+![bosses](docs/bosses.png)
+
 - Data level ada di `src/levels.js`. Uji cepat layar selesai: `?finish=25` (semua level jadi 25 m).
 
 ![adventure](docs/adventure.png)

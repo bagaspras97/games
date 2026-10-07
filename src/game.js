@@ -16,6 +16,7 @@ import { updateMoments, drawMoment, resetMoments } from "./moments.js";
 const MOMENT_REWARD = 5;
 import { DEATHS, deathFor } from "./deaths.js";
 import * as missions from "./missions.js";
+import { createBoss, updateBoss, bossHits, drawBoss } from "./bosses.js";
 import { LEVELS, STAR_PEARL_RATIO, rewardPerStar, worldOptions, isUnlocked, totalStars } from "./levels.js";
 import {
   W, H, PX_PER_M, ZONES, zoneIndex, createWorld, extend, prune, surfaceUnder, updateWorld, hitsHazard, isHarmless,
@@ -50,6 +51,7 @@ let runs = 0, lastAdAt = 0, revived = false;
 let mode = "endless";          // endless | level
 let lvl = null;                // current Adventure level
 let lvlPearls = 0;             // pearls picked up in this level attempt
+let boss = null, bossCtx = null; // exam-level boss and its last corridor info
 let player, world, scroll, speed, depth, last, time = 0, zone = 0;
 let shake = 0;
 let shopCanvases = [];         // animated character previews in the shop
@@ -79,6 +81,8 @@ function reset(withShield = false) {
   extend(world, scroll + W * 2);
   revived = false;
   lvlPearls = 0;
+  boss = mode === "level" && lvl.exam ? createBoss(lvl.n) : null;
+  bossCtx = null;
 }
 
 const box = () => hero().box(player.up);
@@ -251,6 +255,15 @@ function startRun(withShield = false) {
   startMusic();
   platform.gameplayStart();
   if (mode === "level") banner(`🗺️ Level ${lvl.n}: ${lvl.name}`);
+  if (boss) {
+    const d = boss.def;
+    setTimeout(() => {
+      if (state !== "play") return;
+      banner(`👑 BOS: ${d.icon} ${d.name}!`);
+      toast("Bagian yang <b>berkedip merah</b> akan diserang — pindah ke sisi lain! Bertahanlah sampai 🏁", 3800);
+      sfx.abyss();
+    }, 2300);
+  }
   else banner(`${ZONES[zone].icon} ${ZONES[zone].name}`);
   show($("progress"), mode === "level");
 }
@@ -284,7 +297,7 @@ function renderLevels() {
       b.className = "lv" + (open ? "" : " locked") + (L.exam ? " exam" : "") + (stars ? " cleared" : "");
       b.title = L.name;
       b.innerHTML = open
-        ? `<b>${L.n}</b><span>${"★".repeat(stars)}${"☆".repeat(3 - stars)}</span>`
+        ? `<b>${L.exam ? "👑" : ""}${L.n}</b><span>${"★".repeat(stars)}${"☆".repeat(3 - stars)}</span>`
         : `<b>🔒</b><span>${L.n}</span>`;
       b.onclick = () => { if (open) { sfx.click(); startLevel(L.n); } else sfx.denied(); };
       row.querySelector(".lv-row").append(b);
@@ -320,6 +333,7 @@ function levelComplete() {
   $("done-info").innerHTML = `
     <div>${pearlOk ? "✅" : "▫️"} Mutiara ${lvlPearls} / ${world.pearlTotal} (butuh ${Math.round(STAR_PEARL_RATIO * 100)}%)</div>
     <div>${clean ? "✅" : "▫️"} Tanpa terkena bahaya</div>
+    ${boss ? `<div>👑 Berhasil lolos dari ${boss.def.icon} ${boss.def.name}!</div>` : ""}
     <div class="done-reward">${reward ? `+${reward} 🦪 untuk ${gained} bintang baru!` : "Coba raih bintang yang belum didapat!"}</div>`;
   const next = LEVELS[lvl.n];
   show($("done-next"), !!next);
@@ -751,6 +765,21 @@ function update(dt) {
 
   // Lumi's lure pulls nearby pearls in; its jaw opens as they approach.
   player.near = 0;
+  if (boss) {
+    const s = surfaceUnder(world, wx - 10, wx + 10);
+    const startX = world.finishX - lvl.meters * PX_PER_M;
+    bossCtx = {
+      W, scroll, player: { x: player.x, y: player.y, worldX: wx },
+      ceil: s.ceil ?? 90, floor: s.floor ?? H - 90,
+      progress: (wx - startX) / (world.finishX - startX),
+    };
+    if (updateBoss(boss, dt, bossCtx).warn) sfx.denied();
+    if (bossHits(boss, bossCtx) && player.invuln <= 0) {
+      if (player.shield) popShield();
+      else return gameOver("boss", { type: "boss_" + boss.def.key });
+    }
+  }
+
   for (const p of world.pickups) {
     if (p.kind !== "pearl" || p.taken) continue;
     const d = Math.hypot(p.x - wx, p.y - player.y);
@@ -835,6 +864,7 @@ function draw(dt) {
   drawDarkness(ctx, depth, player.x, player.y, hero().light);
   drawFinish(ctx, world, scroll, time);
   drawHazards(ctx, world, scroll, time);
+  if (boss && bossCtx && mode === "level" && state !== "menu") drawBoss(ctx, boss, bossCtx, time);
   drawPickups(ctx, world, scroll, time, getCreature);
   fx.draw(ctx, scroll);
   if (state === "dying") {
@@ -949,6 +979,9 @@ async function boot() {
   document.addEventListener("visibilitychange", () => {
     if (document.hidden && state === "play") gameOver("hidden");
   });
+
+  // Dev helper (?debug): lets automated tests read the boss & player state.
+  if (new URLSearchParams(location.search).has("debug")) window.__dbg = () => ({ boss, bossCtx, player, state });
 
   platform.loadingFinished();
   $("platform").textContent = platform.name;
