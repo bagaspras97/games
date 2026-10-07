@@ -139,6 +139,9 @@ Setiap karakter punya cara mengapung & tenggelam sendiri. Makin mahal, makin uni
 | 🦈 Mantra (Pari Manta) | 🦪 1600 | Meluncur zig-zag kecepatan tetap, bisa belok di tengah | Sayap mengepak, ekor mencambuk, tubuh miring |
 | 🎣 Lumi (Ikan Sungut Ganda) | 🦪 2500 | Seperti Puffy + lentera menerangi laut gelap & menarik mutiara | Umpan berpegas, mulut terbuka saat mutiara dekat, bintik berpendar |
 
+### 🔄 Ganti karakter di tengah penyelaman (Mode Bebas)
+Tombol **🐠 Ganti** (kiri atas, atau tombol **C**) menjeda permainan dan menampilkan karakter yang dimiliki beserta kemampuannya. Setelah berganti: kebal 1 detik, lalu jeda 8 detik sebelum bisa ganti lagi. Tidak tersedia di Petualangan.
+
 ### ⚡ Kemampuan khusus (terkait bahaya)
 | Karakter | Kemampuan |
 |---|---|

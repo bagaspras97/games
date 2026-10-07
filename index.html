@@ -14,6 +14,10 @@
     #platform { position: fixed; bottom: 6px; right: 10px; font-size: 11px; opacity: .4; }
     #mute { position: fixed; top: 10px; right: 10px; z-index: 5; font-size: 22px; padding: 8px 12px;
       background: rgba(255,255,255,.15); }
+    #swap { position: fixed; top: 10px; left: 10px; z-index: 5; font-size: 18px; padding: 8px 14px;
+      background: rgba(255,255,255,.18); }
+    #swap:disabled { opacity: .55; cursor: default; }
+    #swap-panel .grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
     #banner { position: fixed; top: 22%; left: 0; right: 0; text-align: center; font-size: 40px;
       font-weight: 900; pointer-events: none; text-shadow: 0 3px 12px rgba(0,0,0,.6); }
     #banner.pop { animation: pop 2.4s ease forwards; }
@@ -119,6 +123,14 @@
   <div id="banner" class="hidden"></div>
   <div id="toast" class="hidden"></div>
   <button id="mute" aria-label="Suara"></button>
+  <button id="swap" class="hidden" aria-label="Ganti karakter">🐠 Ganti</button>
+
+  <div id="swap-panel" class="panel hidden">
+    <h2>🐠 Ganti karakter</h2>
+    <p>Permainan dijeda. Setelah berganti: kebal 1 detik, lalu tunggu 8 detik untuk ganti lagi. (Tombol <b>C</b>)</p>
+    <div id="swap-grid" class="grid"></div>
+    <button id="swap-close" class="ghost">▶ Lanjut menyelam</button>
+  </div>
 
   <div id="menu" class="panel">
     <h1>🐡 Puffy<small>Petualangan Laut Dalam</small></h1>

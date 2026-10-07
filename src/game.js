@@ -246,7 +246,76 @@ async function claimMission(i, mult) {
   toast(`+${reward} 🦪 masuk ke kantong!`, 1800);
 }
 
+// ---------- Mid-dive character swap (Free mode only) ----------
+const SWAP_COOLDOWN = 8;       // seconds before you can swap again
+let swapCooldown = 0;
+
+function canSwap() {
+  return state === "play" && mode === "endless" && save.owned.length > 1 && swapCooldown <= 0;
+}
+
+function updateSwapButton() {
+  const b = $("swap");
+  const visible = (state === "play" || state === "swap") && mode === "endless" && save.owned.length > 1;
+  show(b, visible);
+  if (!visible) return;
+  b.disabled = swapCooldown > 0;
+  b.textContent = swapCooldown > 0 ? `🐠 ${Math.ceil(swapCooldown)}` : "🐠 Ganti";
+}
+
+function openSwap() {
+  if (!canSwap()) return;
+  state = "swap";                 // pauses the dive
+  platform.gameplayStop();
+  const grid = $("swap-grid");
+  grid.innerHTML = "";
+  for (const ch of CHARACTERS.filter((c) => save.owned.includes(c.id))) {
+    const b = document.createElement("button");
+    b.className = "card char-card" + (ch.id === save.char ? " equipped" : "");
+    const cv = document.createElement("canvas");
+    cv.width = cv.height = 120;
+    const cx = cv.getContext("2d");
+    cx.translate(60, 64);
+    ch.draw(cx, { t: time, up: true, vy: 0, mood: "happy", pulse: 0, flash: 0, near: 0 });
+    b.append(cv);
+    b.insertAdjacentHTML("beforeend", `<b>${ch.name}</b><p class="ability">⚡ ${ch.ability}</p>`);
+    b.onclick = () => chooseSwap(ch.id);
+    grid.append(b);
+  }
+  show(ui.banner, false); show(ui.toast, false);
+  show($("swap-panel"), true);
+}
+
+function closeSwap() {
+  show($("swap-panel"), false);
+  state = "play";
+  last = performance.now();
+  platform.gameplayStart();
+}
+
+function chooseSwap(id) {
+  if (id !== save.char) {
+    save.char = id;
+    const ch = hero();
+    // carry the current direction over to the new way of moving
+    if (ch.mode === "pulse") { player.up = false; player.gravity = 1; }
+    else if (ch.mode === "glide") player.dir = player.up ? -1 : 1;
+    else player.gravity = player.up ? -1 : 1;
+    player.vy = 0;
+    player.sonarT = 3;
+    player.invuln = Math.max(player.invuln, 1);  // a short grace period
+    swapCooldown = SWAP_COOLDOWN;
+    fx.puff(scroll + player.x, player.y);
+    fx.text(scroll + player.x, player.y - 46, `Ganti ke ${ch.name}!`, ch.color);
+    sfx.buy();
+    platform.save(save);
+    announce(missions.trackCharacter(save, id));
+  }
+  closeSwap();
+}
+
 function startRun(withShield = false) {
+  swapCooldown = 0;
   reset(withShield);
   announce(missions.trackCharacter(save, save.char));
   resetMoments();
@@ -737,6 +806,7 @@ function update(dt) {
   setMuffle(Math.min(1, depth / 2000));
 
   if (player.invuln > 0) player.invuln -= dt;
+  if (swapCooldown > 0) swapCooldown -= dt;
   if (player.moodT > 0 && (player.moodT -= dt) <= 0) player.mood = "normal";
 
   const ch = hero();
@@ -909,6 +979,7 @@ function loop(now) {
   const dt = Math.min(0.033, (now - last) / 1000 || 0);
   last = now;
   time += dt;
+  updateSwapButton();
   if (state === "play") update(dt);
   else if (state === "dying") {
     const anim = DEATHS[dying.key];
@@ -969,6 +1040,7 @@ async function boot() {
   canvas.addEventListener("pointerdown", flip);
   addEventListener("keydown", (e) => {
     if (e.code === "Space" || e.code === "ArrowUp") { e.preventDefault(); flip(); }
+    if (e.code === "KeyC") { if (state === "swap") closeSwap(); else openSwap(); }
   });
 
   const muteBtn = $("mute");
@@ -977,6 +1049,8 @@ async function boot() {
   muteBtn.onclick = (e) => { e.stopPropagation(); toggleMute(); muteLabel(); muteBtn.blur(); };
 
   ui.play.onclick = () => { sfx.click(); startEndless(); };
+  $("swap").onclick = (e) => { e.stopPropagation(); $("swap").blur(); openSwap(); };
+  $("swap-close").onclick = closeSwap;
   document.querySelectorAll(".open-levels").forEach((b) => { b.onclick = () => openPanel($("levels"), b.closest(".panel"), renderLevels); });
   $("levels-close").onclick = () => closePanel($("levels"));
   $("done-next").onclick = nextLevel;
