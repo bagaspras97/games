@@ -38,6 +38,7 @@ Selain **♾️ Mode Bebas** (endless), ada **20 level** (5 per zona) dengan gar
 
 ![bosses](docs/bosses.png)
 
+- **Pola mutiara mengikuti posisi level di dalam zona** (tier 0–4): level pertama tiap zona (1, 6, 11, 16) hanya garis lurus/deretan dasar-atas, lalu bukit & lembah, diagonal, gelombang, sampai zig-zag rapat di level Ujian. Setiap zona dimulai mudah lagi. Di Mode Bebas tier mengikuti seberapa jauh kamu masuk ke zona.
 - Data level ada di `src/levels.js`. Uji cepat layar selesai: `?finish=25` (semua level jadi 25 m).
 
 ![adventure](docs/adventure.png)

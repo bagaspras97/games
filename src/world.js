@@ -103,7 +103,7 @@ export function extend(world, untilX) {
 
     if (rnd() < 0.6 + level * 0.35) spawnHazard(world, seg, pick(HAZARDS_BY_ZONE[zone]));
 
-    if (rnd() < 0.6) placePearlPattern(world, seg);
+    if (rnd() < 0.6) placePearlPattern(world, seg, zone);
     if (rnd() < 0.05) {
       world.pickups.push({ kind: "shield", x: seg.x + w / 2, y: (seg.ceil + seg.floor) / 2, r: 22 });
     }
@@ -118,17 +118,35 @@ export function extend(world, untilX) {
 
 // Pearl formations. Besides looking varied, several of them hint at a route:
 // runs along the floor/ceiling reward staying put, diagonals invite a flip.
-const PEARL_PATTERNS = ["line", "floorRun", "ceilRun", "rise", "fall", "hill", "valley", "zigzag", "wave"];
+//
+// Pattern difficulty depends on a TIER 0..4 = the level's position inside its zone
+// (Level 1, 6, 11, 16 → tier 0 … the Ujian → tier 4). In Free mode the tier follows
+// how far you are into the current zone. Every zone starts easy again.
+const PEARL_TIERS = [
+  ["line", "floorRun", "ceilRun"],                                   // 0: no movement needed
+  ["line", "floorRun", "ceilRun", "hill", "valley"],                 // 1: gentle curves
+  ["floorRun", "ceilRun", "hill", "valley", "rise", "fall"],         // 2: one flip to follow
+  ["hill", "valley", "rise", "fall", "wave", "zigzag"],              // 3: rhythm
+  ["rise", "fall", "wave", "zigzag", "zigzag"],                      // 4: constant flipping
+];
 
-function placePearlPattern(world, seg) {
+function pearlTier(world, zone) {
+  if (world.opts.pearlTier != null) return world.opts.pearlTier;
+  const depth = world.end / PX_PER_M;
+  const from = ZONES[zone].from, to = ZONES[zone + 1] ? ZONES[zone + 1].from : from + 1000;
+  return clamp(Math.floor(((depth - from) / (to - from)) * 5), 0, 4);
+}
+
+function placePearlPattern(world, seg, zone) {
+  const tier = pearlTier(world, zone);
   const gap = 42;
   const maxN = Math.floor((seg.w - 120) / gap);
   if (maxN < 3) return;
-  const n = Math.min(maxN, 3 + Math.floor(rnd() * 4));          // 3..6 pearls
+  const n = Math.min(maxN, 3 + Math.floor(rnd() * (2 + tier)));     // tier 0: 3-4 … tier 4: 3-8
   const x0 = seg.x + 60 + rnd() * Math.max(0, seg.w - 120 - (n - 1) * gap);
   const top = seg.ceil + 40, bottom = seg.floor - 40, mid = (top + bottom) / 2;
-  const kind = pick(PEARL_PATTERNS);
-  const amp = rand(40, 90);
+  const kind = pick(PEARL_TIERS[tier]);
+  const amp = rand(25 + tier * 12, 45 + tier * 15);                   // bigger swings when harder
   const base = rand(top + amp, bottom - amp);
   const pts = [];
   for (let i = 0; i < n; i++) {
@@ -142,7 +160,7 @@ function placePearlPattern(world, seg) {
       case "fall": y = top + (bottom - top) * k; break;
       case "hill": y = base - Math.sin(k * Math.PI) * amp; break;
       case "valley": y = base + Math.sin(k * Math.PI) * amp; break;
-      case "zigzag": y = mid + (i % 2 ? -1 : 1) * amp * 0.8; break;
+      case "zigzag": y = mid + (i % 2 ? -1 : 1) * Math.min(amp, (bottom - top) / 2); break;
       case "wave": y = base + Math.sin(k * Math.PI * 2) * amp; break;
     }
     pts.push([x0 + i * gap, clamp(y, top, bottom)]);

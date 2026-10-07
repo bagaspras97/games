@@ -43,7 +43,8 @@ export const rewardPerStar = (lvl) => 10 + lvl.n * 2;
 export function worldOptions(lvl) {
   return {
     startX: ZONES[lvl.zone].from * PX_PER_M,
-    opts: { zone: lvl.zone, difficulty: lvl.difficulty, length: lvl.meters * PX_PER_M },
+    // pearl pattern tier = position inside the zone, so Level 1, 6, 11, 16 are equally easy
+    opts: { zone: lvl.zone, difficulty: lvl.difficulty, length: lvl.meters * PX_PER_M, pearlTier: (lvl.n - 1) % 5 },
   };
 }
 
