@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>Gravity Hop</title>
+  <style>
+    html, body { margin: 0; height: 100%; background: #0d0a24; overflow: hidden;
+      font-family: system-ui, sans-serif; color: #fff; touch-action: none; user-select: none; }
+    body { display: flex; align-items: center; justify-content: center; }
+    canvas { display: block; }
+    #score { position: fixed; top: 12px; left: 0; right: 0; text-align: center;
+      font-size: 28px; font-weight: 800; pointer-events: none; }
+    #platform { position: fixed; bottom: 6px; right: 10px; font-size: 11px; opacity: .4; }
+    .panel { position: fixed; inset: 0; display: flex; flex-direction: column; gap: 14px;
+      align-items: center; justify-content: center; background: rgba(13,10,36,.7); text-align: center; }
+    .panel h1 { font-size: 56px; margin: 0; }
+    .panel p { margin: 0; opacity: .8; }
+    button { font: inherit; font-size: 22px; font-weight: 700; padding: 14px 36px; border: 0;
+      border-radius: 999px; background: #ff4fa3; color: #fff; cursor: pointer; }
+    button.alt { background: #4fffd2; color: #1b1446; }
+    .hidden { display: none !important; }
+    .fake-ad { position: fixed; inset: 0; background: #000; display: flex; align-items: center;
+      justify-content: center; text-align: center; font-size: 22px; z-index: 10; }
+    .fake-ad button { margin-top: 16px; font-size: 16px; padding: 8px 20px; }
+  </style>
+</head>
+<body>
+  <canvas id="game" width="1280" height="720"></canvas>
+  <div id="score"></div>
+  <div id="platform"></div>
+
+  <div id="menu" class="panel">
+    <h1>Gravity Hop</h1>
+    <p>Tap / klik / spasi untuk membalik gravitasi. Hindari duri!</p>
+    <button id="play">Main</button>
+  </div>
+
+  <div id="over" class="panel hidden">
+    <h1>Game Over</h1>
+    <p>Skor: <b id="final">0</b> &nbsp; Terbaik: <b id="best">0</b> &nbsp; 🪙 <b id="coins">0</b></p>
+    <button id="revive" class="alt">▶ Lanjutkan (tonton iklan)</button>
+    <button id="retry">Main lagi</button>
+  </div>
+
+  <script type="module" src="src/game.js"></script>
+</body>
+</html>
