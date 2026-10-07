@@ -50,6 +50,15 @@ Setiap karakter punya cara mengapung & tenggelam sendiri. Makin mahal, makin uni
 
 ![abilities](docs/abilities.png)
 
+### 🐋 Karakter rahasia: Bubu si Paus Biru Mini
+Terbuka **gratis** setelah semua 8 makhluk di 📖 Ensiklopedia Laut ditemukan. Sebelum itu tampil sebagai siluet "???" dengan progres (mis. 7/8).
+- Gerak: naik-turun sedang, badan besar; menyembur dari lubang napas saat naik.
+- ⚡ **Nyanyian paus** tiap 6 detik: gelombang sonar yang mengusir ikan pedang & kail dan membekukan ubur-ubur di sekitarnya.
+
+| Terkunci | Bermain |
+|---|---|
+| ![locked](docs/secret-locked.png) | ![bubu](docs/secret-play.png) |
+
 Data karakter (fisika, hitbox, kemampuan, gambar) ada di `src/characters.js`.
 
 ![characters](docs/characters.png)

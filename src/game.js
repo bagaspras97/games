@@ -4,6 +4,8 @@
 import { createPlatform } from "./sdk/adapter.js";
 import { CHARACTERS, getCharacter } from "./characters.js";
 import { CREATURES, getCreature } from "./creatures.js";
+
+const SECRET_ID = "bubu";
 import {
   sfx, unlock, toggleMute, isMuted, setAdPlaying, startMusic, stopMusic, setTempo, setMuffle,
 } from "./audio.js";
@@ -47,7 +49,7 @@ function reset(withShield = false) {
   player = {
     x: 260, y: H - 140, vy: 0, up: false, gravity: 1, dir: 1,
     shield: withShield, invuln: 0, mood: "normal", moodT: 0, tilt: 0,
-    pulse: 0, flash: 0, near: 0,
+    pulse: 0, flash: 0, near: 0, sonarT: 3,
   };
   scroll = START_M * PX_PER_M;
   world = createWorld(save.dex, scroll);
@@ -199,16 +201,19 @@ function renderShop() {
   for (const ch of CHARACTERS) {
     const owned = save.owned.includes(ch.id);
     const equipped = save.char === ch.id;
+    const hidden = ch.secret && !owned;
     const card = document.createElement("button");
-    card.className = "card char-card" + (equipped ? " equipped" : "");
+    card.className = "card char-card" + (equipped ? " equipped" : "") + (ch.secret ? " secret" : "");
     const c = document.createElement("canvas");
     c.width = c.height = 120;
-    shopCanvases.push({ c, ch });
-    const label = equipped ? "Dipakai" : owned ? "Pakai" : `🦪 ${ch.price}`;
+    shopCanvases.push({ c, ch, hidden });
+    const label = equipped ? "Dipakai" : owned ? "Pakai"
+      : hidden ? `🔒 Lengkapi Ensiklopedia (${save.dex.length}/${CREATURES.length})` : `🦪 ${ch.price}`;
     card.append(c);
-    card.insertAdjacentHTML("beforeend",
-      `<b>${ch.name} <small>${ch.species}</small></b><p class="desc">${ch.desc}</p><p class="ability">⚡ ${ch.ability}</p><span class="price">${label}</span>`);
-    if (!owned && save.pearls < ch.price) card.classList.add("locked");
+    card.insertAdjacentHTML("beforeend", hidden
+      ? `<b>??? <small>Karakter Rahasia</small></b><p class="desc">Temukan semua makhluk di 📖 Ensiklopedia Laut untuk membukanya.</p><p class="ability">⚡ ???</p><span class="price">${label}</span>`
+      : `<b>${ch.name} <small>${ch.species}</small></b><p class="desc">${ch.desc}</p><p class="ability">⚡ ${ch.ability}</p><span class="price">${label}</span>`);
+    if (hidden || (!owned && save.pearls < ch.price)) card.classList.add("locked");
     card.onclick = () => selectCharacter(ch);
     ui.shopGrid.append(card);
   }
@@ -216,7 +221,7 @@ function renderShop() {
 
 // Shop previews loop each character's "float ↔ sink" animation.
 function drawShopPreviews() {
-  for (const { c, ch } of shopCanvases) {
+  for (const { c, ch, hidden } of shopCanvases) {
     const cx = c.getContext("2d");
     cx.clearRect(0, 0, c.width, c.height);
     const phase = Math.floor(time / 1.4) % 2 === 0;
@@ -225,10 +230,19 @@ function drawShopPreviews() {
     cx.translate(60, 64);
     ch.draw(cx, { t: time, up: phase, vy, mood: "normal", pulse: Math.max(0, 1 - (time % 1.4) * 2), flash: Math.max(0, 1 - (time % 1.4) * 2), near: phase ? 0.6 : 0 });
     cx.restore();
+    if (hidden) { // silhouette for the locked secret character
+      cx.globalCompositeOperation = "source-atop";
+      cx.fillStyle = "#0b1e3a";
+      cx.fillRect(0, 0, c.width, c.height);
+      cx.globalCompositeOperation = "source-over";
+      cx.fillStyle = "#fff"; cx.font = "bold 34px system-ui"; cx.textAlign = "center";
+      cx.fillText("?", 60, 76);
+    }
   }
 }
 
 function selectCharacter(ch) {
+  if (ch.secret && !save.owned.includes(ch.id)) { sfx.denied(); return; }
   if (!save.owned.includes(ch.id)) {
     if (save.pearls < ch.price) { sfx.denied(); return; }
     save.pearls -= ch.price;
@@ -256,6 +270,10 @@ async function freePearls() {
 // ---------- Ensiklopedia Laut ----------
 function renderDex() {
   ui.dexCount.textContent = `${save.dex.length} / ${CREATURES.length}`;
+  const left = CREATURES.length - save.dex.length;
+  $("dex-reward").innerHTML = left > 0
+    ? `🔒 Temukan <b>${left}</b> makhluk lagi untuk membuka <b>karakter rahasia</b>!`
+    : `🐋 Lengkap! <b>Bubu si Paus Biru Mini</b> sudah terbuka di menu 🐠 Karakter.`;
   ui.dexGrid.innerHTML = "";
   for (const c of CREATURES) {
     const found = save.dex.includes(c.id);
@@ -302,6 +320,28 @@ function flip() {
   player.flash = 1;
   setMood("surprised", 0.25);
   if (!ch.jet) fx.puff(scroll + player.x, player.y);
+}
+
+// Grants the secret character once the encyclopedia is complete. Returns true if newly unlocked.
+function unlockSecret() {
+  if (save.dex.length < CREATURES.length || save.owned.includes(SECRET_ID)) return false;
+  save.owned.push(SECRET_ID);
+  platform.save(save);
+  return true;
+}
+
+// Bubu's whale song: scares off swordfish & hooks and freezes jellyfish nearby.
+function whaleSong(ch) {
+  const wx = scroll + player.x;
+  fx.sonar(wx, player.y);
+  fx.text(wx, player.y - 46, "♪ Nyanyian paus!", "#a8dcff");
+  sfx.zone();
+  player.flash = 1;
+  for (const h of world.hazards) {
+    if (Math.hypot(h.x - wx, (h.y ?? player.y) - player.y) > ch.sonar.radius || isHarmless(h, time)) continue;
+    if ((h.type === "sword" && h.active) || h.type === "hook") h.fleeing = true;
+    if (h.type === "jelly") h.stunUntil = time + 3;
+  }
 }
 
 // Okto's ink: swordfish nearby flee, jellyfish nearby freeze for a moment.
@@ -382,6 +422,7 @@ function update(dt) {
   player.y += player.vy * dt;
   player.tilt = ch.mode === "toggle" && ch.id === "puffy" ? player.vy / ch.max * 0.35 : 0;
   player.pulse = Math.max(0, player.pulse - dt * 3);
+  if (ch.sonar && (player.sonarT -= dt) <= 0) { player.sonarT = ch.sonar.every; whaleSong(ch); }
   player.flash = Math.max(0, player.flash - dt * 2);
 
   // Swimming into the side of a wall (e.g. the far edge of a trench).
@@ -447,6 +488,13 @@ function update(dt) {
         platform.save(save);
         sfx.discover();
         toast(`📖 <b>Penemuan baru: ${c.name}!</b><br>${c.fact}`, 5000);
+        if (unlockSecret()) {
+          setTimeout(() => {
+            banner("🐋 Karakter rahasia terbuka!");
+            toast("🎉 <b>Ensiklopedia lengkap!</b><br>Bubu si Paus Biru Mini kini bisa dipilih di menu 🐠 Karakter.", 6000);
+            sfx.buy();
+          }, 2500);
+        }
       } else {
         save.pearls += 5;
         sfx.pearl();
@@ -528,6 +576,9 @@ async function boot() {
   if (!save.owned.includes("puffy")) save.owned.unshift("puffy");
   if (!save.owned.includes(save.char)) save.char = "puffy";
   if (!Array.isArray(save.dex)) save.dex = [];
+  save.owned = save.owned.filter((id) => id !== SECRET_ID || save.dex.length >= CREATURES.length);
+  unlockSecret();
+  if (!save.owned.includes(save.char)) save.char = "puffy";
   reset();
 
   addEventListener("pointerdown", unlock, true);

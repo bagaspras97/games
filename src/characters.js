@@ -257,6 +257,61 @@ function drawLumi(ctx, a) {
   eye(ctx, 10, -8, 5, a.mood);
 }
 
+// ---------- 7. Bubu (secret: little blue whale) ----------
+function drawBubu(ctx, a) {
+  const fluke = Math.sin(a.t * 4) * 0.5;
+  // sonar arcs in front (bright right after a song)
+  const song = a.flash;
+  ctx.strokeStyle = `rgba(160,230,255,${0.15 + song * 0.6})`; ctx.lineWidth = 3;
+  for (let i = 0; i < 3; i++) {
+    const r = 18 + ((a.t * 30 + i * 14) % 42);
+    ctx.beginPath(); ctx.arc(46, 0, r, -0.6, 0.6); ctx.stroke();
+  }
+  // tail stock + fluke (flaps up and down)
+  ctx.fillStyle = "#2f5f9e";
+  ctx.beginPath(); ctx.moveTo(-30, -10); ctx.quadraticCurveTo(-50, fluke * 10, -56, fluke * 14); ctx.quadraticCurveTo(-50, 8 + fluke * 10, -30, 10); ctx.fill();
+  ctx.save();
+  ctx.translate(-56, fluke * 14);
+  ctx.rotate(fluke);
+  ctx.beginPath(); ctx.moveTo(0, 0); ctx.quadraticCurveTo(-6, -16, -18, -20); ctx.quadraticCurveTo(-10, -6, -4, 0);
+  ctx.quadraticCurveTo(-10, 6, -18, 20); ctx.quadraticCurveTo(-6, 16, 0, 0); ctx.fill();
+  ctx.restore();
+  // body with gradient
+  const g = ctx.createLinearGradient(0, -24, 0, 24);
+  g.addColorStop(0, "#3d74c4"); g.addColorStop(0.6, "#4f8ad6"); g.addColorStop(1, "#7fb0e8");
+  ctx.fillStyle = g;
+  ctx.beginPath(); ctx.ellipse(4, 0, 42, 22, 0, 0, TAU); ctx.fill();
+  // belly + throat grooves
+  ctx.fillStyle = "#d8e9f8";
+  ctx.beginPath(); ctx.ellipse(10, 9, 32, 11, 0, 0, Math.PI); ctx.fill();
+  ctx.strokeStyle = "rgba(120,160,210,0.7)"; ctx.lineWidth = 1.5;
+  for (let i = 0; i < 4; i++) { ctx.beginPath(); ctx.moveTo(-8 + i * 2, 11 + i * 2.5); ctx.quadraticCurveTo(14, 14 + i * 2.5, 38 - i * 3, 6 + i * 2); ctx.stroke(); }
+  // light spots on the back
+  ctx.fillStyle = "rgba(255,255,255,0.35)";
+  [[-14, -12], [-4, -16], [8, -14]].forEach(([x, y]) => { ctx.beginPath(); ctx.arc(x, y, 2.5, 0, TAU); ctx.fill(); });
+  // pectoral fin paddles
+  ctx.fillStyle = "#2f5f9e";
+  ctx.beginPath(); ctx.ellipse(4, 14, 14, 5, 0.7 + Math.sin(a.t * 4) * 0.3, 0, TAU); ctx.fill();
+  // smile
+  ctx.strokeStyle = "#1b3a66"; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(44, 4); ctx.quadraticCurveTo(32, 10, 22, 6); ctx.stroke();
+  // blinking eye
+  if (a.mood !== "dead" && (a.t % 4) < 0.12) {
+    ctx.beginPath(); ctx.moveTo(23, -1); ctx.lineTo(31, -1); ctx.stroke();
+  } else eye(ctx, 27, -1, 4, a.mood);
+  ctx.fillStyle = "rgba(255,150,170,.5)";
+  ctx.beginPath(); ctx.arc(32, 6, 3.5, 0, TAU); ctx.fill();
+  // blowhole spout when floating up
+  if (a.up) {
+    ctx.fillStyle = "rgba(220,245,255,0.85)";
+    for (let i = 0; i < 7; i++) {
+      const k = ((a.t * 2 + i / 7) % 1);
+      const side = i % 2 ? 1 : -1;
+      ctx.beginPath(); ctx.arc(12 + side * k * 14, -22 - Math.sin(k * Math.PI) * 26, 3 * (1 - k) + 1, 0, TAU); ctx.fill();
+    }
+  }
+}
+
 function mixRGB(a, b, t) {
   return `rgb(${a.map((v, i) => Math.round(v + (b[i] - v) * t)).join(",")})`;
 }
@@ -317,6 +372,17 @@ export const CHARACTERS = [
     draw: drawLumi,
   },
 ];
+
+// Unlocked for free once every creature in the Ensiklopedia Laut is found.
+CHARACTERS.push({
+  id: "bubu", name: "Bubu", species: "Paus Biru Mini", price: 0, secret: true, color: "#a8dcff",
+  desc: "Karakter rahasia! Besar & tenang: naik-turun sedang, menyembur dari lubang napas.",
+  mode: "toggle", g: 1500, max: 600,
+  ability: "Nyanyian paus tiap 6 detik: mengusir ikan pedang, kail & membekukan ubur-ubur di sekitarnya.",
+  sonar: { every: 6, radius: 480 },
+  box: () => ({ hw: 40, hh: 22, r: 22 }),
+  draw: drawBubu,
+});
 
 export function getCharacter(id) {
   return CHARACTERS.find((c) => c.id === id) || CHARACTERS[0];

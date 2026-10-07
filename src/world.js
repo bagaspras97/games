@@ -130,6 +130,7 @@ export function updateWorld(world, dt, scroll, t) {
     if (h.type === "jelly") h.y = h.baseY + Math.sin(t * 1.8 + h.phase) * h.amp;
     else if (h.type === "hook") {
       const progress = clamp((W + 100 - sx) / 500, 0, 1);
+      if (h.fleeing) h.len = Math.max(0, h.len - 420 * dt); // reeled away
       h.y = h.top + h.len * progress + Math.sin(t * 2) * 6;
     } else if (h.type === "sword") {
       if (!h.active && sx < W + 520) h.active = true;

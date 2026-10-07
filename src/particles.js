@@ -64,6 +64,13 @@ export function text(x, y, str, color = "#fff") {
   add({ x, y, vx: 0, vy: -60, g: 0, life: 1.1, max: 1.1, size: 22, color, shape: "text", str });
 }
 
+// Wide expanding rings for the whale song (sonar).
+export function sonar(x, y) {
+  for (let i = 0; i < 3; i++) {
+    add({ x, y, vx: 0, vy: 0, g: 0, life: 0.9, max: 0.9, size: 30 + i * 40, grow: 900, color: "#a8dcff", shape: "ring" });
+  }
+}
+
 // Ring wave when the shield bubble pops.
 export function ring(x, y) {
   add({ x, y, vx: 0, vy: 0, g: 0, life: 0.4, max: 0.4, size: 40, grow: 260, color: "#a8f4ff", shape: "ring" });
