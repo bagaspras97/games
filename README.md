@@ -44,6 +44,17 @@ Setiap hari 3 misi baru (2 lucu + 1 biasa, sama untuk satu hari penuh), hadiah m
 
 Daftar misi ada di `src/missions.js` (tinggal tambah objek baru ke `POOL`).
 
+### 🔥 Streak harian
+Selesaikan **ketiga** misi hari ini → streak +1 (kalau kemarin juga selesai) dan dapat **bonus streak**. Bolos sehari → streak kembali ke 0.
+
+| Hari | 1 | 2 | 3 | 4 | 5 | 6 | 7 🎁 |
+|---|---|---|---|---|---|---|---|
+| Bonus 🦪 | 20 | 30 | 40 | 50 | 60 | 80 | 150 |
+
+Siklus 7 hari berulang. Bonus bisa diambil biasa atau x2 lewat rewarded ad.
+
+![streak](docs/streak.png)
+
 ![missions](docs/missions.png)
 
 ## Koleksi

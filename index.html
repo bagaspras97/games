@@ -50,6 +50,20 @@
     .char-card .ability { font-size: 12px; font-weight: 600; line-height: 1.35; margin: 0; color: #ffe27a; }
     .char-card.secret { background: linear-gradient(160deg, rgba(30,80,150,.9), rgba(60,30,110,.9)); border-color: #ffe27a; }
     .cause { font-size: 18px; font-style: italic; color: #ffd1dc; }
+    #streak { width: min(620px, 92vw); background: linear-gradient(135deg, rgba(255,122,60,.35), rgba(255,60,120,.3));
+      border: 2px solid #ffb35c; border-radius: 16px; padding: 10px 14px; box-sizing: border-box; }
+    .s-head { font-size: 20px; font-weight: 800; }
+    .s-row { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin: 8px 0; }
+    .s-day { background: rgba(0,0,0,.3); border-radius: 10px; padding: 6px 2px; font-size: 11px; display: flex;
+      flex-direction: column; align-items: center; gap: 2px; border: 2px solid transparent; }
+    .s-day b { font-size: 12px; }
+    .s-day.done { background: #ff8a3c; }
+    .s-day.today { border-color: #ffe27a; animation: glow 1.2s ease-in-out infinite alternate; }
+    @keyframes glow { to { box-shadow: 0 0 14px rgba(255,226,122,.8); } }
+    .s-status { font-size: 13px; opacity: .9; }
+    .s-actions { display: flex; gap: 8px; justify-content: center; margin-top: 6px; flex-wrap: wrap; }
+    #missions-list { max-height: 34vh; overflow-y: auto; }
+    #missions { gap: 10px; }
     #missions-list { display: flex; flex-direction: column; gap: 12px; width: min(620px, 92vw); }
     .mission { background: rgba(20,60,110,.85); border-radius: 16px; padding: 12px 16px; text-align: left;
       border: 2px solid transparent; }
@@ -124,6 +138,7 @@
   <div id="missions" class="panel hidden">
     <h2>🎯 Misi Harian</h2>
     <p>Misi baru setiap hari. Ada yang serius, ada yang… kocak 😜</p>
+    <div id="streak"></div>
     <div id="missions-list"></div>
     <button id="missions-close" class="ghost">Kembali</button>
   </div>

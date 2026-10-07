@@ -82,10 +82,56 @@ export function trackCharacter(save, id) {
 }
 
 export function claimable(save) {
-  return ensureDaily(save).list.filter((m) => m.done && !m.claimed).length;
+  const ms = ensureDaily(save);
+  const bonus = streakInfo(save).doneToday && !ms.bonusClaimed ? 1 : 0;
+  return ms.list.filter((m) => m.done && !m.claimed).length + bonus;
 }
 
 export function describe(m) {
   const def = byId(m.id);
   return { ...def, ...m };
+}
+
+// ---------- Daily streak ----------
+// Finishing all of today's missions extends the streak (if yesterday was also
+// finished) or starts a new one. Each streak day gives a bonus that grows over a
+// 7-day cycle; missing a day resets it.
+
+export const STREAK_REWARDS = [20, 30, 40, 50, 60, 80, 150];
+export const streakReward = (day) => STREAK_REWARDS[(day - 1) % STREAK_REWARDS.length];
+
+function dayOffset(day, delta) {
+  const [y, m, d] = day.split("-").map(Number);
+  const dt = new Date(y, m - 1, d + delta);
+  return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}-${String(dt.getDate()).padStart(2, "0")}`;
+}
+
+// Current streak state as the UI should show it.
+export function streakInfo(save) {
+  const day = today();
+  const s = save.streak || { count: 0, lastDay: null };
+  const doneToday = s.lastDay === day;
+  const alive = doneToday || s.lastDay === dayOffset(day, -1);
+  const count = alive ? s.count : 0;
+  const ms = ensureDaily(save);
+  return {
+    count,
+    doneToday,
+    claimed: !!ms.bonusClaimed,
+    // the streak day today's bonus belongs to (or would belong to)
+    day: doneToday ? count : count + 1,
+  };
+}
+
+// Call when a mission completes; returns the streak day if today's set just got finished.
+export function checkStreak(save) {
+  const ms = ensureDaily(save);
+  const day = today();
+  if (!ms.list.every((m) => m.done)) return 0;
+  const s = save.streak || { count: 0, lastDay: null };
+  if (s.lastDay === day) return 0;
+  s.count = s.lastDay === dayOffset(day, -1) ? s.count + 1 : 1;
+  s.lastDay = day;
+  save.streak = s;
+  return s.count;
 }

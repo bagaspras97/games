@@ -97,6 +97,15 @@ function announce(done) {
     sfx.discover();
     toast(`🎯 <b>Misi selesai!</b> ${m.text}<br>Ambil +${m.reward} 🦪 di menu 🎯 Misi`, 3500);
   }
+  const streakDay = done.length ? missions.checkStreak(save) : 0;
+  if (streakDay) {
+    platform.save(save);
+    setTimeout(() => {
+      banner(`🔥 Streak ${streakDay} hari!`);
+      toast(`🔥 <b>Semua misi hari ini selesai!</b><br>Bonus streak hari ke-${streakDay}: +${missions.streakReward(streakDay)} 🦪 menunggu di menu 🎯 Misi`, 4500);
+      sfx.buy();
+    }, 1800);
+  }
   if (done.length) updateMissionBadges();
 }
 
@@ -108,7 +117,61 @@ function updateMissionBadges() {
   });
 }
 
+function renderStreak() {
+  const st = missions.streakInfo(save);
+  const box = $("streak");
+  const cycleDay = ((st.day - 1) % 7) + 1;           // 1..7 position of today's bonus
+  const weekStart = st.day - cycleDay + 1;
+  let dots = "";
+  for (let i = 1; i <= 7; i++) {
+    const day = weekStart + i - 1;
+    const cls = day < st.day || (day === st.day && st.doneToday) ? "done" : day === st.day ? "today" : "";
+    dots += `<div class="s-day ${cls}"><b>${i === 7 ? "🎁" : "Hari " + i}</b><span>${missions.streakReward(day)} 🦪</span></div>`;
+  }
+  const status = st.doneToday
+    ? `Streak hari ini aman! Kembali besok untuk hari ke-${st.count + 1} 🔥`
+    : st.count > 0
+      ? `Selesaikan ketiga misi hari ini agar streak tidak putus!`
+      : `Selesaikan ketiga misi hari ini untuk memulai streak!`;
+  box.innerHTML = `<div class="s-head">🔥 Streak: <b>${st.count}</b> hari</div><div class="s-row">${dots}</div><div class="s-status">${status}</div><div class="s-actions"></div>`;
+  if (st.doneToday && !st.claimed) {
+    const reward = missions.streakReward(st.count);
+    const claim = document.createElement("button");
+    claim.className = "alt small";
+    claim.textContent = `Ambil bonus +${reward} 🦪`;
+    claim.onclick = () => claimStreak(1);
+    const double = document.createElement("button");
+    double.className = "ghost small";
+    double.textContent = `🎬 x2 (+${reward * 2})`;
+    double.onclick = () => claimStreak(2);
+    box.querySelector(".s-actions").append(claim, double);
+  } else if (st.doneToday) {
+    box.querySelector(".s-actions").innerHTML = `<span class="m-done">✅ Bonus hari ini sudah diambil</span>`;
+  }
+}
+
+async function claimStreak(mult) {
+  const ms = missions.ensureDaily(save);
+  const st = missions.streakInfo(save);
+  if (!st.doneToday || ms.bonusClaimed) return;
+  if (mult > 1) {
+    const earned = await withAd(() => platform.rewarded());
+    state = "missions";
+    if (!earned) mult = 1;
+  }
+  ms.bonusClaimed = true;
+  const reward = missions.streakReward(st.count) * mult;
+  save.pearls += reward;
+  sfx.buy();
+  platform.save(save);
+  ui.pearls.textContent = save.pearls;
+  renderMissions();
+  updateMissionBadges();
+  toast(`🔥 Bonus streak +${reward} 🦪!`, 1800);
+}
+
 function renderMissions() {
+  renderStreak();
   const ms = missions.ensureDaily(save);
   const list = $("missions-list");
   list.innerHTML = "";
@@ -293,6 +356,7 @@ function openPanel(panel, from, render) {
   panelReturn = from;
   state = panel === ui.shop ? "shop" : panel === ui.dex ? "dex" : "missions";
   show(ui.menu, false); show(ui.over, false);
+  show(ui.banner, false); show(ui.toast, false); // keep panels uncluttered
   render();
   show(panel, true);
 }
