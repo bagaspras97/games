@@ -93,6 +93,16 @@ export const sfx = {
   },
   denied() { tone({ type: "square", from: 160, to: 120, dur: 0.15, vol: 0.15 }); },
   click() { tone({ type: "triangle", from: 660, dur: 0.04, vol: 0.12 }); },
+  // Knock-out sounds, one per hazard kind.
+  pop() { noise(0.5, 0.3); tone({ type: "sine", from: 900, to: 300, dur: 0.6, vol: 0.15 }); },
+  zap() {
+    for (let i = 0; i < 6; i++) tone({ type: "square", from: 120 + Math.random() * 600, to: 80, dur: 0.07, vol: 0.18, delay: i * 0.07 });
+  },
+  reel() { tone({ type: "triangle", from: 200, to: 1200, dur: 0.9, vol: 0.2, delay: 0.3 }); },
+  thud() { noise(0.2, 0.6); tone({ type: "sine", from: 120, to: 40, dur: 0.3, vol: 0.4 }); },
+  rustle() { noise(0.6, 0.25); tone({ type: "sine", from: 500, to: 900, dur: 0.8, vol: 0.08, delay: 0.3 }); },
+  abyss() { tone({ type: "sawtooth", from: 220, to: 40, dur: 1.1, vol: 0.2 }); noise(0.25, 0.5); },
+  splash() { noise(0.4, 0.5); tone({ type: "sine", from: 400, to: 1400, dur: 0.3, vol: 0.2 }); },
   revive() {
     [392, 523, 659, 784].forEach((f, i) => tone({ type: "triangle", from: f, dur: 0.12, vol: 0.2, delay: i * 0.08 }));
   },

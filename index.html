@@ -49,6 +49,7 @@
     .char-card .desc { font-size: 12px; font-weight: 500; line-height: 1.35; margin: 0; min-height: 3em; opacity: .9; }
     .char-card .ability { font-size: 12px; font-weight: 600; line-height: 1.35; margin: 0; color: #ffe27a; }
     .char-card.secret { background: linear-gradient(160deg, rgba(30,80,150,.9), rgba(60,30,110,.9)); border-color: #ffe27a; }
+    .cause { font-size: 18px; font-style: italic; color: #ffd1dc; }
     .reward { font-size: 15px; color: #ffe27a; }
     .char-card .price { font-size: 14px; font-weight: 700; opacity: 1; }
     #dex .grid { grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); }
@@ -82,6 +83,7 @@
 
   <div id="over" class="panel hidden">
     <h1 id="over-title">Aduh!</h1>
+    <p id="over-cause" class="cause"></p>
     <p>Kedalaman: <b id="final">0</b> m &nbsp; Terbaik: <b id="best">0</b> m &nbsp; 🦪 <b id="pearls">0</b></p>
     <button id="revive" class="alt">▶ Lanjutkan (tonton iklan)</button>
     <button id="retry">Selam lagi</button>

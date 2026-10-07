@@ -19,6 +19,23 @@ Puffy si ikan buntal menyelam makin dalam. **Tap / klik / Spasi**: Puffy **menge
 
 ![deep](docs/deep.png)
 
+## Animasi kekalahan
+Setiap bahaya punya animasi & suara sendiri sebelum layar Game Over, plus keterangan penyebabnya (`src/deaths.js`):
+
+| Bahaya | Animasi |
+|---|---|
+| 🦔 Bulu babi / 🪸 karang / ❄️ es runcing | Tertusuk: berkedip merah, bocor udara & meluncur zig-zag seperti balon kempis |
+| 🪼 Ubur-ubur listrik | Tersetrum: bergetar, berkedip putih-kuning dengan petir, lalu gosong & berasap |
+| 🎣 Kail pancing | Tersangkut di mulut lalu ditarik naik keluar layar |
+| 🕸️ Jaring | Jaring membungkus, karakter meronta, lalu diangkut ke atas |
+| 🗡️ Ikan pedang | Benturan bintang, terpental berputar ke belakang dengan bintang pusing |
+| 🛍️ Sampah plastik | Terbungkus kantong plastik dan melayang tak berdaya |
+| 🧱 Dinding | "Gedebuk": gepeng menempel, bintang pusing, lalu merosot |
+| 🕳️ Palung bawah | Berputar mengecil ke kegelapan, rahang bermata kuning menutup |
+| ☀️ Palung atas | Terlempar keluar dari air dengan cipratan |
+
+![deaths](docs/deaths.png)
+
 ## Koleksi
 - 🦪 **Mutiara**: mata uang untuk membuka **karakter laut baru** (lihat di bawah).
 - 🫧 **Gelembung perisai**: kebal satu kali tabrakan/jatuh. Muncul jarang, atau dari rewarded ad "Mulai dengan perisai".

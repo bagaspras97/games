@@ -10,6 +10,7 @@ import {
   sfx, unlock, toggleMute, isMuted, setAdPlaying, startMusic, stopMusic, setTempo, setMuffle,
 } from "./audio.js";
 import * as fx from "./particles.js";
+import { DEATHS, deathFor } from "./deaths.js";
 import {
   W, H, PX_PER_M, ZONES, zoneIndex, createWorld, extend, prune, surfaceUnder, updateWorld, hitsHazard, isHarmless,
   drawBackground, drawTerrain, drawDarkness, drawHazards, drawPickups,
@@ -98,22 +99,53 @@ function startRun(withShield = false) {
 function addShake(amount) { shake = Math.max(shake, amount); }
 function vibrate(ms) { try { navigator.vibrate && navigator.vibrate(ms); } catch (e) {} }
 
-// cause: "hazard" | "wall" | "pit" | "hidden". Shake & vibration only when touching a hazard.
-function gameOver(cause) {
-  state = "over";
+// cause: "hazard" | "wall" | "pit" | "hidden". Each hazard plays its own knock-out
+// animation (see deaths.js) before the Game Over panel. Shake & vibration only on hazards.
+let dying = null;
+
+function gameOver(cause, h = null) {
   stopMusic();
-  if (cause !== "hidden") {
-    sfx.death();
-    addShake(22);
-    vibrate([60, 40, 90]);
-    setMood("dead", 99);
-    fx.explode(scroll + player.x, player.y, [hero().color, "#ffffff", "#ffb3c7"]);
-  }
   platform.gameplayStop();
+  if (cause === "hidden") { dying = null; return finishGameOver(); }
+  const { key, label } = deathFor(cause, h, player.y);
+  dying = { key, label, t: 0, x: player.x, y: player.y, wx: scroll + player.x, h, ox: 0, oy: 0 };
+  if (h && h.type === "bag") h.gone = true; // the bag is drawn wrapped around the character
+  state = "dying";
+  setMood("dead", 99);
+  addShake(cause === "wall" || key === "sword" ? 26 : 16);
+  vibrate([60, 40, 90]);
+  (sfx[DEATHS[key].sound] || sfx.death)();
+  DEATHS[key].start(dying, fx);
+}
+
+// Offscreen sprite of the knocked-out character, optionally tinted (red flash, charred…).
+const spriteCanvas = document.createElement("canvas");
+spriteCanvas.width = spriteCanvas.height = 220;
+function heroSprite(tint, alpha = 0.6) {
+  const c = spriteCanvas.getContext("2d");
+  c.clearRect(0, 0, 220, 220);
+  c.save();
+  c.translate(110, 110);
+  hero().draw(c, { t: time, up: player.up, vy: 0, mood: "dead", pulse: 0, flash: 0, near: 0 });
+  c.restore();
+  if (tint) {
+    c.globalCompositeOperation = "source-atop";
+    c.globalAlpha = alpha;
+    c.fillStyle = tint;
+    c.fillRect(0, 0, 220, 220);
+    c.globalAlpha = 1;
+    c.globalCompositeOperation = "source-over";
+  }
+  return spriteCanvas;
+}
+
+function finishGameOver() {
+  state = "over";
   runs++;
   save.best = Math.max(save.best, depth);
   platform.save(save);
   $("over-title").textContent = `Aduh, ${hero().name}!`;
+  $("over-cause").textContent = dying ? dying.label : "";
   ui.final.textContent = depth;
   ui.best.textContent = save.best;
   ui.pearls.textContent = save.pearls;
@@ -452,7 +484,7 @@ function update(dt) {
     if (useAbility(h)) continue;
     if (player.invuln > 0) continue;
     if (player.shield) { popShield(); h.gone = true; continue; }
-    return gameOver("hazard");
+    return gameOver("hazard", h);
   }
 
   // Lumi's lure pulls nearby pearls in; its jaw opens as they approach.
@@ -537,7 +569,13 @@ function draw(dt) {
   drawHazards(ctx, world, scroll, time);
   drawPickups(ctx, world, scroll, time, getCreature);
   fx.draw(ctx, scroll);
-  if (state !== "over" && state !== "ad") drawPlayer();
+  if (state === "dying") {
+    const anim = DEATHS[dying.key];
+    ctx.save();
+    ctx.translate(dying.x, dying.y);
+    anim.draw(ctx, dying, Math.min(1, dying.t / anim.dur), heroSprite);
+    ctx.restore();
+  } else if (state !== "over" && state !== "ad") drawPlayer();
   ctx.restore();
 
   ui.hud.textContent = state === "menu" ? "" : `${depth} m  •  🦪 ${save.pearls}${player.shield ? "  •  🫧" : ""}`;
@@ -548,6 +586,13 @@ function loop(now) {
   last = now;
   time += dt;
   if (state === "play") update(dt);
+  else if (state === "dying") {
+    const anim = DEATHS[dying.key];
+    dying.t += dt;
+    updateWorld(world, dt, scroll, time);
+    anim.step(dying, dt, fx);
+    if (dying.t >= anim.dur + 0.25) finishGameOver();
+  }
   else if (state === "menu") { // idle animation behind the title screen
     scroll += 60 * dt;
     updateWorld(world, dt, scroll, time);
