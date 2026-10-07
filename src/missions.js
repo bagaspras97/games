@@ -23,6 +23,7 @@ export const POOL = [
   { id: "ability", event: "ability", target: 5, reward: 30, text: "Pakai kemampuan khusus karakter 5 kali ⚡" },
   { id: "creature", event: "creature", target: 3, reward: 30, text: "Sapa 3 makhluk langka 📖" },
   { id: "shield", event: "shield_pop", target: 2, reward: 25, text: "Pecahkan 2 gelembung perisai 🫧" },
+  { id: "moment", event: "moment", target: 2, reward: 30, text: "Saksikan 2 momen langka ✨ (paus, lumba-lumba…)" },
   { id: "chars", event: "chars", target: 2, mode: "max", reward: 20, text: "Menyelam dengan 2 karakter berbeda 🐠" },
 ];
 

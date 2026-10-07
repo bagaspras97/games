@@ -27,6 +27,21 @@ Puffy si ikan buntal menyelam makin dalam. **Tap / klik / Spasi**: Puffy **menge
 
 ![zones](docs/zones.png)
 
+## ✨ Momen langka
+Sesekali (sekitar tiap 40–75 detik) terjadi peristiwa besar di latar, sesuai zona. Saksikan sampai selesai untuk **+5 🦪** (ada juga misi "Saksikan 2 momen langka"). Kode: `src/moments.js`, uji dengan `?moment=humpback`.
+
+| Momen | Zona |
+|---|---|
+| 🐬 Kawanan lumba-lumba melompat-lompat | Dangkal |
+| 🌀 Pusaran ribuan ikan kecil (*bait ball*) | Dangkal, Terbuka |
+| 🐋 Paus bungkuk melintas dengan sirip panjang & nyanyian paus | Dangkal, Terbuka |
+| 🐳 Paus sperma menyelam ke kedalaman | Terbuka, Senja |
+| 🦑 Cumi-cumi raksasa dengan tentakel panjang | Senja, Gelap |
+| 🪼 Ubur-ubur raksasa bercahaya naik dari jurang | Gelap |
+| ✨ Gelombang cahaya bioluminesensi | Senja, Gelap |
+
+![moments](docs/moments.png)
+
 ## Animasi kekalahan
 Setiap bahaya punya animasi & suara sendiri sebelum layar Game Over, plus keterangan penyebabnya (`src/deaths.js`):
 

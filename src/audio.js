@@ -103,6 +103,15 @@ export const sfx = {
   rustle() { noise(0.6, 0.25); tone({ type: "sine", from: 500, to: 900, dur: 0.8, vol: 0.08, delay: 0.3 }); },
   abyss() { tone({ type: "sawtooth", from: 220, to: 40, dur: 1.1, vol: 0.2 }); noise(0.25, 0.5); },
   splash() { noise(0.4, 0.5); tone({ type: "sine", from: 400, to: 1400, dur: 0.3, vol: 0.2 }); },
+  // Rare moments
+  whale() { // long, gliding whale-song calls
+    [[180, 320, 0, 1.4], [320, 150, 1.2, 1.6], [220, 420, 2.6, 1.2]].forEach(([a, b, d, len]) =>
+      tone({ type: "sine", from: a, to: b, dur: len, vol: 0.22, delay: d }));
+  },
+  dolphin() { // playful clicks & whistles
+    for (let i = 0; i < 6; i++) tone({ type: "sine", from: 1800 + i * 150, to: 2600, dur: 0.08, vol: 0.12, delay: i * 0.09 });
+    tone({ type: "sine", from: 1400, to: 3000, dur: 0.4, vol: 0.12, delay: 0.6 });
+  },
   revive() {
     [392, 523, 659, 784].forEach((f, i) => tone({ type: "triangle", from: f, dur: 0.12, vol: 0.2, delay: i * 0.08 }));
   },

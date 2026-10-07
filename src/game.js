@@ -11,6 +11,9 @@ import {
 } from "./audio.js";
 import * as fx from "./particles.js";
 import { updateAmbient, drawAmbient } from "./ambient.js";
+import { updateMoments, drawMoment, resetMoments } from "./moments.js";
+
+const MOMENT_REWARD = 5;
 import { DEATHS, deathFor } from "./deaths.js";
 import * as missions from "./missions.js";
 import {
@@ -224,6 +227,7 @@ async function claimMission(i, mult) {
 function startRun(withShield = false) {
   reset(withShield);
   announce(missions.trackCharacter(save, save.char));
+  resetMoments();
   state = "play";
   show(ui.menu, false); show(ui.over, false); show(ui.toast, false);
   fx.clear();
@@ -714,6 +718,7 @@ function draw(dt) {
   ctx.fillRect(-40, -40, W + 80, H + 80);
 
   drawBackground(ctx, scroll, depth, time);
+  drawMoment(ctx, W, H, time);
   drawAmbient(ctx, time, Math.min(1, Math.max(0, (depth - 500) / 1200)));
   drawTerrain(ctx, world, scroll, depth, time, dt, player.x, player.y);
   drawDarkness(ctx, depth, player.x, player.y, hero().light);
@@ -753,6 +758,17 @@ function loop(now) {
   fx.update(dt);
   const swimSpeed = state === "play" ? speed : state === "menu" ? 60 : 0;
   updateAmbient(dt, zoneIndex(depth), W, H, swimSpeed, player.x, player.y);
+  const ev = updateMoments(dt, zoneIndex(depth), state === "play");
+  if (ev && ev.started) {
+    const m = ev.started.def;
+    toast(`✨ <b>Momen langka!</b> ${m.icon} ${m.name}`, 4000);
+    (sfx[m.sound] || sfx.zone)();
+  } else if (ev && ev.ended && state === "play") { // witnessed it to the end
+    save.pearls += MOMENT_REWARD;
+    fx.text(scroll + player.x, player.y - 50, `${ev.ended.def.icon} Saksi momen langka! +${MOMENT_REWARD} 🦪`, "#fff6a8");
+    sfx.pearl();
+    mission("moment");
+  }
   draw(dt);
   if (state === "shop") drawShopPreviews();
   requestAnimationFrame(loop);
