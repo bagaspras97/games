@@ -45,6 +45,14 @@ export function puff(x, y) {
   }
 }
 
+// Dark ink cloud when the octopus jets away.
+export function ink(x, y) {
+  for (let i = 0; i < 22; i++) {
+    const a = Math.random() * Math.PI * 2, v = rand(30, 160);
+    add({ x: x + rand(-10, 10), y: y + rand(-10, 10), vx: Math.cos(a) * v - 120, vy: Math.sin(a) * v, g: 0, life: rand(0.6, 1.1), max: 1.1, size: rand(10, 26), color: "#1a1028", shape: "dot" });
+  }
+}
+
 // Bubble trail behind Puffy (tinted by skin), drifting upward.
 export function trail(x, y, color) {
   if (Math.random() < 0.5) return;

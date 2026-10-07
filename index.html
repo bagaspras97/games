@@ -43,6 +43,11 @@
     .card span { font-size: 13px; opacity: .85; font-weight: 500; }
     .card.equipped { border-color: #7ff0ff; }
     .card.locked { opacity: .45; cursor: not-allowed; }
+    #shop .grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+    .char-card canvas { width: 96px; height: 96px; }
+    .char-card b small { display: block; font-size: 12px; font-weight: 500; opacity: .75; }
+    .char-card .desc { font-size: 12px; font-weight: 500; line-height: 1.35; margin: 0; min-height: 3em; opacity: .9; }
+    .char-card .price { font-size: 14px; font-weight: 700; opacity: 1; }
     #dex .grid { grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); }
     .dex-card span { font-size: 12px; line-height: 1.35; }
     .dex-card.unknown { opacity: .6; }
@@ -67,25 +72,26 @@
     <button id="play">Menyelam!</button>
     <button class="shield-start alt">🫧 Mulai dengan perisai (iklan)</button>
     <div class="row">
-      <button class="open-shop ghost">🎨 Skin</button>
+      <button class="open-shop ghost">🐠 Karakter</button>
       <button class="open-dex ghost">📖 Ensiklopedia</button>
     </div>
   </div>
 
   <div id="over" class="panel hidden">
-    <h1>Aduh, Puffy!</h1>
+    <h1 id="over-title">Aduh!</h1>
     <p>Kedalaman: <b id="final">0</b> m &nbsp; Terbaik: <b id="best">0</b> m &nbsp; 🦪 <b id="pearls">0</b></p>
     <button id="revive" class="alt">▶ Lanjutkan (tonton iklan)</button>
     <button id="retry">Selam lagi</button>
     <button class="shield-start ghost">🫧 Selam lagi + perisai (iklan)</button>
     <div class="row">
-      <button class="open-shop ghost">🎨 Skin</button>
+      <button class="open-shop ghost">🐠 Karakter</button>
       <button class="open-dex ghost">📖 Ensiklopedia</button>
     </div>
   </div>
 
   <div id="shop" class="panel hidden">
-    <h2>Toko Skin Puffy</h2>
+    <h2>🐠 Karakter Laut</h2>
+    <p>Setiap karakter punya cara mengapung & tenggelam sendiri.</p>
     <p>🦪 <b id="shop-pearls">0</b></p>
     <div id="shop-grid" class="grid"></div>
     <button id="free-pearls" class="alt"></button>

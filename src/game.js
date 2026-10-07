@@ -2,7 +2,7 @@
 // Tap / click / space: Puffy inflates (floats up) or deflates (sinks down).
 // Avoid hazards, collect pearls, grab shield bubbles, discover rare creatures.
 import { createPlatform } from "./sdk/adapter.js";
-import { SKINS, getSkin } from "./skins.js";
+import { CHARACTERS, getCharacter } from "./characters.js";
 import { CREATURES, getCreature } from "./creatures.js";
 import {
   sfx, unlock, toggleMute, isMuted, setAdPlaying, startMusic, stopMusic, setTempo, setMuffle,
@@ -29,25 +29,25 @@ const ui = {
 const INTERSTITIAL_EVERY = 3;  // runs between mid-game ads
 const MIN_AD_GAP_MS = 60000;   // never show interstitials more often than this
 const FREE_PEARLS = 25;        // reward for watching an ad in the shop
-const GRAVITY = 2000;          // water: a bit softer than air
-const MAX_FALL = 760;
-const SIZE_PUFFED = 56, SIZE_SLIM = 42;
 const CLIMB = 48;              // step height Puffy swims over automatically
 // Dev helper: ?start=1000 begins the dive at 1000 m to test deeper zones.
 const START_M = Number(new URLSearchParams(location.search).get("start")) || 0;
 
 let platform;
-let save = { best: 0, pearls: 0, skin: "classic", owned: ["classic"], dex: [] };
+let save = { best: 0, pearls: 0, char: "puffy", owned: ["puffy"], dex: [] };
 let state = "menu";            // menu | play | over | ad | shop | dex
 let panelReturn = null;        // panel to show again when shop/dex closes
 let runs = 0, lastAdAt = 0, revived = false;
 let player, world, scroll, speed, depth, last, time = 0, zone = 0;
 let shake = 0;
+let shopCanvases = [];         // animated character previews in the shop
+const hero = () => getCharacter(save.char);
 
 function reset(withShield = false) {
   player = {
-    x: 260, y: H - 140, vy: 0, puffed: false, gravity: 1,
+    x: 260, y: H - 140, vy: 0, up: false, gravity: 1, dir: 1,
     shield: withShield, invuln: 0, mood: "normal", moodT: 0, tilt: 0,
+    pulse: 0, flash: 0, near: 0,
   };
   scroll = START_M * PX_PER_M;
   world = createWorld(save.dex, scroll);
@@ -56,10 +56,7 @@ function reset(withShield = false) {
   revived = false;
 }
 
-const size = () => (player.puffed ? SIZE_PUFFED : SIZE_SLIM);
-const halfH = () => (player.puffed ? SIZE_PUFFED * 0.5 : SIZE_SLIM * 0.34);
-const halfW = () => size() * 0.5;
-const hitR = () => (player.puffed ? SIZE_PUFFED * 0.44 : SIZE_SLIM * 0.36);
+const box = () => hero().box(player.up);
 
 function resize() {
   const scale = Math.min(innerWidth / W, innerHeight / H);
@@ -108,12 +105,13 @@ function gameOver(cause) {
     addShake(22);
     vibrate([60, 40, 90]);
     setMood("dead", 99);
-    fx.explode(scroll + player.x, player.y, [getSkin(save.skin).color, "#ffffff", "#ffb3c7"]);
+    fx.explode(scroll + player.x, player.y, [hero().color, "#ffffff", "#ffb3c7"]);
   }
   platform.gameplayStop();
   runs++;
   save.best = Math.max(save.best, depth);
   platform.save(save);
+  $("over-title").textContent = `Aduh, ${hero().name}!`;
   ui.final.textContent = depth;
   ui.best.textContent = save.best;
   ui.pearls.textContent = save.pearls;
@@ -164,8 +162,8 @@ async function revive() {
         seg.ceil = seg.ceil ?? 90;
       }
     }
-    player.puffed = false; player.gravity = 1; player.vy = 0;
-    player.y = surfaceUnder(world, wx - 30, wx + 30).floor - halfH();
+    player.up = false; player.gravity = 1; player.dir = 1; player.vy = 0;
+    player.y = surfaceUnder(world, wx - 30, wx + 30).floor - box().hh;
     player.invuln = 1.5;
     setMood("happy", 1);
     state = "play";
@@ -197,33 +195,47 @@ function closePanel(panel) {
 function renderShop() {
   ui.shopPearls.textContent = save.pearls;
   ui.shopGrid.innerHTML = "";
-  for (const skin of SKINS) {
-    const owned = save.owned.includes(skin.id);
-    const equipped = save.skin === skin.id;
+  shopCanvases = [];
+  for (const ch of CHARACTERS) {
+    const owned = save.owned.includes(ch.id);
+    const equipped = save.char === ch.id;
     const card = document.createElement("button");
-    card.className = "card" + (equipped ? " equipped" : "");
+    card.className = "card char-card" + (equipped ? " equipped" : "");
     const c = document.createElement("canvas");
-    c.width = c.height = 96;
-    const cx = c.getContext("2d");
-    cx.translate(50, 52);
-    skin.draw(cx, 52, true, "normal");
-    const label = equipped ? "Dipakai" : owned ? "Pakai" : `🦪 ${skin.price}`;
+    c.width = c.height = 120;
+    shopCanvases.push({ c, ch });
+    const label = equipped ? "Dipakai" : owned ? "Pakai" : `🦪 ${ch.price}`;
     card.append(c);
-    card.insertAdjacentHTML("beforeend", `<b>${skin.name}</b><span>${label}</span>`);
-    if (!owned && save.pearls < skin.price) card.classList.add("locked");
-    card.onclick = () => selectSkin(skin);
+    card.insertAdjacentHTML("beforeend",
+      `<b>${ch.name} <small>${ch.species}</small></b><p class="desc">${ch.desc}</p><span class="price">${label}</span>`);
+    if (!owned && save.pearls < ch.price) card.classList.add("locked");
+    card.onclick = () => selectCharacter(ch);
     ui.shopGrid.append(card);
   }
 }
 
-function selectSkin(skin) {
-  if (!save.owned.includes(skin.id)) {
-    if (save.pearls < skin.price) { sfx.denied(); return; }
-    save.pearls -= skin.price;
-    save.owned.push(skin.id);
+// Shop previews loop each character's "float ↔ sink" animation.
+function drawShopPreviews() {
+  for (const { c, ch } of shopCanvases) {
+    const cx = c.getContext("2d");
+    cx.clearRect(0, 0, c.width, c.height);
+    const phase = Math.floor(time / 1.4) % 2 === 0;
+    const vy = ch.mode === "glide" ? (phase ? -300 : 300) : Math.sin(time * 2) * 400;
+    cx.save();
+    cx.translate(60, 64);
+    ch.draw(cx, { t: time, up: phase, vy, mood: "normal", pulse: Math.max(0, 1 - (time % 1.4) * 2), flash: Math.max(0, 1 - (time % 1.4) * 2), near: phase ? 0.6 : 0 });
+    cx.restore();
+  }
+}
+
+function selectCharacter(ch) {
+  if (!save.owned.includes(ch.id)) {
+    if (save.pearls < ch.price) { sfx.denied(); return; }
+    save.pearls -= ch.price;
+    save.owned.push(ch.id);
     sfx.buy();
   } else sfx.click();
-  save.skin = skin.id;
+  save.char = ch.id;
   platform.save(save);
   renderShop();
 }
@@ -267,12 +279,28 @@ function renderDex() {
 // ---------- Gameplay ----------
 function flip() {
   if (state !== "play") return;
-  player.puffed = !player.puffed;
-  player.gravity = player.puffed ? -1 : 1;
-  player.vy *= 0.2;
-  sfx.flip(player.puffed);
+  const ch = hero();
+  if (ch.mode === "pulse") {
+    player.vy = -ch.impulse;
+    player.pulse = 1;
+    sfx.flip(true);
+  } else if (ch.mode === "glide") {
+    player.dir *= -1;
+    player.up = player.dir < 0;
+    sfx.flip(player.up);
+  } else {
+    player.up = !player.up;
+    player.gravity = player.up ? -1 : 1;
+    if (ch.jet) { // octopus: instant ink jet + brief invulnerability
+      player.vy = player.gravity * ch.max * 0.7;
+      player.invuln = Math.max(player.invuln, 0.25);
+      fx.ink(scroll + player.x, player.y);
+    } else player.vy *= 0.2;
+    sfx.flip(player.up);
+  }
+  player.flash = 1;
   setMood("surprised", 0.25);
-  fx.puff(scroll + player.x, player.y);
+  if (!ch.jet) fx.puff(scroll + player.x, player.y);
 }
 
 function popShield() {
@@ -303,11 +331,18 @@ function update(dt) {
   if (player.invuln > 0) player.invuln -= dt;
   if (player.moodT > 0 && (player.moodT -= dt) <= 0) player.mood = "normal";
 
-  const hh = halfH(), hw = halfW();
+  const ch = hero();
+  const { hw, hh, r } = box();
   const wx = scroll + player.x;
-  player.vy = Math.max(-MAX_FALL, Math.min(MAX_FALL, player.vy + GRAVITY * player.gravity * dt));
+  if (ch.mode === "glide") player.vy = player.dir * ch.speed;
+  else {
+    const g = ch.mode === "pulse" ? ch.g : ch.g * player.gravity;
+    player.vy = Math.max(-ch.max, Math.min(ch.max, player.vy + g * dt));
+  }
   player.y += player.vy * dt;
-  player.tilt = player.vy / MAX_FALL * 0.35;
+  player.tilt = ch.mode === "toggle" && ch.id === "puffy" ? player.vy / ch.max * 0.35 : 0;
+  player.pulse = Math.max(0, player.pulse - dt * 3);
+  player.flash = Math.max(0, player.flash - dt * 2);
 
   // Swimming into the side of a wall (e.g. the far edge of a trench).
   const front = surfaceUnder(world, wx + hw - 4, wx + hw);
@@ -331,12 +366,23 @@ function update(dt) {
     player.vy = 0;
   }
 
-  const r = hitR();
   for (const h of world.hazards) {
     if (h.gone || !hitsHazard(h, wx, player.y, r)) continue;
     if (player.invuln > 0) continue;
     if (player.shield) { popShield(); h.gone = true; continue; }
     return gameOver("hazard");
+  }
+
+  // Lumi's lure pulls nearby pearls in; its jaw opens as they approach.
+  player.near = 0;
+  for (const p of world.pickups) {
+    if (p.kind !== "pearl" || p.taken) continue;
+    const d = Math.hypot(p.x - wx, p.y - player.y);
+    if (ch.magnet && d < ch.magnet) {
+      p.x += (wx - p.x) * Math.min(1, dt * 6);
+      p.y += (player.y - p.y) * Math.min(1, dt * 6);
+    }
+    if (d < 160) player.near = Math.max(player.near, 1 - d / 160);
   }
 
   for (const p of world.pickups) {
@@ -368,19 +414,19 @@ function update(dt) {
     }
   }
 
-  fx.trail(wx - hw, player.y, getSkin(save.skin).color);
+  fx.trail(wx - hw, player.y, ch.color);
 }
 
 function drawPlayer() {
-  const skin = getSkin(save.skin);
+  const ch = hero();
   ctx.save();
   ctx.translate(player.x, player.y);
   ctx.rotate(player.tilt);
   if (player.invuln > 0 && Math.floor(time * 12) % 2) ctx.globalAlpha = 0.4;
-  skin.draw(ctx, size(), player.puffed, player.mood);
+  ch.draw(ctx, { t: time, up: player.up, vy: player.vy, mood: player.mood, pulse: player.pulse, flash: player.flash, near: player.near });
   ctx.restore();
   if (player.shield) {
-    const r = size() * 0.8 + Math.sin(time * 5) * 2;
+    const r = box().r * 1.9 + Math.sin(time * 5) * 2;
     ctx.strokeStyle = "rgba(168,244,255,0.9)"; ctx.lineWidth = 3;
     ctx.fillStyle = "rgba(168,244,255,0.15)";
     ctx.beginPath(); ctx.arc(player.x, player.y, r, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
@@ -398,7 +444,7 @@ function draw(dt) {
 
   drawBackground(ctx, scroll, depth, time);
   drawTerrain(ctx, world, scroll, depth, time);
-  drawDarkness(ctx, depth, player.x, player.y);
+  drawDarkness(ctx, depth, player.x, player.y, hero().light);
   drawHazards(ctx, world, scroll, time);
   drawPickups(ctx, world, scroll, time, getCreature);
   fx.draw(ctx, scroll);
@@ -417,9 +463,11 @@ function loop(now) {
     scroll += 60 * dt;
     updateWorld(world, dt, scroll, time);
     player.y = H - 140 + Math.sin(time * 2) * 6;
+    player.vy = Math.cos(time * 2) * 12;
   }
   fx.update(dt);
   draw(dt);
+  if (state === "shop") drawShopPreviews();
   requestAnimationFrame(loop);
 }
 
@@ -433,10 +481,11 @@ async function boot() {
     delete loaded.coins;
   }
   save = Object.assign(save, loaded);
-  if (!Array.isArray(save.owned)) save.owned = ["classic"];
-  save.owned = save.owned.filter((id) => SKINS.some((s) => s.id === id));
-  if (!save.owned.includes("classic")) save.owned.unshift("classic");
-  if (!save.owned.includes(save.skin)) save.skin = "classic";
+  delete save.skin; // skins were replaced by characters
+  if (!Array.isArray(save.owned)) save.owned = [];
+  save.owned = save.owned.filter((id) => CHARACTERS.some((c) => c.id === id));
+  if (!save.owned.includes("puffy")) save.owned.unshift("puffy");
+  if (!save.owned.includes(save.char)) save.char = "puffy";
   if (!Array.isArray(save.dex)) save.dex = [];
   reset();
 

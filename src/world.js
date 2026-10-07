@@ -332,10 +332,11 @@ function drawDeco(ctx, x, y, d, t) {
 }
 
 // Darken the scene with depth, leaving a pool of light around Puffy.
-export function drawDarkness(ctx, depth, px, py) {
-  const a = clamp((depth - 500) / 1200, 0, 0.7);
+export function drawDarkness(ctx, depth, px, py, light = 0) {
+  const a = clamp((depth - 500) / 1200, 0, 0.7) * (light ? 0.75 : 1);
   if (a <= 0) return;
-  const g = ctx.createRadialGradient(px, py, 60, px, py, 520);
+  // light > 0: a lantern (anglerfish) gives a bigger, brighter pool of light
+  const g = ctx.createRadialGradient(px, py, 60 + light * 0.4, px, py, 520 + light);
   g.addColorStop(0, "rgba(0,0,10,0)");
   g.addColorStop(1, `rgba(0,0,10,${a})`);
   ctx.fillStyle = g;
