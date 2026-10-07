@@ -1,6 +1,7 @@
 // Background sea life: fish, schools, turtles, rays, glowing deep-sea creatures.
 // They live in screen space on parallax layers (smaller = farther), swim with
-// wiggling tails, and dart away when the player swims close.
+// wiggling tails. Kept few, small and faint so they never compete with the
+// things that matter for play (hazards, pearls, the player).
 
 const TAU = Math.PI * 2;
 const rand = (a, b) => a + Math.random() * (b - a);
@@ -13,7 +14,7 @@ const BY_ZONE = [
   ["hatchet", "hatchet", "lantern", "lantern", "squid", "school", "ray"],
   ["lantern", "lantern", "lantern", "siphono", "squid", "hatchet", "bigangler"],
 ];
-const WANT = [11, 10, 9, 9]; // target number of creatures on screen per zone
+const WANT = [4, 4, 4, 4]; // target number of creatures on screen per zone
 
 let list = [];
 
@@ -21,11 +22,11 @@ export function clearAmbient() { list = []; }
 
 function spawn(zone, W, H, anywhere) {
   const kind = pick(BY_ZONE[zone]);
-  const layer = rand(0.45, 0.95);                 // 1 = close to the play layer
+  const layer = rand(0.35, 0.7);                  // smaller = farther away
   const dir = Math.random() < 0.8 ? -1 : 1;        // most swim against the scroll
   const y = rand(130, H - 150);
   const x = anywhere ? rand(0, W) : dir < 0 ? W + 80 : -80;
-  const base = { kind, layer, dir, x, y, baseY: y, phase: rand(0, TAU), flee: 0, vx: 0, vy: 0 };
+  const base = { kind, layer, dir, x, y, baseY: y, phase: rand(0, TAU) };
   if (kind === "school") { // a school = several small fish moving together
     const n = 6 + Math.floor(Math.random() * 6), color = pick(["#c9e4ff", "#ffe7a0", "#b5f0d8"]);
     for (let i = 0; i < n; i++) {
@@ -38,27 +39,13 @@ function spawn(zone, W, H, anywhere) {
   list.push({ ...base, speed: speeds[kind], color: colors[kind] });
 }
 
-export function updateAmbient(dt, zone, W, H, scrollSpeed, px, py) {
-  if (list.length === 0) for (let i = 0; i < WANT[zone]; i++) spawn(zone, W, H, true);
+export function updateAmbient(dt, zone, W, H, scrollSpeed) {
+  if (list.length === 0) for (let i = 0; i < WANT[zone] / 2; i++) spawn(zone, W, H, true);
   else if (list.length < WANT[zone] && Math.random() < dt * 1.2) spawn(zone, W, H, false);
 
   for (const f of list) {
-    // react: dart away from the player when close (closer layers react more)
-    const dx = f.x - px, dy = f.y - py, d = Math.hypot(dx, dy);
-    if (d < 170 * f.layer) {
-      f.flee = 1;
-      f.vx += (dx / (d || 1)) * 900 * dt;
-      f.vy += (dy / (d || 1)) * 700 * dt;
-      if (Math.sign(dx) !== 0) f.dir = Math.sign(dx);
-    }
-    f.flee = Math.max(0, f.flee - dt * 0.8);
-    f.vx *= 1 - Math.min(1, dt * 1.5);
-    f.vy *= 1 - Math.min(1, dt * 1.5);
-    const swim = f.dir * f.speed * (1 + f.flee * 2.5);
-    f.x += (swim + f.vx - scrollSpeed * f.layer * 0.6) * dt;
-    f.baseY += f.vy * dt;
+    f.x += (f.dir * f.speed - scrollSpeed * f.layer * 0.6) * dt;
     f.y = f.baseY + Math.sin(f.phase + f.x * 0.01) * 8;
-    f.baseY = Math.max(110, Math.min(H - 120, f.baseY));
   }
   list = list.filter((f) => f.x > -200 && f.x < W + 200);
 }
@@ -71,8 +58,8 @@ export function drawAmbient(ctx, t, dark) {
     ctx.translate(f.x, f.y);
     const s = f.layer * 1.35;
     ctx.scale(s * f.dir * -1, s); // art faces left; flip when swimming right
-    ctx.globalAlpha = 0.45 + f.layer * 0.45;
-    const wag = Math.sin(t * (10 + f.flee * 18) + f.phase); // tail beat (faster when fleeing)
+    ctx.globalAlpha = 0.25 + f.layer * 0.35;
+    const wag = Math.sin(t * 10 + f.phase); // tail beat
     DRAW[f.kind](ctx, f, t, wag, dark);
     ctx.restore();
   }

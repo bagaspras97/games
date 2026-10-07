@@ -757,7 +757,7 @@ function loop(now) {
   }
   fx.update(dt);
   const swimSpeed = state === "play" ? speed : state === "menu" ? 60 : 0;
-  updateAmbient(dt, zoneIndex(depth), W, H, swimSpeed, player.x, player.y);
+  updateAmbient(dt, zoneIndex(depth), W, H, swimSpeed);
   const ev = updateMoments(dt, zoneIndex(depth), state === "play");
   if (ev && ev.started) {
     const m = ev.started.def;

@@ -41,7 +41,9 @@ export function createWorld(dex = [], startX = 0) {
     segs: [], hazards: [], pickups: [], end: startX,
     floor: BASE_FLOOR, ceil: BASE_CEIL, lastPit: true, dex,
   };
-  addSeg(world, 1400, BASE_FLOOR, BASE_CEIL); // flat, safe start
+  const start = addSeg(world, 1400, BASE_FLOOR, BASE_CEIL); // flat, safe, calm start
+  start.deco = start.deco.filter((_, i) => i % 2 === 0);
+  start.cdeco = [];
   return world;
 }
 
@@ -238,7 +240,7 @@ export function drawBackground(ctx, scroll, depth, t) {
   drawFarScenery(ctx, scroll, depth);
 
   // kelp forest silhouette (parallax)
-  ctx.strokeStyle = "rgba(0,30,40,0.35)";
+  ctx.strokeStyle = "rgba(0,30,40,0.2)";
   ctx.lineWidth = 10;
   ctx.lineCap = "round";
   for (let i = 0; i < 12; i++) {
@@ -314,7 +316,9 @@ export function drawTerrain(ctx, world, scroll, depth, t, dt = 0, px = -999, py 
       ctx.fillStyle = g;
       ctx.fillRect(x, s.floor, w, H - s.floor);
       drawCaustics(ctx, x, s.floor, w, t, caustic);
+      ctx.globalAlpha = 0.7; // decoration stays in the background, hazards & pearls pop
       for (const d of s.deco) drawFloorDeco(ctx, x + d.dx, s.floor, d, t, dt, px, py, dark);
+      ctx.globalAlpha = 1;
     }
     if (s.ceil !== null) {
       const g = ctx.createLinearGradient(0, 0, 0, s.ceil);
@@ -323,7 +327,9 @@ export function drawTerrain(ctx, world, scroll, depth, t, dt = 0, px = -999, py 
       ctx.fillRect(x, 0, w, s.ceil);
       ctx.fillStyle = "rgba(255,255,255,0.35)";
       ctx.fillRect(x, s.ceil - 4, w, 4);
+      ctx.globalAlpha = 0.7;
       for (const d of s.cdeco) drawCeilDeco(ctx, x + d.dx, s.ceil, d, t);
+      ctx.globalAlpha = 1;
     }
 
     if (s.pit === "bottom") {

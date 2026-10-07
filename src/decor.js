@@ -23,7 +23,7 @@ const CORAL_COLORS = ["#ff7aa2", "#ff9f5a", "#c58bff", "#ffd45a", "#5fd3c8", "#f
 
 export function makeFloorDeco(zone, w) {
   const out = [];
-  for (let x = 24; x < w - 16; x += rand(46, 110)) {
+  for (let x = 40; x < w - 30; x += rand(120, 240)) {
     out.push({
       dx: x, kind: pick(FLOOR_BY_ZONE[zone]), h: rand(0.8, 1.3),
       color: pick(CORAL_COLORS), phase: rand(0, TAU), open: 1, hide: 0,
@@ -34,7 +34,7 @@ export function makeFloorDeco(zone, w) {
 
 export function makeCeilDeco(zone, w) {
   const out = [];
-  for (let x = 30; x < w - 20; x += rand(70, 150)) {
+  for (let x = 40; x < w - 30; x += rand(170, 340)) {
     out.push({ dx: x, kind: pick(CEIL_BY_ZONE[zone]), h: rand(0.7, 1.3), phase: rand(0, TAU), drop: rand(0, 1) });
   }
   return out;
