@@ -4,7 +4,7 @@
 // longer, harder "Ujian" (exam) that closes the zone.
 //
 // Stars: ⭐ reach the finish, ⭐⭐ also collect ≥ 70% of the pearls,
-//        ⭐⭐⭐ also finish without getting hit (no shield pop, no revive).
+//        ⭐⭐⭐ also finish without a knock-out (no "Lanjutkan"; a popped shield is fine).
 
 import { ZONES, PX_PER_M } from "./world.js";
 

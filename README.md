@@ -23,7 +23,7 @@ Puffy si ikan buntal menyelam makin dalam. **Tap / klik / Spasi**: Puffy **menge
 Selain **♾️ Mode Bebas** (endless), ada **20 level** (5 per zona) dengan garis **FINISH** dan progress bar.
 - Setiap level punya **susunan tetap** (seed), jadi bisa dihafal dan diulang untuk bintang lebih banyak.
 - Level ke-5 tiap zona adalah **Ujian** (lebih panjang & sulit, tombol ungu).
-- ★ sampai finish · ★★ + kumpulkan ≥70% mutiara · ★★★ + tanpa terkena bahaya (tanpa perisai pecah/lanjutkan).
+- ★ sampai finish · ★★ + kumpulkan ≥70% mutiara · ★★★ + tanpa kalah, yaitu tidak memakai "Lanjutkan" (perisai yang pecah tidak mengurangi bintang).
 - Hadiah mutiara untuk setiap bintang baru (10 + 2×nomor level). Level berikutnya terbuka setelah level sebelumnya selesai.
 - **Bos di setiap level Ujian** (`src/bosses.js`): tidak bisa dilawan, tujuannya **bertahan sampai 🏁**. Setiap serangan menyasar **lajur atas atau bawah**; lajur itu **berkedip merah** dulu (~1 detik) → pindah ke sisi lain!
 

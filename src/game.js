@@ -313,7 +313,9 @@ function levelComplete() {
   platform.gameplayStop();
   runs++;
   const pearlOk = world.pearlTotal === 0 || lvlPearls >= Math.ceil(world.pearlTotal * STAR_PEARL_RATIO);
-  const clean = !player.hit && !revived;
+  // ★★★ = finish without having to continue after a knock-out. A shield bubble
+  // that pops along the way is fine — it saved you, it doesn't cost a star.
+  const clean = !revived;
   const stars = 1 + (pearlOk ? 1 : 0) + (pearlOk && clean ? 1 : 0);
   if (!save.levels) save.levels = {};
   const before = save.levels[lvl.n] || 0;
@@ -332,7 +334,7 @@ function levelComplete() {
   $("done-stars").innerHTML = [1, 2, 3].map((i) => `<span class="star ${i <= stars ? "on" : ""}" style="animation-delay:${i * 0.25}s">★</span>`).join("");
   $("done-info").innerHTML = `
     <div>${pearlOk ? "✅" : "▫️"} Mutiara ${lvlPearls} / ${world.pearlTotal} (butuh ${Math.round(STAR_PEARL_RATIO * 100)}%)</div>
-    <div>${clean ? "✅" : "▫️"} Tanpa terkena bahaya</div>
+    <div>${clean ? "✅" : "▫️"} Tanpa kalah (tanpa "Lanjutkan")</div>
     ${boss ? `<div>👑 Berhasil lolos dari ${boss.def.icon} ${boss.def.name}!</div>` : ""}
     <div class="done-reward">${reward ? `+${reward} 🦪 untuk ${gained} bintang baru!` : "Coba raih bintang yang belum didapat!"}</div>`;
   const next = LEVELS[lvl.n];
@@ -689,7 +691,6 @@ function useAbility(h) {
 }
 
 function popShield() {
-  player.hit = true;
   mission("shield_pop");
   player.shield = false;
   player.invuln = 1.2;
