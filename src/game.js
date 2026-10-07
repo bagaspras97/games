@@ -10,6 +10,7 @@ import {
   sfx, unlock, toggleMute, isMuted, setAdPlaying, startMusic, stopMusic, setTempo, setMuffle,
 } from "./audio.js";
 import * as fx from "./particles.js";
+import { updateAmbient, drawAmbient } from "./ambient.js";
 import { DEATHS, deathFor } from "./deaths.js";
 import * as missions from "./missions.js";
 import {
@@ -713,7 +714,8 @@ function draw(dt) {
   ctx.fillRect(-40, -40, W + 80, H + 80);
 
   drawBackground(ctx, scroll, depth, time);
-  drawTerrain(ctx, world, scroll, depth, time);
+  drawAmbient(ctx, time, Math.min(1, Math.max(0, (depth - 500) / 1200)));
+  drawTerrain(ctx, world, scroll, depth, time, dt, player.x, player.y);
   drawDarkness(ctx, depth, player.x, player.y, hero().light);
   drawHazards(ctx, world, scroll, time);
   drawPickups(ctx, world, scroll, time, getCreature);
@@ -749,6 +751,8 @@ function loop(now) {
     player.vy = Math.cos(time * 2) * 12;
   }
   fx.update(dt);
+  const swimSpeed = state === "play" ? speed : state === "menu" ? 60 : 0;
+  updateAmbient(dt, zoneIndex(depth), W, H, swimSpeed, player.x, player.y);
   draw(dt);
   if (state === "shop") drawShopPreviews();
   requestAnimationFrame(loop);

@@ -19,6 +19,14 @@ Puffy si ikan buntal menyelam makin dalam. **Tap / klik / Spasi**: Puffy **menge
 
 ![deep](docs/deep.png)
 
+## Latar laut yang hidup
+- **Ikan latar** (`src/ambient.js`) per zona di beberapa lapisan parallax: ikan tang, kepe-kepe, angelfish, wrasse, kawanan sarden, penyu, pari, barakuda, ikan kapak perak, ikan lentera bercahaya, cumi, sifonofor bercahaya, dan siluet anglerfish raksasa. Ekor mengibas, dan mereka **kabur** saat Puffy mendekat.
+- **Dasar laut** (`src/decor.js`): kelp bergoyang, lamun, karang bercabang dengan polip berdenyut, karang otak, kipas laut, anemon (dengan ikan badut yang **bersembunyi** saat Puffy lewat), bintang laut, kima yang **menutup** saat didekati, spons, **cacing tabung yang masuk ke tabungnya**, lili laut, jamur bercahaya, dan cerobong hidrotermal berasap.
+- **Langit-langit**: es runcing & tetesan air (dangkal), teritip yang menjulurkan kaki, stalaktit, dan benang cacing bercahaya (dalam).
+- **Pemandangan jauh**: punggung terumbu, siluet kapal karam, dan pantulan cahaya (*caustics*) di pasir perairan dangkal.
+
+![zones](docs/zones.png)
+
 ## Animasi kekalahan
 Setiap bahaya punya animasi & suara sendiri sebelum layar Game Over, plus keterangan penyebabnya (`src/deaths.js`):
 

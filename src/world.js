@@ -3,6 +3,7 @@
 // All x values are world coordinates; the camera scrolls by `scroll`.
 
 import { CREATURES } from "./creatures.js";
+import { makeFloorDeco, makeCeilDeco, drawFloorDeco, drawCeilDeco, drawCaustics } from "./decor.js";
 
 export const W = 1280, H = 720;
 const BASE_FLOOR = H - 90, BASE_CEIL = 90;
@@ -45,9 +46,8 @@ export function createWorld(dex = [], startX = 0) {
 }
 
 function addSeg(world, w, floor, ceil) {
-  const deco = [];
-  for (let x = 30; x < w - 20; x += rand(60, 140)) deco.push({ dx: x, kind: pick(["weed", "weed", "coral", "rock", "shell"]), h: rand(18, 42) });
-  const seg = { x: world.end, w, floor, ceil, deco };
+  const zone = zoneIndex(world.end / PX_PER_M);
+  const seg = { x: world.end, w, floor, ceil, deco: makeFloorDeco(zone, w), cdeco: makeCeilDeco(zone, w) };
   world.segs.push(seg);
   world.end += w;
   return seg;
@@ -234,14 +234,8 @@ export function drawBackground(ctx, scroll, depth, t) {
     }
   }
 
-  // far fish school silhouettes
-  ctx.fillStyle = `rgba(0,20,50,${0.25})`;
-  for (let i = 0; i < 9; i++) {
-    const x = ((i * 150 - scroll * 0.12 - t * 25) % (W + 300) + W + 300) % (W + 300) - 150;
-    const y = 250 + Math.sin(i * 1.7) * 80 + Math.sin(t + i) * 6;
-    ctx.beginPath(); ctx.ellipse(x, y, 14, 6, 0, 0, Math.PI * 2); ctx.fill();
-    ctx.beginPath(); ctx.moveTo(x + 12, y); ctx.lineTo(x + 22, y - 6); ctx.lineTo(x + 22, y + 6); ctx.fill();
-  }
+  // distant reef mounds & the odd shipwreck (far parallax)
+  drawFarScenery(ctx, scroll, depth);
 
   // kelp forest silhouette (parallax)
   ctx.strokeStyle = "rgba(0,30,40,0.35)";
@@ -276,8 +270,37 @@ export function drawBackground(ctx, scroll, depth, t) {
   }
 }
 
+function drawFarScenery(ctx, scroll, depth) {
+  const a = clamp(1 - depth / 1200, 0.15, 1);
+  // rolling reef mounds with coral bumps
+  ctx.fillStyle = `rgba(10,50,90,${0.35 * a})`;
+  ctx.beginPath(); ctx.moveTo(0, H);
+  for (let x = 0; x <= W; x += 20) {
+    const wx = x + scroll * 0.18;
+    ctx.lineTo(x, H - 150 - Math.sin(wx * 0.004) * 40 - Math.abs(Math.sin(wx * 0.03)) * 14);
+  }
+  ctx.lineTo(W, H); ctx.fill();
+  // shipwreck every ~5000 px of far-layer distance
+  const span = 5000, off = (scroll * 0.18) % span;
+  const sx = W + 300 - off;
+  if (sx > -400 && sx < W + 400 && depth > 150) {
+    ctx.save();
+    ctx.translate(sx, H - 170);
+    ctx.rotate(-0.12);
+    ctx.fillStyle = `rgba(5,25,50,${0.55 * a})`;
+    ctx.beginPath(); ctx.moveTo(-160, 0); ctx.lineTo(150, 0); ctx.lineTo(120, 50); ctx.lineTo(-130, 50); ctx.fill();
+    ctx.fillRect(-40, -110, 10, 110); ctx.fillRect(40, -80, 8, 80);           // masts
+    ctx.fillRect(-90, -30, 70, 30);                                         // cabin
+    ctx.beginPath(); ctx.moveTo(-35, -105); ctx.lineTo(10, -60); ctx.lineTo(-35, -60); ctx.fill(); // torn sail
+    ctx.restore();
+  }
+}
+
 // ---------- Terrain ----------
-export function drawTerrain(ctx, world, scroll, depth, t) {
+// dt, px, py: frame time and player screen position, so decorations can react.
+export function drawTerrain(ctx, world, scroll, depth, t, dt = 0, px = -999, py = -999) {
+  const dark = clamp((depth - 500) / 1200, 0, 1);
+  const caustic = clamp(1 - depth / 400, 0, 1) * 0.18;
   const sand = byDepth(SAND, depth), sandDark = byDepth(SAND_DARK, depth);
   const ice = byDepth(ICE, depth), iceDark = byDepth(ICE_DARK, depth);
 
@@ -290,7 +313,8 @@ export function drawTerrain(ctx, world, scroll, depth, t) {
       g.addColorStop(0, sand); g.addColorStop(1, sandDark);
       ctx.fillStyle = g;
       ctx.fillRect(x, s.floor, w, H - s.floor);
-      for (const d of s.deco) drawDeco(ctx, x + d.dx, s.floor, d, t);
+      drawCaustics(ctx, x, s.floor, w, t, caustic);
+      for (const d of s.deco) drawFloorDeco(ctx, x + d.dx, s.floor, d, t, dt, px, py, dark);
     }
     if (s.ceil !== null) {
       const g = ctx.createLinearGradient(0, 0, 0, s.ceil);
@@ -299,6 +323,7 @@ export function drawTerrain(ctx, world, scroll, depth, t) {
       ctx.fillRect(x, 0, w, s.ceil);
       ctx.fillStyle = "rgba(255,255,255,0.35)";
       ctx.fillRect(x, s.ceil - 4, w, 4);
+      for (const d of s.cdeco) drawCeilDeco(ctx, x + d.dx, s.ceil, d, t);
     }
 
     if (s.pit === "bottom") {
@@ -318,28 +343,6 @@ export function drawTerrain(ctx, world, scroll, depth, t) {
       ctx.fillStyle = g;
       ctx.fillRect(x, 0, w, 220);
     }
-  }
-}
-
-function drawDeco(ctx, x, y, d, t) {
-  if (d.kind === "weed") {
-    ctx.strokeStyle = "#3fae6a"; ctx.lineWidth = 4; ctx.lineCap = "round";
-    ctx.beginPath(); ctx.moveTo(x, y);
-    ctx.quadraticCurveTo(x + Math.sin(t * 2 + x) * 8, y - d.h / 2, x + Math.sin(t * 2 + x + 1) * 10, y - d.h);
-    ctx.stroke();
-  } else if (d.kind === "coral") {
-    ctx.strokeStyle = "#ff8fa8"; ctx.lineWidth = 5; ctx.lineCap = "round";
-    ctx.beginPath();
-    ctx.moveTo(x, y); ctx.lineTo(x, y - d.h * 0.7);
-    ctx.moveTo(x, y - d.h * 0.35); ctx.lineTo(x - 9, y - d.h * 0.65);
-    ctx.moveTo(x, y - d.h * 0.45); ctx.lineTo(x + 9, y - d.h * 0.8);
-    ctx.stroke();
-  } else if (d.kind === "rock") {
-    ctx.fillStyle = "rgba(60,60,80,0.45)";
-    ctx.beginPath(); ctx.ellipse(x, y, 14, 8, 0, Math.PI, 0); ctx.fill();
-  } else {
-    ctx.fillStyle = "#ffd6c9";
-    ctx.beginPath(); ctx.arc(x, y - 4, 6, Math.PI, 0); ctx.fill();
   }
 }
 
