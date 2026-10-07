@@ -38,6 +38,18 @@ Setiap karakter punya cara mengapung & tenggelam sendiri. Makin mahal, makin uni
 | 🦈 Mantra (Pari Manta) | 🦪 220 | Meluncur zig-zag kecepatan tetap, bisa belok di tengah | Sayap mengepak, ekor mencambuk, tubuh miring |
 | 🎣 Lumi (Ikan Sungut Ganda) | 🦪 320 | Seperti Puffy + lentera menerangi laut gelap & menarik mutiara | Umpan berpegas, mulut terbuka saat mutiara dekat, bintik berpendar |
 
+### ⚡ Kemampuan khusus (terkait bahaya)
+| Karakter | Kemampuan |
+|---|---|
+| 🐡 Puffy | Saat mengembang, **ikan pedang memantul** dari durinya |
+| 🐴 Kudi | Tubuh ramping: **lolos dari jaring** |
+| 🪼 Jeli | **Kebal ubur-ubur listrik** (sesama ubur-ubur) |
+| 🐙 Okto | Tinta **membutakan ikan pedang** & **membekukan ubur-ubur** di dekatnya |
+| 🦈 Mantra | Kulit licin & pipih: **kail pancing meleset** |
+| 🎣 Lumi | Menangkap **sampah plastik** untuk dibuang: laut bersih +2 🦪 |
+
+![abilities](docs/abilities.png)
+
 Data karakter (fisika, hitbox, kemampuan, gambar) ada di `src/characters.js`.
 
 ![characters](docs/characters.png)
@@ -52,6 +64,7 @@ Data karakter (fisika, hitbox, kemampuan, gambar) ada di `src/characters.js`.
 python3 -m http.server 8000 --bind 127.0.0.1
 # buka http://localhost:8000/?platform=local
 # uji zona dalam: http://localhost:8000/?start=1000
+# uji kemampuan: http://localhost:8000/?start=1000&hazard=jelly  (urchin, coral, icicle, jelly, hook, sword, net, bag)
 ```
 `?platform=` bisa `poki`, `crazygames`, `youtube`, `facebook`, atau `local` (iklan simulasi).
 

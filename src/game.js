@@ -9,7 +9,7 @@ import {
 } from "./audio.js";
 import * as fx from "./particles.js";
 import {
-  W, H, PX_PER_M, ZONES, zoneIndex, createWorld, extend, prune, surfaceUnder, updateWorld, hitsHazard,
+  W, H, PX_PER_M, ZONES, zoneIndex, createWorld, extend, prune, surfaceUnder, updateWorld, hitsHazard, isHarmless,
   drawBackground, drawTerrain, drawDarkness, drawHazards, drawPickups,
 } from "./world.js";
 
@@ -207,7 +207,7 @@ function renderShop() {
     const label = equipped ? "Dipakai" : owned ? "Pakai" : `🦪 ${ch.price}`;
     card.append(c);
     card.insertAdjacentHTML("beforeend",
-      `<b>${ch.name} <small>${ch.species}</small></b><p class="desc">${ch.desc}</p><span class="price">${label}</span>`);
+      `<b>${ch.name} <small>${ch.species}</small></b><p class="desc">${ch.desc}</p><p class="ability">⚡ ${ch.ability}</p><span class="price">${label}</span>`);
     if (!owned && save.pearls < ch.price) card.classList.add("locked");
     card.onclick = () => selectCharacter(ch);
     ui.shopGrid.append(card);
@@ -295,12 +295,52 @@ function flip() {
       player.vy = player.gravity * ch.max * 0.7;
       player.invuln = Math.max(player.invuln, 0.25);
       fx.ink(scroll + player.x, player.y);
+      inkBlast();
     } else player.vy *= 0.2;
     sfx.flip(player.up);
   }
   player.flash = 1;
   setMood("surprised", 0.25);
   if (!ch.jet) fx.puff(scroll + player.x, player.y);
+}
+
+// Okto's ink: swordfish nearby flee, jellyfish nearby freeze for a moment.
+function inkBlast() {
+  const wx = scroll + player.x;
+  let hit = false;
+  for (const h of world.hazards) {
+    if (Math.hypot(h.x - wx, (h.y ?? player.y) - player.y) > 380 || isHarmless(h, time)) continue;
+    if (h.type === "sword" && h.active) { h.fleeing = true; hit = true; fx.text(h.x, h.y - 30, "Buta tinta!", "#d6c8ff"); }
+    if (h.type === "jelly") { h.stunUntil = time + 2.5; hit = true; fx.text(h.x, h.y - 34, "Beku!", "#d6c8ff"); }
+  }
+  if (hit) sfx.shieldPop();
+}
+
+// Character ability vs. a hazard Puffy & friends are touching. Returns true if handled.
+function useAbility(h) {
+  const ch = hero();
+  if (!ch.immune || !ch.immune(h, player)) return false;
+  if (h.noted) return true;
+  h.noted = true;
+  switch (h.type) {
+    case "sword":
+      h.fleeing = true;
+      sfx.denied();
+      fx.text(h.x, h.y - 30, "Boing! Memantul", "#ffe27a");
+      break;
+    case "net": fx.text(scroll + player.x, player.y - 40, "Lolos dari jaring!", "#ffc98a"); sfx.click(); break;
+    case "jelly": fx.text(h.x, h.y - 40, "Halo, teman! 🪼", "#ff9fe0"); sfx.pearl(); break;
+    case "hook": fx.text(h.x, h.y - 24, "Meleset!", "#9fc3ff"); sfx.click(); break;
+    case "bag":
+      h.gone = true;
+      save.pearls += 2;
+      fx.sparkle(h.x, h.y, "#7ffff0");
+      fx.text(h.x, h.y - 30, "Laut bersih! +2 🦪", "#7ffff0");
+      sfx.pearl();
+      break;
+  }
+  setMood("happy", 0.6);
+  return true;
 }
 
 function popShield() {
@@ -367,7 +407,8 @@ function update(dt) {
   }
 
   for (const h of world.hazards) {
-    if (h.gone || !hitsHazard(h, wx, player.y, r)) continue;
+    if (h.gone || isHarmless(h, time) || !hitsHazard(h, wx, player.y, r)) continue;
+    if (useAbility(h)) continue;
     if (player.invuln > 0) continue;
     if (player.shield) { popShield(); h.gone = true; continue; }
     return gameOver("hazard");

@@ -59,6 +59,11 @@ export function trail(x, y, color) {
   add({ x: x + rand(-4, 4), y: y + rand(-8, 8), vx: rand(-50, -20), vy: rand(-60, -20), g: 0, life: 0.6, max: 0.6, size: rand(3, 7), color, shape: "bubble" });
 }
 
+// Floating label (e.g. "Lolos!") that rises and fades.
+export function text(x, y, str, color = "#fff") {
+  add({ x, y, vx: 0, vy: -60, g: 0, life: 1.1, max: 1.1, size: 22, color, shape: "text", str });
+}
+
 // Ring wave when the shield bubble pops.
 export function ring(x, y) {
   add({ x, y, vx: 0, vy: 0, g: 0, life: 0.4, max: 0.4, size: 40, grow: 260, color: "#a8f4ff", shape: "ring" });
@@ -81,7 +86,14 @@ export function draw(ctx, scroll) {
     ctx.globalAlpha = Math.max(0, p.life / p.max);
     ctx.fillStyle = p.color;
     const x = p.x - scroll;
-    if (p.shape === "square") {
+    if (p.shape === "text") {
+      ctx.font = "bold 22px system-ui";
+      ctx.textAlign = "center";
+      ctx.lineWidth = 4;
+      ctx.strokeStyle = "rgba(0,0,0,0.6)";
+      ctx.strokeText(p.str, x, p.y);
+      ctx.fillText(p.str, x, p.y);
+    } else if (p.shape === "square") {
       ctx.save();
       ctx.translate(x, p.y);
       ctx.rotate(p.rot);

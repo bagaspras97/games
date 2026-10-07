@@ -98,7 +98,11 @@ export function extend(world, untilX) {
   }
 }
 
+// Dev helper (?hazard=jelly): every hazard becomes this type, to test abilities.
+const FORCED = new URLSearchParams(location.search).get("hazard");
+
 function spawnHazard(world, seg, type) {
+  if (FORCED) type = FORCED;
   const x = seg.x + rand(90, seg.w - 140);
   const mid = (seg.ceil + seg.floor) / 2;
   const h = { type, x };
@@ -122,13 +126,15 @@ function spawnHazard(world, seg, type) {
 export function updateWorld(world, dt, scroll, t) {
   for (const h of world.hazards) {
     const sx = h.x - scroll;
+    if (h.type === "jelly" && h.stunUntil > t) continue; // frozen by ink
     if (h.type === "jelly") h.y = h.baseY + Math.sin(t * 1.8 + h.phase) * h.amp;
     else if (h.type === "hook") {
       const progress = clamp((W + 100 - sx) / 500, 0, 1);
       h.y = h.top + h.len * progress + Math.sin(t * 2) * 6;
     } else if (h.type === "sword") {
       if (!h.active && sx < W + 520) h.active = true;
-      if (h.active) h.x -= h.speed * dt;
+      if (h.fleeing) { h.x += 380 * dt; h.y -= 220 * dt; } // bounced / scared away
+      else if (h.active) h.x -= h.speed * dt;
     } else if (h.type === "bag") {
       h.y = h.baseY + Math.sin(t * 0.9 + h.phase) * 30;
       h.x -= 25 * dt;
@@ -138,6 +144,11 @@ export function updateWorld(world, dt, scroll, t) {
 }
 
 // Circle (cx, cy, cr) vs hazard.
+// A hazard that a character ability has neutralised (fleeing / stunned).
+export function isHarmless(h, t) {
+  return h.fleeing || h.stunUntil > t;
+}
+
 export function hitsHazard(h, cx, cy, cr) {
   const circle = (x, y, r) => Math.hypot(cx - x, cy - y) < cr + r;
   const rect = (x, y, w, hh) => {
@@ -352,6 +363,7 @@ export function drawHazards(ctx, world, scroll, t) {
       continue;
     }
     ctx.save();
+    if (isHarmless(h, t)) ctx.globalAlpha = 0.4;
     switch (h.type) {
       case "urchin": drawUrchin(ctx, x, h.y, h.r, t); break;
       case "coral": drawCoralSpike(ctx, x, h); break;
