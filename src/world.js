@@ -103,11 +103,7 @@ export function extend(world, untilX) {
 
     if (rnd() < 0.6 + level * 0.35) spawnHazard(world, seg, pick(HAZARDS_BY_ZONE[zone]));
 
-    // pearls: small arcs of 3
-    if (rnd() < 0.55) {
-      const cx = seg.x + rand(80, w - 120), cy = rand(seg.ceil + 70, seg.floor - 70);
-      for (let i = 0; i < 3; i++) addPearl(world, cx + i * 40, cy - Math.sin((i / 2) * Math.PI) * 20);
-    }
+    if (rnd() < 0.6) placePearlPattern(world, seg);
     if (rnd() < 0.05) {
       world.pickups.push({ kind: "shield", x: seg.x + w / 2, y: (seg.ceil + seg.floor) / 2, r: 22 });
     }
@@ -117,6 +113,45 @@ export function extend(world, untilX) {
       const c = pick(fresh.length ? fresh : pool);
       world.pickups.push({ kind: "creature", id: c.id, x: seg.x + w * 0.6, y: rand(seg.ceil + 80, seg.floor - 80), baseY: 0, r: 26 });
     }
+  }
+}
+
+// Pearl formations. Besides looking varied, several of them hint at a route:
+// runs along the floor/ceiling reward staying put, diagonals invite a flip.
+const PEARL_PATTERNS = ["line", "floorRun", "ceilRun", "rise", "fall", "hill", "valley", "zigzag", "wave"];
+
+function placePearlPattern(world, seg) {
+  const gap = 42;
+  const maxN = Math.floor((seg.w - 120) / gap);
+  if (maxN < 3) return;
+  const n = Math.min(maxN, 3 + Math.floor(rnd() * 4));          // 3..6 pearls
+  const x0 = seg.x + 60 + rnd() * Math.max(0, seg.w - 120 - (n - 1) * gap);
+  const top = seg.ceil + 40, bottom = seg.floor - 40, mid = (top + bottom) / 2;
+  const kind = pick(PEARL_PATTERNS);
+  const amp = rand(40, 90);
+  const base = rand(top + amp, bottom - amp);
+  const pts = [];
+  for (let i = 0; i < n; i++) {
+    const k = n === 1 ? 0 : i / (n - 1);
+    let y;
+    switch (kind) {
+      case "line": y = base; break;
+      case "floorRun": y = bottom; break;
+      case "ceilRun": y = top; break;
+      case "rise": y = bottom - (bottom - top) * k; break;
+      case "fall": y = top + (bottom - top) * k; break;
+      case "hill": y = base - Math.sin(k * Math.PI) * amp; break;
+      case "valley": y = base + Math.sin(k * Math.PI) * amp; break;
+      case "zigzag": y = mid + (i % 2 ? -1 : 1) * amp * 0.8; break;
+      case "wave": y = base + Math.sin(k * Math.PI * 2) * amp; break;
+    }
+    pts.push([x0 + i * gap, clamp(y, top, bottom)]);
+  }
+  // never put a pearl inside a static hazard
+  const solid = world.hazards.filter((h) => ["urchin", "coral", "icicle", "net"].includes(h.type) && h.x > seg.x - 100 && h.x < seg.x + seg.w);
+  for (const [x, y] of pts) {
+    if (solid.some((h) => hitsHazard(h, x, y, 16))) continue;
+    addPearl(world, x, y);
   }
 }
 
