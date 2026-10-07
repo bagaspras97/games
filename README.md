@@ -27,10 +27,11 @@ Ganti `?platform=` dengan `poki`, `crazygames`, `youtube`, atau `facebook` untuk
 - Background **parallax** (bintang + siluet stalaktit/stalagmit). Palung & duri makin sering seiring jarak.
 - Kode: `src/world.js`.
 
-## Suara & getaran
-- Efek suara disintesis dengan Web Audio API (`src/audio.js`), tanpa file audio.
-- Screen shake saat kalah, mendarat keras, dan membalik gravitasi; getaran HP (`navigator.vibrate`) di Android.
-- Tombol 🔊/🔇 di pojok kanan atas (tersimpan). Suara otomatis dibisukan selama iklan tayang (syarat platform).
+## Suara, musik, partikel & getaran
+- Efek suara & **musik latar chiptune** disintesis dengan Web Audio API (`src/audio.js`), tanpa file audio. Tempo musik naik mengikuti kecepatan game; musik berhenti saat kalah.
+- **Partikel** (`src/particles.js`): jejak di belakang karakter (warna mengikuti skin), kepulan saat balik gravitasi, kilau saat ambil koin, ledakan saat kalah.
+- **Getaran layar & HP hanya saat menyentuh bahaya**: duri, dinding, atau jatuh ke palung.
+- Tombol 🔊/🔇 di pojok kanan atas (tersimpan). Semua suara otomatis dibisukan selama iklan tayang (syarat platform).
 
 ## Toko Skin
 7 skin (Klasik, Neon, Slime, Kucing, Robot, Api, Bintang Emas) dibeli dengan koin hasil bermain. Untuk menambah skin, cukup tambahkan objek baru di `SKINS` pada `src/skins.js`.

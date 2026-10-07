@@ -89,3 +89,76 @@ export const sfx = {
     [392, 523, 659, 784].forEach((f, i) => tone({ type: "triangle", from: f, dur: 0.12, vol: 0.2, delay: i * 0.08 }));
   },
 };
+
+// ---------- Background music ----------
+// A small synthesized chiptune loop (bass + arpeggio + hi-hat), scheduled ahead of
+// time with the Web Audio clock so it stays in rhythm. Tempo follows game speed.
+
+const BASS = [45, 45, 41, 41, 48, 48, 43, 43];           // MIDI notes, one per half bar (Am F C G)
+const CHORDS = [[57, 60, 64], [53, 57, 60], [48, 52, 55], [55, 59, 62]];
+const midi = (n) => 440 * Math.pow(2, (n - 69) / 12);
+
+let musicGain = null, timer = null, step = 0, nextTime = 0, bpm = 112;
+
+export function setTempo(v) { bpm = Math.max(100, Math.min(150, v)); }
+
+function musicNote(freq, t, dur, type, vol) {
+  const osc = ctx.createOscillator();
+  const g = ctx.createGain();
+  osc.type = type;
+  osc.frequency.value = freq;
+  g.gain.setValueAtTime(vol, t);
+  g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+  osc.connect(g).connect(musicGain);
+  osc.start(t);
+  osc.stop(t + dur + 0.02);
+}
+
+function hat(t) {
+  const len = Math.floor(ctx.sampleRate * 0.03);
+  const buf = ctx.createBuffer(1, len, ctx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / len);
+  const src = ctx.createBufferSource();
+  const f = ctx.createBiquadFilter();
+  const g = ctx.createGain();
+  f.type = "highpass";
+  f.frequency.value = 6000;
+  g.gain.value = 0.08;
+  src.buffer = buf;
+  src.connect(f).connect(g).connect(musicGain);
+  src.start(t);
+}
+
+function scheduleStep(t) {
+  const sixteenth = 60 / bpm / 4;
+  const bar = Math.floor(step / 16) % 4;
+  const s = step % 16;
+  if (s % 4 === 0) musicNote(midi(BASS[bar * 2 + (s >= 8 ? 1 : 0)]), t, sixteenth * 3, "triangle", 0.35);
+  if (s % 2 === 0) {
+    const chord = CHORDS[bar];
+    musicNote(midi(chord[(s / 2) % 3] + 12), t, sixteenth * 1.5, "square", 0.05);
+  }
+  if (s % 4 === 2) hat(t);
+  step++;
+  return sixteenth;
+}
+
+export function startMusic() {
+  if (!ctx || timer) return;
+  if (!musicGain) {
+    musicGain = ctx.createGain();
+    musicGain.gain.value = 0.6;
+    musicGain.connect(master);
+  }
+  step = 0;
+  nextTime = ctx.currentTime + 0.05;
+  timer = setInterval(() => {
+    while (nextTime < ctx.currentTime + 0.12) nextTime += scheduleStep(nextTime);
+  }, 25);
+}
+
+export function stopMusic() {
+  clearInterval(timer);
+  timer = null;
+}

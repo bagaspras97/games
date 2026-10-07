@@ -21,14 +21,14 @@ function eyes(ctx, s, color = "#1b1446") {
 
 export const SKINS = [
   {
-    id: "classic", name: "Klasik", price: 0, spin: true,
+    id: "classic", color: "#ffffff", name: "Klasik", price: 0, spin: true,
     draw(ctx, s) {
       ctx.fillStyle = "#ffffff";
       ctx.fillRect(-s / 2, -s / 2, s, s);
     },
   },
   {
-    id: "neon", name: "Neon", price: 20, spin: true,
+    id: "neon", color: "#4fffd2", name: "Neon", price: 20, spin: true,
     draw(ctx, s) {
       ctx.shadowColor = "#4fffd2";
       ctx.shadowBlur = s * 0.6;
@@ -39,7 +39,7 @@ export const SKINS = [
     },
   },
   {
-    id: "slime", name: "Slime", price: 40, spin: false,
+    id: "slime", color: "#7dff5a", name: "Slime", price: 40, spin: false,
     draw(ctx, s) {
       ctx.fillStyle = "#7dff5a";
       roundRect(ctx, -s / 2, -s / 2, s, s, s * 0.35);
@@ -50,7 +50,7 @@ export const SKINS = [
     },
   },
   {
-    id: "cat", name: "Kucing", price: 60, spin: false,
+    id: "cat", color: "#ffb347", name: "Kucing", price: 60, spin: false,
     draw(ctx, s) {
       ctx.fillStyle = "#ffb347";
       ctx.beginPath(); // ears
@@ -69,7 +69,7 @@ export const SKINS = [
     },
   },
   {
-    id: "robot", name: "Robot", price: 80, spin: false,
+    id: "robot", color: "#9aa7c7", name: "Robot", price: 80, spin: false,
     draw(ctx, s) {
       ctx.fillStyle = "#9aa7c7";
       ctx.fillRect(-s / 2, -s / 2, s, s);
@@ -85,7 +85,7 @@ export const SKINS = [
     },
   },
   {
-    id: "fire", name: "Api", price: 120, spin: true,
+    id: "fire", color: "#ff9a3c", name: "Api", price: 120, spin: true,
     draw(ctx, s) {
       const g = ctx.createRadialGradient(0, 0, s * 0.05, 0, 0, s * 0.6);
       g.addColorStop(0, "#fff6a8");
@@ -99,7 +99,7 @@ export const SKINS = [
     },
   },
   {
-    id: "star", name: "Bintang Emas", price: 200, spin: true,
+    id: "star", color: "#ffd700", name: "Bintang Emas", price: 200, spin: true,
     draw(ctx, s) {
       ctx.fillStyle = "#ffd700";
       ctx.shadowColor = "#ffd700";

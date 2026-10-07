@@ -2,7 +2,8 @@
 // Tap / click / space flips gravity. Avoid the spikes. Collect coins.
 import { createPlatform } from "./sdk/adapter.js";
 import { SKINS, getSkin } from "./skins.js";
-import { sfx, unlock, toggleMute, isMuted, setAdPlaying } from "./audio.js";
+import { sfx, unlock, toggleMute, isMuted, setAdPlaying, startMusic, stopMusic, setTempo } from "./audio.js";
+import * as fx from "./particles.js";
 import {
   W, H, createWorld, extend, prune, surfaceUnder,
   drawBackground, drawTerrain, drawSpikes, drawCoins,
@@ -59,6 +60,8 @@ function startRun() {
   reset();
   state = "play";
   show(ui.menu, false); show(ui.over, false);
+  fx.clear();
+  startMusic();
   platform.gameplayStart();
 }
 
@@ -68,11 +71,16 @@ function vibrate(ms) {
   try { navigator.vibrate && navigator.vibrate(ms); } catch (e) {}
 }
 
-function gameOver() {
+// cause: "spike" | "wall" | "pit" | "hidden". Shake & vibration only when touching a hazard.
+function gameOver(cause) {
   state = "over";
-  sfx.death();
-  addShake(22);
-  vibrate([60, 40, 90]);
+  stopMusic();
+  if (cause !== "hidden") {
+    sfx.death();
+    addShake(22);
+    vibrate([60, 40, 90]);
+    fx.explode(scroll + player.x, player.y, [getSkin(save.skin).color, "#ffe14f", "#ff4fa3"]);
+  }
   platform.gameplayStop();
   runs++;
   save.best = Math.max(save.best, score);
@@ -107,6 +115,7 @@ async function revive() {
   if (earned) {
     revived = true;
     sfx.revive();
+    startMusic();
     // Clear nearby hazards and drop the player back on a safe flat strip.
     const wx = scroll + player.x;
     world.spikes = world.spikes.filter((o) => o.x > wx + 500 || o.x < wx - 100);
@@ -169,7 +178,7 @@ function renderShop() {
 
 function selectSkin(skin) {
   if (!save.owned.includes(skin.id)) {
-    if (save.coins < skin.price) { sfx.denied(); addShake(6); return; }
+    if (save.coins < skin.price) { sfx.denied(); return; }
     save.coins -= skin.price;
     sfx.buy();
     save.owned.push(skin.id);
@@ -198,7 +207,7 @@ function flip() {
   player.gravity *= -1;
   player.vy = 0;
   sfx.flip(player.gravity < 0);
-  addShake(3);
+  fx.puff(scroll + player.x, player.y + (player.size / 2) * -player.gravity, player.gravity);
 }
 
 const CLIMB = 48; // step height the player walks up automatically
@@ -215,11 +224,13 @@ function update(dt) {
   player.vy += 2600 * player.gravity * dt;
   player.y += player.vy * dt;
   player.rot += dt * 6;
+  setTempo(100 + (speed - 420) / 8);
+  fx.trail(wx - half, player.y, getSkin(save.skin).color);
 
   // Hitting the side of a wall (e.g. the far edge of a trench) is fatal.
   const front = surfaceUnder(world, wx + half - 4, wx + half);
-  if (front.floor !== null && player.y + half > front.floor + CLIMB) return gameOver();
-  if (front.ceil !== null && player.y - half < front.ceil - CLIMB) return gameOver();
+  if (front.floor !== null && player.y + half > front.floor + CLIMB) return gameOver("wall");
+  if (front.ceil !== null && player.y - half < front.ceil - CLIMB) return gameOver("wall");
 
   // Land on floor / ceiling (small steps are climbed automatically).
   const under = surfaceUnder(world, wx - half + 4, wx + half - 4);
@@ -227,22 +238,23 @@ function update(dt) {
   let landed = false;
   if (under.floor !== null && player.y + half > under.floor) { player.y = under.floor - half; player.vy = Math.min(player.vy, 0); landed = true; }
   if (under.ceil !== null && player.y - half < under.ceil) { player.y = under.ceil + half; player.vy = Math.max(player.vy, 0); landed = true; }
-  if (landed && impact > 500) { sfx.land(); addShake(Math.min(8, impact / 160)); vibrate(15); }
+  if (landed && impact > 500) sfx.land();
 
   // Fell into a trench.
-  if (player.y - half > H || player.y + half < 0) return gameOver();
+  if (player.y - half > H || player.y + half < 0) return gameOver("pit");
 
   const px = wx - half + 6, py = player.y - half + 6, ps = player.size - 12;
   for (const o of world.spikes) {
     const ox = o.x + o.w * 0.2, ow = o.w * 0.6;
     const oy = o.top ? o.base : o.base - o.h;
-    if (px < ox + ow && px + ps > ox && py < oy + o.h && py + ps > oy) return gameOver();
+    if (px < ox + ow && px + ps > ox && py < oy + o.h && py + ps > oy) return gameOver("spike");
   }
   for (const c of world.coins) {
     if (!c.taken && Math.hypot(c.x - wx, c.y - player.y) < c.r + half) {
       c.taken = true;
       save.coins++;
       sfx.coin();
+      fx.sparkle(c.x, c.y);
     }
   }
 }
@@ -260,7 +272,8 @@ function draw(dt) {
   drawSpikes(ctx, world, scroll);
   drawCoins(ctx, world, scroll, time);
 
-  if (player) {
+  fx.draw(ctx, scroll);
+  if (player && state !== "over" && state !== "ad") {
     const skin = getSkin(save.skin);
     ctx.save();
     ctx.translate(player.x, player.y);
@@ -279,6 +292,7 @@ function loop(now) {
   last = now;
   time += dt;
   if (state === "play") update(dt);
+  fx.update(dt);
   draw(dt);
   requestAnimationFrame(loop);
 }
@@ -314,7 +328,7 @@ async function boot() {
 
   // Pause the game when the tab/app is hidden.
   document.addEventListener("visibilitychange", () => {
-    if (document.hidden && state === "play") gameOver();
+    if (document.hidden && state === "play") gameOver("hidden");
   });
 
   platform.loadingFinished();
