@@ -1,6 +1,7 @@
 // "Gravity Hop" — one-tap hyper-casual runner.
 // Tap / click / space flips gravity. Avoid the spikes. Collect coins.
 import { createPlatform } from "./sdk/adapter.js";
+import { SKINS, getSkin } from "./skins.js";
 
 const W = 1280, H = 720; // 16:9 logical resolution (Poki requirement)
 const canvas = document.getElementById("game");
@@ -15,14 +16,21 @@ const ui = {
   play: document.getElementById("play"),
   retry: document.getElementById("retry"),
   revive: document.getElementById("revive"),
+  shop: document.getElementById("shop"),
+  shopCoins: document.getElementById("shop-coins"),
+  shopGrid: document.getElementById("shop-grid"),
+  shopClose: document.getElementById("shop-close"),
+  freeCoins: document.getElementById("free-coins"),
 };
 
 const INTERSTITIAL_EVERY = 3;  // runs between mid-game ads
 const MIN_AD_GAP_MS = 60000;   // never show interstitials more often than this
+const FREE_COINS = 25;         // reward for watching an ad in the shop
 
 let platform;
-let save = { best: 0, coins: 0 };
-let state = "menu";            // menu | play | over | ad
+let save = { best: 0, coins: 0, skin: "classic", owned: ["classic"] };
+let state = "menu";            // menu | play | over | ad | shop
+let shopReturn = null;         // panel to show again when the shop closes
 let runs = 0, lastAdAt = 0, revived = false;
 let player, obstacles, pickups, speed, distance, score, spawnTimer, last;
 
@@ -90,6 +98,66 @@ async function revive() {
     show(ui.revive, false);
     show(ui.over, true);
   }
+}
+
+// ---------- Skin shop ----------
+function openShop(from) {
+  shopReturn = from;
+  state = "shop";
+  show(ui.menu, false); show(ui.over, false);
+  renderShop();
+  show(ui.shop, true);
+}
+
+function closeShop() {
+  show(ui.shop, false);
+  ui.coins.textContent = save.coins;
+  state = shopReturn === ui.over ? "over" : "menu";
+  show(shopReturn, true);
+}
+
+function renderShop() {
+  ui.shopCoins.textContent = save.coins;
+  ui.shopGrid.innerHTML = "";
+  for (const skin of SKINS) {
+    const owned = save.owned.includes(skin.id);
+    const equipped = save.skin === skin.id;
+    const card = document.createElement("button");
+    card.className = "skin" + (equipped ? " equipped" : "");
+    const c = document.createElement("canvas");
+    c.width = c.height = 96;
+    const cx = c.getContext("2d");
+    cx.translate(48, 52);
+    skin.draw(cx, 44);
+    const label = equipped ? "Dipakai" : owned ? "Pakai" : `🪙 ${skin.price}`;
+    card.append(c);
+    card.insertAdjacentHTML("beforeend", `<b>${skin.name}</b><span>${label}</span>`);
+    if (!owned && save.coins < skin.price) card.classList.add("locked");
+    card.onclick = () => selectSkin(skin);
+    ui.shopGrid.append(card);
+  }
+}
+
+function selectSkin(skin) {
+  if (!save.owned.includes(skin.id)) {
+    if (save.coins < skin.price) return;
+    save.coins -= skin.price;
+    save.owned.push(skin.id);
+  }
+  save.skin = skin.id;
+  platform.save(save);
+  renderShop();
+}
+
+async function freeCoins() {
+  ui.freeCoins.disabled = true;
+  const earned = await platform.rewarded();
+  ui.freeCoins.disabled = false;
+  if (earned) {
+    save.coins += FREE_COINS;
+    platform.save(save);
+  }
+  renderShop();
 }
 
 function flip() {
@@ -173,11 +241,12 @@ function draw() {
   }
 
   if (player) {
+    const skin = getSkin(save.skin);
     ctx.save();
     ctx.translate(player.x, player.y);
-    ctx.rotate(player.rot);
-    ctx.fillStyle = "#ffffff";
-    ctx.fillRect(-player.size / 2, -player.size / 2, player.size, player.size);
+    if (skin.spin) ctx.rotate(player.rot);
+    else if (player.gravity < 0) ctx.scale(1, -1); // face stays upright relative to "floor"
+    skin.draw(ctx, player.size);
     ctx.restore();
   }
 
@@ -197,6 +266,8 @@ async function boot() {
   addEventListener("resize", resize);
   platform = await createPlatform();
   save = Object.assign(save, await platform.load());
+  if (!Array.isArray(save.owned)) save.owned = ["classic"];
+  if (!save.owned.includes(save.skin)) save.skin = "classic";
   reset();
 
   canvas.addEventListener("pointerdown", flip);
@@ -206,6 +277,12 @@ async function boot() {
   ui.play.onclick = startRun;
   ui.retry.onclick = retry;
   ui.revive.onclick = revive;
+  document.querySelectorAll(".open-shop").forEach((b) => {
+    b.onclick = () => openShop(b.closest(".panel"));
+  });
+  ui.shopClose.onclick = closeShop;
+  ui.freeCoins.onclick = freeCoins;
+  ui.freeCoins.textContent = `🎬 +${FREE_COINS} koin (tonton iklan)`;
 
   // Pause the game when the tab/app is hidden.
   document.addEventListener("visibilitychange", () => {

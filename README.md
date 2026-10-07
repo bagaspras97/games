@@ -17,11 +17,18 @@ Ganti `?platform=` dengan `poki`, `crazygames`, `youtube`, atau `facebook` untuk
 ## Struktur
 - `index.html`: halaman, UI menu/game over
 - `src/game.js`: logika game (kanvas 16:9 1280x720)
+- `src/skins.js`: daftar skin karakter (nama, harga koin, fungsi gambar)
 - `src/sdk/adapter.js`: satu antarmuka untuk semua platform:
   `init`, `loadingFinished`, `gameplayStart/Stop`, `interstitial`, `rewarded`, `save/load`
 
+## Toko Skin
+7 skin (Klasik, Neon, Slime, Kucing, Robot, Api, Bintang Emas) dibeli dengan koin hasil bermain. Untuk menambah skin, cukup tambahkan objek baru di `SKINS` pada `src/skins.js`.
+
+![shop](docs/shop.png)
+
 ## Monetisasi bawaan
 - **Rewarded ad**: tombol "Lanjutkan" setelah game over (sekali per run).
+- **Rewarded ad di Toko Skin**: +25 koin per iklan.
 - **Interstitial**: tiap 3 kali main ulang, minimal jarak 60 detik.
 - Progres (skor terbaik, koin) disimpan lewat penyimpanan milik platform.
 
