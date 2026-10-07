@@ -50,6 +50,22 @@
     .char-card .ability { font-size: 12px; font-weight: 600; line-height: 1.35; margin: 0; color: #ffe27a; }
     .char-card.secret { background: linear-gradient(160deg, rgba(30,80,150,.9), rgba(60,30,110,.9)); border-color: #ffe27a; }
     .cause { font-size: 18px; font-style: italic; color: #ffd1dc; }
+    #missions-list { display: flex; flex-direction: column; gap: 12px; width: min(620px, 92vw); }
+    .mission { background: rgba(20,60,110,.85); border-radius: 16px; padding: 12px 16px; text-align: left;
+      border: 2px solid transparent; }
+    .mission.ready { border-color: #ffe27a; box-shadow: 0 0 18px rgba(255,226,122,.35); }
+    .mission.claimed { opacity: .6; }
+    .m-text { font-size: 16px; font-weight: 700; }
+    .m-bar { position: relative; height: 18px; background: rgba(0,0,0,.35); border-radius: 9px; margin: 8px 0; overflow: hidden; }
+    .m-bar i { position: absolute; inset: 0 auto 0 0; background: linear-gradient(90deg, #7ff0ff, #ff7a9c); border-radius: 9px; }
+    .m-bar span { position: relative; display: block; text-align: center; font-size: 12px; font-weight: 700; line-height: 18px; }
+    .m-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: 14px; }
+    button.small { font-size: 15px; padding: 8px 16px; }
+    .m-reward { opacity: .85; }
+    .open-missions { position: relative; }
+    .open-missions.has-badge::after { content: attr(data-badge); position: absolute; top: -6px; right: -6px;
+      background: #ff3b5c; color: #fff; font-size: 12px; min-width: 20px; height: 20px; line-height: 20px;
+      border-radius: 10px; padding: 0 4px; box-sizing: border-box; }
     .reward { font-size: 15px; color: #ffe27a; }
     .char-card .price { font-size: 14px; font-weight: 700; opacity: 1; }
     #dex .grid { grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); }
@@ -78,6 +94,7 @@
     <div class="row">
       <button class="open-shop ghost">🐠 Karakter</button>
       <button class="open-dex ghost">📖 Ensiklopedia</button>
+      <button class="open-missions ghost">🎯 Misi</button>
     </div>
   </div>
 
@@ -91,6 +108,7 @@
     <div class="row">
       <button class="open-shop ghost">🐠 Karakter</button>
       <button class="open-dex ghost">📖 Ensiklopedia</button>
+      <button class="open-missions ghost">🎯 Misi</button>
     </div>
   </div>
 
@@ -101,6 +119,13 @@
     <div id="shop-grid" class="grid"></div>
     <button id="free-pearls" class="alt"></button>
     <button id="shop-close" class="ghost">Kembali</button>
+  </div>
+
+  <div id="missions" class="panel hidden">
+    <h2>🎯 Misi Harian</h2>
+    <p>Misi baru setiap hari. Ada yang serius, ada yang… kocak 😜</p>
+    <div id="missions-list"></div>
+    <button id="missions-close" class="ghost">Kembali</button>
   </div>
 
   <div id="dex" class="panel hidden">

@@ -11,6 +11,7 @@ import {
 } from "./audio.js";
 import * as fx from "./particles.js";
 import { DEATHS, deathFor } from "./deaths.js";
+import * as missions from "./missions.js";
 import {
   W, H, PX_PER_M, ZONES, zoneIndex, createWorld, extend, prune, surfaceUnder, updateWorld, hitsHazard, isHarmless,
   drawBackground, drawTerrain, drawDarkness, drawHazards, drawPickups,
@@ -50,7 +51,7 @@ function reset(withShield = false) {
   player = {
     x: 260, y: H - 140, vy: 0, up: false, gravity: 1, dir: 1,
     shield: withShield, invuln: 0, mood: "normal", moodT: 0, tilt: 0,
-    pulse: 0, flash: 0, near: 0, sonarT: 3,
+    pulse: 0, flash: 0, near: 0, sonarT: 3, flips: 0,
   };
   scroll = START_M * PX_PER_M;
   world = createWorld(save.dex, scroll);
@@ -86,8 +87,79 @@ function toast(html, ms = 4000) {
   toastTimer = setTimeout(() => show(ui.toast, false), ms);
 }
 
+// ---------- Missions ----------
+function mission(event, amount = 1) {
+  announce(missions.track(save, event, amount));
+}
+
+function announce(done) {
+  for (const m of done) {
+    sfx.discover();
+    toast(`🎯 <b>Misi selesai!</b> ${m.text}<br>Ambil +${m.reward} 🦪 di menu 🎯 Misi`, 3500);
+  }
+  if (done.length) updateMissionBadges();
+}
+
+function updateMissionBadges() {
+  const n = missions.claimable(save);
+  document.querySelectorAll(".open-missions").forEach((b) => {
+    b.dataset.badge = n || "";
+    b.classList.toggle("has-badge", n > 0);
+  });
+}
+
+function renderMissions() {
+  const ms = missions.ensureDaily(save);
+  const list = $("missions-list");
+  list.innerHTML = "";
+  ms.list.forEach((m, i) => {
+    const d = missions.describe(m);
+    const card = document.createElement("div");
+    card.className = "mission" + (d.claimed ? " claimed" : d.done ? " ready" : "");
+    const pct = Math.round((d.progress / d.target) * 100);
+    card.innerHTML = `
+      <div class="m-text">${d.funny ? "😜 " : ""}${d.text}</div>
+      <div class="m-bar"><i style="width:${pct}%"></i><span>${d.progress} / ${d.target}</span></div>
+      <div class="m-actions"></div>`;
+    const actions = card.querySelector(".m-actions");
+    if (d.claimed) actions.innerHTML = `<span class="m-done">✅ Hadiah diambil</span>`;
+    else if (d.done) {
+      const claim = document.createElement("button");
+      claim.className = "alt small";
+      claim.textContent = `Ambil +${d.reward} 🦪`;
+      claim.onclick = () => claimMission(i, 1);
+      const double = document.createElement("button");
+      double.className = "ghost small";
+      double.textContent = `🎬 x2 (+${d.reward * 2})`;
+      double.onclick = () => claimMission(i, 2);
+      actions.append(claim, double);
+    } else actions.innerHTML = `<span class="m-reward">Hadiah: ${d.reward} 🦪</span>`;
+    list.append(card);
+  });
+}
+
+async function claimMission(i, mult) {
+  const m = missions.ensureDaily(save).list[i];
+  if (!m.done || m.claimed) return;
+  if (mult > 1) {
+    const earned = await withAd(() => platform.rewarded());
+    state = "missions";
+    if (!earned) mult = 1;
+  }
+  m.claimed = true;
+  const reward = missions.describe(m).reward * mult;
+  save.pearls += reward;
+  sfx.buy();
+  platform.save(save);
+  ui.pearls.textContent = save.pearls;
+  renderMissions();
+  updateMissionBadges();
+  toast(`+${reward} 🦪 masuk ke kantong!`, 1800);
+}
+
 function startRun(withShield = false) {
   reset(withShield);
+  announce(missions.trackCharacter(save, save.char));
   state = "play";
   show(ui.menu, false); show(ui.over, false); show(ui.toast, false);
   fx.clear();
@@ -142,6 +214,12 @@ function heroSprite(tint, alpha = 0.6) {
 function finishGameOver() {
   state = "over";
   runs++;
+  if (dying) {
+    mission("ko_" + dying.key);
+    if (depth - START_M < 50) mission("ko_early");
+  }
+  mission("depth", depth);
+  mission("flips", player.flips);
   save.best = Math.max(save.best, depth);
   platform.save(save);
   $("over-title").textContent = `Aduh, ${hero().name}!`;
@@ -213,7 +291,7 @@ async function revive() {
 // ---------- Skin shop ----------
 function openPanel(panel, from, render) {
   panelReturn = from;
-  state = panel === ui.shop ? "shop" : "dex";
+  state = panel === ui.shop ? "shop" : panel === ui.dex ? "dex" : "missions";
   show(ui.menu, false); show(ui.over, false);
   render();
   show(panel, true);
@@ -350,6 +428,7 @@ function flip() {
     sfx.flip(player.up);
   }
   player.flash = 1;
+  player.flips++;
   setMood("surprised", 0.25);
   if (!ch.jet) fx.puff(scroll + player.x, player.y);
 }
@@ -369,6 +448,7 @@ function whaleSong(ch) {
   fx.text(wx, player.y - 46, "♪ Nyanyian paus!", "#a8dcff");
   sfx.zone();
   player.flash = 1;
+  mission("ability");
   for (const h of world.hazards) {
     if (Math.hypot(h.x - wx, (h.y ?? player.y) - player.y) > ch.sonar.radius || isHarmless(h, time)) continue;
     if ((h.type === "sword" && h.active) || h.type === "hook") h.fleeing = true;
@@ -385,7 +465,7 @@ function inkBlast() {
     if (h.type === "sword" && h.active) { h.fleeing = true; hit = true; fx.text(h.x, h.y - 30, "Buta tinta!", "#d6c8ff"); }
     if (h.type === "jelly") { h.stunUntil = time + 2.5; hit = true; fx.text(h.x, h.y - 34, "Beku!", "#d6c8ff"); }
   }
-  if (hit) sfx.shieldPop();
+  if (hit) { sfx.shieldPop(); mission("ability"); }
 }
 
 // Character ability vs. a hazard Puffy & friends are touching. Returns true if handled.
@@ -406,16 +486,19 @@ function useAbility(h) {
     case "bag":
       h.gone = true;
       save.pearls += 2;
+      mission("pearls", 2);
       fx.sparkle(h.x, h.y, "#7ffff0");
       fx.text(h.x, h.y - 30, "Laut bersih! +2 🦪", "#7ffff0");
       sfx.pearl();
       break;
   }
   setMood("happy", 0.6);
+  mission("ability");
   return true;
 }
 
 function popShield() {
+  mission("shield_pop");
   player.shield = false;
   player.invuln = 1.2;
   sfx.shieldPop();
@@ -504,6 +587,7 @@ function update(dt) {
     p.taken = true;
     if (p.kind === "pearl") {
       save.pearls++;
+      mission("pearls");
       sfx.pearl();
       fx.sparkle(p.x, p.y);
       setMood("happy", 0.4);
@@ -513,6 +597,7 @@ function update(dt) {
       fx.sparkle(p.x, p.y, "#a8f4ff");
     } else if (p.kind === "creature") {
       const c = getCreature(p.id);
+      mission("creature");
       fx.sparkle(p.x, p.y, "#fff6a8");
       setMood("happy", 1);
       if (!save.dex.includes(c.id)) {
@@ -644,6 +729,10 @@ async function boot() {
   document.querySelectorAll(".shield-start").forEach((b) => { b.onclick = () => startWithShield(b.closest(".panel")); });
   document.querySelectorAll(".open-shop").forEach((b) => { b.onclick = () => openPanel(ui.shop, b.closest(".panel"), renderShop); });
   document.querySelectorAll(".open-dex").forEach((b) => { b.onclick = () => openPanel(ui.dex, b.closest(".panel"), renderDex); });
+  document.querySelectorAll(".open-missions").forEach((b) => { b.onclick = () => openPanel($("missions"), b.closest(".panel"), renderMissions); });
+  $("missions-close").onclick = () => closePanel($("missions"));
+  missions.ensureDaily(save);
+  updateMissionBadges();
   ui.shopClose.onclick = () => closePanel(ui.shop);
   ui.dexClose.onclick = () => closePanel(ui.dex);
   ui.freePearls.onclick = freePearls;

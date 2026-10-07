@@ -36,6 +36,16 @@ Setiap bahaya punya animasi & suara sendiri sebelum layar Game Over, plus ketera
 
 ![deaths](docs/deaths.png)
 
+## 🎯 Misi harian
+Setiap hari 3 misi baru (2 lucu + 1 biasa, sama untuk satu hari penuh), hadiah mutiara. Klaim biasa atau **x2 lewat rewarded ad**. Tombol 🎯 Misi menampilkan badge jumlah hadiah yang siap diambil.
+
+- 😜 Lucu: kesetrum ubur-ubur 3×, tertangkap kail, terbungkus plastik, terjerat jaring, diseruduk ikan pedang, jadi camilan penghuni palung, terlempar keluar air, gedebuk ke dinding, kempis tertusuk duri, kalah sebelum 50 m, mengembang-mengempis 100× dalam satu selaman.
+- Biasa: kumpulkan 50 mutiara, capai 500 m, pakai kemampuan 5×, sapa 3 makhluk langka, pecahkan 2 perisai, main dengan 2 karakter berbeda.
+
+Daftar misi ada di `src/missions.js` (tinggal tambah objek baru ke `POOL`).
+
+![missions](docs/missions.png)
+
 ## Koleksi
 - 🦪 **Mutiara**: mata uang untuk membuka **karakter laut baru** (lihat di bawah).
 - 🫧 **Gelembung perisai**: kebal satu kali tabrakan/jatuh. Muncul jarang, atau dari rewarded ad "Mulai dengan perisai".
@@ -81,7 +91,7 @@ Data karakter (fisika, hitbox, kemampuan, gambar) ada di `src/characters.js`.
 ![characters](docs/characters.png)
 
 ## Monetisasi
-- Rewarded: lanjutkan setelah kalah, mulai dengan perisai, +25 mutiara di menu karakter.
+- Rewarded: lanjutkan setelah kalah, mulai dengan perisai, +25 mutiara di menu karakter, hadiah misi x2.
 - Interstitial: tiap 3 kali main ulang, jarak minimal 60 detik.
 - Suara & musik otomatis dibisukan selama iklan.
 
@@ -99,6 +109,8 @@ python3 -m http.server 8000 --bind 127.0.0.1
 - `src/world.js`: terrain, palung, zona, bahaya, pickup, semua rendering dunia
 - `src/characters.js`: 6 karakter laut (mode gerak, kemampuan, animasi)
 - `src/creatures.js`: makhluk Ensiklopedia Laut + faktanya
+- `src/missions.js`: misi harian & hadiahnya
+- `src/deaths.js`: animasi kekalahan per bahaya
 - `src/particles.js`: gelembung, kilau, ledakan
 - `src/audio.js`: efek suara & musik sintetis (Web Audio API)
 - `src/sdk/adapter.js`: satu antarmuka untuk semua platform
