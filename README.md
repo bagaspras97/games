@@ -19,6 +19,19 @@ Puffy si ikan buntal menyelam makin dalam. **Tap / klik / Spasi**: Puffy **menge
 
 ![deep](docs/deep.png)
 
+## ⚖️ Peran kedua mode & ekonomi mutiara
+Satu kantong mutiara untuk semua, dipakai membeli karakter.
+
+| | ♾️ Mode Bebas — *jelajahi laut* | 🗺️ Petualangan — *taklukkan tantangan* |
+|---|---|---|
+| Mutiara yang diambil | Langsung masuk kantong | Dihitung untuk ★★, dibayar lewat **bonus bintang baru** (tidak bisa ditambang dengan mengulang level) |
+| 📖 Makhluk Ensiklopedia | ✅ Hanya di sini | ❌ |
+| Momen langka | ✅ +5 🦪 | Tetap tampil, tanpa hadiah |
+| Rekor kedalaman / bintang & bos | Rekor | Bintang & bos |
+| Misi harian & streak | ✅ | ✅ |
+
+Harga karakter dirancang agar karakter terakhir jadi target ± 1–2 minggu bermain rutin (± 350–450 🦪/hari dari menyelam, misi & streak). Tombol iklan **+40 🦪** dibatasi **5× per hari**.
+
 ## 🗺️ Mode Petualangan (level)
 Selain **♾️ Mode Bebas** (endless), ada **20 level** (5 per zona) dengan garis **FINISH** dan progress bar.
 - Setiap level punya **susunan tetap** (seed), jadi bisa dihafal dan diulang untuk bintang lebih banyak.
@@ -108,6 +121,7 @@ Siklus 7 hari berulang. Bonus bisa diambil biasa atau x2 lewat rewarded ad.
 
 ## Koleksi
 - 🦪 **Mutiara**: mata uang untuk membuka **karakter laut baru** (lihat di bawah).
+- 📖 Makhluk langka Ensiklopedia hanya muncul di **♾️ Mode Bebas**.
 - 🫧 **Gelembung perisai**: kebal satu kali tabrakan/jatuh. Muncul jarang, atau dari rewarded ad "Mulai dengan perisai".
 - 📖 **Ensiklopedia Laut**: 8 makhluk langka (2 per zona). Sentuh untuk menemukan dan membaca faktanya.
 
@@ -119,11 +133,11 @@ Setiap karakter punya cara mengapung & tenggelam sendiri. Makin mahal, makin uni
 | Karakter | Harga | Cara bergerak | Animasi |
 |---|---|---|---|
 | 🐡 Puffy (Ikan Buntal) | Gratis | Ketuk: mengembang (naik) ↔ mengempis (turun) | Duri muncul saat mengembang, sirip mengepak |
-| 🐴 Kudi (Kuda Laut) | 🦪 40 | Seperti Puffy tapi lebih pelan & ramping | Ekor menggulung saat turun, sirip punggung bergetar |
-| 🪼 Jeli (Ubur-ubur) | 🦪 90 | Ketuk = denyut dorong ke atas, otomatis tenggelam | Lonceng berkontraksi, tentakel tertinggal mengikuti gerak |
-| 🐙 Okto (Gurita) | 🦪 150 | Semburan tinta: pindah sisi super cepat + kebal sesaat | Tentakel mengalir saat melesat, kulit berubah warna, awan tinta |
-| 🦈 Mantra (Pari Manta) | 🦪 220 | Meluncur zig-zag kecepatan tetap, bisa belok di tengah | Sayap mengepak, ekor mencambuk, tubuh miring |
-| 🎣 Lumi (Ikan Sungut Ganda) | 🦪 320 | Seperti Puffy + lentera menerangi laut gelap & menarik mutiara | Umpan berpegas, mulut terbuka saat mutiara dekat, bintik berpendar |
+| 🐴 Kudi (Kuda Laut) | 🦪 150 | Seperti Puffy tapi lebih pelan & ramping | Ekor menggulung saat turun, sirip punggung bergetar |
+| 🪼 Jeli (Ubur-ubur) | 🦪 400 | Ketuk = denyut dorong ke atas, otomatis tenggelam | Lonceng berkontraksi, tentakel tertinggal mengikuti gerak |
+| 🐙 Okto (Gurita) | 🦪 900 | Semburan tinta: pindah sisi super cepat + kebal sesaat | Tentakel mengalir saat melesat, kulit berubah warna, awan tinta |
+| 🦈 Mantra (Pari Manta) | 🦪 1600 | Meluncur zig-zag kecepatan tetap, bisa belok di tengah | Sayap mengepak, ekor mencambuk, tubuh miring |
+| 🎣 Lumi (Ikan Sungut Ganda) | 🦪 2500 | Seperti Puffy + lentera menerangi laut gelap & menarik mutiara | Umpan berpegas, mulut terbuka saat mutiara dekat, bintik berpendar |
 
 ### ⚡ Kemampuan khusus (terkait bahaya)
 | Karakter | Kemampuan |
@@ -151,7 +165,7 @@ Data karakter (fisika, hitbox, kemampuan, gambar) ada di `src/characters.js`.
 ![characters](docs/characters.png)
 
 ## Monetisasi
-- Rewarded: lanjutkan setelah kalah, mulai dengan perisai, +25 mutiara di menu karakter, hadiah misi x2.
+- Rewarded: lanjutkan setelah kalah, mulai dengan perisai, +40 mutiara di menu karakter (maks. 5×/hari), hadiah misi x2.
 - Interstitial: tiap 3 kali main ulang, jarak minimal 60 detik.
 - Suara & musik otomatis dibisukan selama iklan.
 

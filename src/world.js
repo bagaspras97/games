@@ -107,7 +107,7 @@ export function extend(world, untilX) {
     if (rnd() < 0.05) {
       world.pickups.push({ kind: "shield", x: seg.x + w / 2, y: (seg.ceil + seg.floor) / 2, r: 22 });
     }
-    if (rnd() < 0.05) {
+    if (!world.finishX && rnd() < 0.05) { // rare creatures (Ensiklopedia) live in Free mode only
       const pool = CREATURES.filter((c) => c.zone === zone);
       const fresh = pool.filter((c) => !world.dex.includes(c.id));
       const c = pick(fresh.length ? fresh : pool);

@@ -38,7 +38,8 @@ const ui = {
 
 const INTERSTITIAL_EVERY = 3;  // runs between mid-game ads
 const MIN_AD_GAP_MS = 60000;   // never show interstitials more often than this
-const FREE_PEARLS = 25;        // reward for watching an ad in the shop
+const FREE_PEARLS = 40;        // reward for watching an ad in the shop…
+const FREE_PEARLS_PER_DAY = 5; // …at most this many times per day
 const CLIMB = 48;              // step height Puffy swims over automatically
 // Dev helper: ?start=1000 begins the dive at 1000 m to test deeper zones.
 const START_M = Number(new URLSearchParams(location.search).get("start")) || 0;
@@ -498,6 +499,7 @@ function closePanel(panel) {
 }
 
 function renderShop() {
+  updateFreePearlsButton();
   ui.shopPearls.textContent = save.pearls;
   ui.shopGrid.innerHTML = "";
   shopCanvases = [];
@@ -557,12 +559,27 @@ function selectCharacter(ch) {
   renderShop();
 }
 
+function adPearlsLeft() {
+  const day = missions.today();
+  if (!save.adPearls || save.adPearls.day !== day) save.adPearls = { day, count: 0 };
+  return FREE_PEARLS_PER_DAY - save.adPearls.count;
+}
+
+function updateFreePearlsButton() {
+  const left = adPearlsLeft();
+  ui.freePearls.disabled = left <= 0;
+  ui.freePearls.textContent = left > 0
+    ? `🎬 +${FREE_PEARLS} mutiara (tonton iklan) · sisa ${left}/${FREE_PEARLS_PER_DAY} hari ini`
+    : `🎬 Jatah iklan hari ini habis — kembali besok!`;
+}
+
 async function freePearls() {
+  if (adPearlsLeft() <= 0) return;
   ui.freePearls.disabled = true;
   const earned = await withAd(() => platform.rewarded());
   state = "shop";
-  ui.freePearls.disabled = false;
   if (earned) {
+    save.adPearls.count++;
     save.pearls += FREE_PEARLS;
     sfx.buy();
     platform.save(save);
@@ -591,7 +608,7 @@ function renderDex() {
       card.append(cv);
       card.insertAdjacentHTML("beforeend", `<b>${c.name}</b><span>${c.fact}</span>`);
     } else {
-      card.insertAdjacentHTML("beforeend", `<div class="q">❓</div><b>???</b><span>Temukan di ${ZONES[c.zone].icon} ${ZONES[c.zone].name}</span>`);
+      card.insertAdjacentHTML("beforeend", `<div class="q">❓</div><b>???</b><span>Temukan di ♾️ Mode Bebas, ${ZONES[c.zone].icon} ${ZONES[c.zone].name}</span>`);
     }
     ui.dexGrid.append(card);
   }
@@ -678,10 +695,12 @@ function useAbility(h) {
     case "hook": fx.text(h.x, h.y - 24, "Meleset!", "#9fc3ff"); sfx.click(); break;
     case "bag":
       h.gone = true;
-      save.pearls += 2;
-      mission("pearls", 2);
       fx.sparkle(h.x, h.y, "#7ffff0");
-      fx.text(h.x, h.y - 30, "Laut bersih! +2 🦪", "#7ffff0");
+      if (mode === "endless") {
+        save.pearls += 2;
+        mission("pearls", 2);
+        fx.text(h.x, h.y - 30, "Laut bersih! +2 🦪", "#7ffff0");
+      } else fx.text(h.x, h.y - 30, "Laut bersih!", "#7ffff0");
       sfx.pearl();
       break;
   }
@@ -795,15 +814,15 @@ function update(dt) {
     if (p.taken || Math.hypot(p.x - wx, p.y + (p.bob || 0) - player.y) > p.r + r) continue;
     p.taken = true;
     if (p.kind === "pearl") {
-      save.pearls++;
-      lvlPearls++;
+      if (mode === "level") lvlPearls++; // Adventure: counts toward ★★, paid out as star bonus
+      else save.pearls++;
       mission("pearls");
       sfx.pearl();
       fx.sparkle(p.x, p.y);
       setMood("happy", 0.4);
     } else if (p.kind === "shield") {
       if (!player.shield) { player.shield = true; sfx.shield(); }
-      else { save.pearls += 3; sfx.pearl(); }
+      else { if (mode === "endless") save.pearls += 3; sfx.pearl(); }
       fx.sparkle(p.x, p.y, "#a8f4ff");
     } else if (p.kind === "creature") {
       const c = getCreature(p.id);
@@ -913,8 +932,9 @@ function loop(now) {
     toast(`✨ <b>Momen langka!</b> ${m.icon} ${m.name}`, 4000);
     (sfx[m.sound] || sfx.zone)();
   } else if (ev && ev.ended && state === "play") { // witnessed it to the end
-    save.pearls += MOMENT_REWARD;
-    fx.text(scroll + player.x, player.y - 50, `${ev.ended.def.icon} Saksi momen langka! +${MOMENT_REWARD} 🦪`, "#fff6a8");
+    const paid = mode === "endless"; // Adventure pays out through star bonuses only
+    if (paid) save.pearls += MOMENT_REWARD;
+    fx.text(scroll + player.x, player.y - 50, `${ev.ended.def.icon} Saksi momen langka!${paid ? ` +${MOMENT_REWARD} 🦪` : ""}`, "#fff6a8");
     sfx.pearl();
     mission("moment");
   }
@@ -975,7 +995,7 @@ async function boot() {
   ui.shopClose.onclick = () => closePanel(ui.shop);
   ui.dexClose.onclick = () => closePanel(ui.dex);
   ui.freePearls.onclick = freePearls;
-  ui.freePearls.textContent = `🎬 +${FREE_PEARLS} mutiara (tonton iklan)`;
+  updateFreePearlsButton();
 
   document.addEventListener("visibilitychange", () => {
     if (document.hidden && state === "play") gameOver("hidden");

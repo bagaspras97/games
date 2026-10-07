@@ -328,7 +328,7 @@ export const CHARACTERS = [
     draw: drawPuffy,
   },
   {
-    id: "kudi", name: "Kudi", species: "Kuda Laut", price: 40, color: "#ffc98a",
+    id: "kudi", name: "Kudi", species: "Kuda Laut", price: 150, color: "#ffc98a",
     desc: "Melayang lembut & ramping: naik-turun lebih pelan, mudah dikendalikan.",
     mode: "toggle", g: 1100, max: 430,
     ability: "Tubuh ramping: lolos menyelinap di antara lubang jaring.",
@@ -337,7 +337,7 @@ export const CHARACTERS = [
     draw: drawKudi,
   },
   {
-    id: "jeli", name: "Jeli", species: "Ubur-ubur", price: 90, color: "#ff9fe0",
+    id: "jeli", name: "Jeli", species: "Ubur-ubur", price: 400, color: "#ff9fe0",
     desc: "Ketuk = denyut dorong ke atas. Tanpa ketukan, perlahan tenggelam.",
     mode: "pulse", g: 950, max: 620, impulse: 470,
     ability: "Kebal sengatan ubur-ubur listrik (sesama ubur-ubur!).",
@@ -346,7 +346,7 @@ export const CHARACTERS = [
     draw: drawJeli,
   },
   {
-    id: "okto", name: "Okto", species: "Gurita", price: 150, color: "#2a1a36",
+    id: "okto", name: "Okto", species: "Gurita", price: 900, color: "#2a1a36",
     desc: "Semburan tinta: pindah sisi super cepat & kebal sesaat saat menyembur.",
     mode: "toggle", g: 3400, max: 1150, jet: true,
     ability: "Tinta membutakan ikan pedang & membekukan ubur-ubur di dekatnya.",
@@ -354,7 +354,7 @@ export const CHARACTERS = [
     draw: drawOkto,
   },
   {
-    id: "mantra", name: "Mantra", species: "Pari Manta", price: 220, color: "#9fc3ff",
+    id: "mantra", name: "Mantra", species: "Pari Manta", price: 1600, color: "#9fc3ff",
     desc: "Meluncur zig-zag dengan kecepatan tetap; bisa berbelok di tengah air.",
     mode: "glide", speed: 300,
     ability: "Kulit licin & pipih: kail pancing selalu meleset.",
@@ -363,7 +363,7 @@ export const CHARACTERS = [
     draw: drawMantra,
   },
   {
-    id: "lumi", name: "Lumi", species: "Ikan Sungut Ganda", price: 320, color: "#7ffff0",
+    id: "lumi", name: "Lumi", species: "Ikan Sungut Ganda", price: 2500, color: "#7ffff0",
     desc: "Lentera menerangi laut gelap & menarik mutiara di sekitarnya.",
     mode: "toggle", g: 2000, max: 760, light: 360, magnet: 150,
     ability: "Mulut besar menangkap sampah plastik untuk dibuang: laut bersih +2 🦪.",
