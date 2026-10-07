@@ -13,9 +13,13 @@ function add(p) {
 
 const rand = (a, b) => a + Math.random() * (b - a);
 
-// Burst of square debris + sparks when the player crashes.
+// Burst of bubbles + coloured bits when Puffy gets hurt.
 export function explode(x, y, colors) {
-  for (let i = 0; i < 36; i++) {
+  for (let i = 0; i < 18; i++) {
+    const a = Math.random() * Math.PI * 2, v = rand(80, 320);
+    add({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, g: -200, life: rand(0.6, 1.2), max: 1.2, size: rand(6, 16), color: "#d8f6ff", shape: "bubble" });
+  }
+  for (let i = 0; i < 24; i++) {
     const a = Math.random() * Math.PI * 2, v = rand(150, 650);
     add({
       x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, g: 900,
@@ -25,24 +29,31 @@ export function explode(x, y, colors) {
   }
 }
 
-// Ring of sparkles when a coin is collected.
-export function sparkle(x, y) {
+// Ring of sparkles when a pearl / item is collected.
+export function sparkle(x, y, color = "#fff4fb") {
   for (let i = 0; i < 12; i++) {
     const a = (Math.PI * 2 * i) / 12, v = rand(120, 240);
-    add({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, g: 0, life: 0.45, max: 0.45, size: rand(3, 5), color: "#4fffd2", shape: "dot" });
+    add({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, g: 0, life: 0.45, max: 0.45, size: rand(3, 5), shape: "dot", color });
   }
 }
 
-// Small puff where the player pushes off when flipping gravity.
-export function puff(x, y, dir) {
-  for (let i = 0; i < 8; i++) {
-    add({ x: x + rand(-18, 18), y, vx: rand(-80, 80), vy: dir * rand(40, 140), g: 0, life: 0.35, max: 0.35, size: rand(4, 7), color: "#ffd1ec", shape: "dot" });
+// Burst of bubbles when Puffy inflates / deflates.
+export function puff(x, y) {
+  for (let i = 0; i < 10; i++) {
+    const a = Math.random() * Math.PI * 2, v = rand(60, 180);
+    add({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, g: -120, life: 0.5, max: 0.5, size: rand(4, 10), color: "#d8f6ff", shape: "bubble" });
   }
 }
 
-// Continuous trail behind the running player.
+// Bubble trail behind Puffy (tinted by skin), drifting upward.
 export function trail(x, y, color) {
-  add({ x: x + rand(-6, 6), y: y + rand(-10, 10), vx: rand(-60, -20), vy: rand(-20, 20), g: 0, life: 0.4, max: 0.4, size: rand(3, 6), color, shape: "dot" });
+  if (Math.random() < 0.5) return;
+  add({ x: x + rand(-4, 4), y: y + rand(-8, 8), vx: rand(-50, -20), vy: rand(-60, -20), g: 0, life: 0.6, max: 0.6, size: rand(3, 7), color, shape: "bubble" });
+}
+
+// Ring wave when the shield bubble pops.
+export function ring(x, y) {
+  add({ x, y, vx: 0, vy: 0, g: 0, life: 0.4, max: 0.4, size: 40, grow: 260, color: "#a8f4ff", shape: "ring" });
 }
 
 export function update(dt) {
@@ -51,6 +62,7 @@ export function update(dt) {
     p.x += p.vx * dt;
     p.y += p.vy * dt;
     if (p.vr) p.rot += p.vr * dt;
+    if (p.grow) p.size += p.grow * dt;
     p.life -= dt;
   }
   list = list.filter((p) => p.life > 0);
@@ -67,6 +79,12 @@ export function draw(ctx, scroll) {
       ctx.rotate(p.rot);
       ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
       ctx.restore();
+    } else if (p.shape === "bubble" || p.shape === "ring") {
+      ctx.strokeStyle = p.color;
+      ctx.lineWidth = p.shape === "ring" ? 4 : 1.5;
+      ctx.beginPath();
+      ctx.arc(x, p.y, p.size / 2, 0, Math.PI * 2);
+      ctx.stroke();
     } else {
       ctx.beginPath();
       ctx.arc(x, p.y, p.size / 2, 0, Math.PI * 2);

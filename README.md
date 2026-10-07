@@ -1,50 +1,55 @@
-# Gravity Hop
+# 🐡 Puffy: Petualangan Laut Dalam
 
-Prototipe game web hyper-casual satu tombol (HTML5 + Canvas, tanpa build step) dengan **adapter SDK** untuk Poki, CrazyGames, YouTube Playables, dan Facebook Instant Games.
+Game web hyper-casual satu tombol (HTML5 + Canvas, tanpa build step, tanpa file aset) dengan **adapter SDK** untuk Poki, CrazyGames, YouTube Playables, dan Facebook Instant Games.
 
 ![screenshot](docs/screenshot.png)
 
-## Cara main
-Tap / klik / Spasi untuk membalik gravitasi. Hindari duri, kumpulkan koin.
+## Konsep
+Puffy si ikan buntal menyelam makin dalam. **Tap / klik / Spasi**: Puffy **mengembang** (mengapung ke atas) atau **mengempis** (tenggelam ke bawah). Skor = **kedalaman (m)**.
+
+| Zona | Kedalaman | Bahaya |
+|---|---|---|
+| 🌤️ Perairan Dangkal | 0–300 m | Bulu babi, karang tajam, es runcing |
+| 🌊 Laut Terbuka | 300–800 m | + Ubur-ubur listrik, kail pancing |
+| 🌑 Zona Senja | 800–1500 m | + Ikan pedang (didahului tanda "!"), jaring, sampah plastik |
+| ✨ Zona Gelap | 1500 m+ | Semua, lebih rapat; laut gelap dengan cahaya di sekitar Puffy |
+
+- **Palung**: lantai/atap hilang. Jatuh = kalah, jadi pindah sisi sebelum palung.
+- Warna laut, terrain, dan musik (makin teredam) berubah mengikuti kedalaman.
+
+![deep](docs/deep.png)
+
+## Koleksi
+- 🦪 **Mutiara**: mata uang untuk 7 skin Puffy di toko.
+- 🫧 **Gelembung perisai**: kebal satu kali tabrakan/jatuh. Muncul jarang, atau dari rewarded ad "Mulai dengan perisai".
+- 📖 **Ensiklopedia Laut**: 8 makhluk langka (2 per zona). Sentuh untuk menemukan dan membaca faktanya.
+
+| Toko Skin | Ensiklopedia |
+|---|---|
+| ![shop](docs/shop.png) | ![dex](docs/dex.png) |
+
+## Monetisasi
+- Rewarded: lanjutkan setelah kalah, mulai dengan perisai, +25 mutiara di toko.
+- Interstitial: tiap 3 kali main ulang, jarak minimal 60 detik.
+- Suara & musik otomatis dibisukan selama iklan.
 
 ## Menjalankan
 ```bash
-python3 -m http.server 8000
+python3 -m http.server 8000 --bind 127.0.0.1
 # buka http://localhost:8000/?platform=local
+# uji zona dalam: http://localhost:8000/?start=1000
 ```
-Ganti `?platform=` dengan `poki`, `crazygames`, `youtube`, atau `facebook` untuk memuat SDK platform tersebut. Kalau SDK gagal dimuat, game otomatis memakai mode `local` (iklan simulasi).
+`?platform=` bisa `poki`, `crazygames`, `youtube`, `facebook`, atau `local` (iklan simulasi).
 
 ## Struktur
-- `index.html`: halaman, UI menu/game over
-- `src/game.js`: logika game (kanvas 16:9 1280x720)
-- `src/skins.js`: daftar skin karakter (nama, harga koin, fungsi gambar)
-- `src/sdk/adapter.js`: satu antarmuka untuk semua platform:
-  `init`, `loadingFinished`, `gameplayStart/Stop`, `interstitial`, `rewarded`, `save/load`
-
-## Dunia gua
-- Lantai & langit-langit **berundak** naik-turun (undakan kecil dinaiki otomatis).
-- **Palung**: bagian lantai/langit-langit yang hilang. Jatuh = kalah, jadi balik gravitasi sebelum palung. Ada koin bonus di atas palung.
-- Background **parallax** (bintang + siluet stalaktit/stalagmit). Palung & duri makin sering seiring jarak.
-- Kode: `src/world.js`.
-
-## Suara, musik, partikel & getaran
-- Efek suara & **musik latar chiptune** disintesis dengan Web Audio API (`src/audio.js`), tanpa file audio. Tempo musik naik mengikuti kecepatan game; musik berhenti saat kalah.
-- **Partikel** (`src/particles.js`): jejak di belakang karakter (warna mengikuti skin), kepulan saat balik gravitasi, kilau saat ambil koin, ledakan saat kalah.
-- **Getaran layar & HP hanya saat menyentuh bahaya**: duri, dinding, atau jatuh ke palung.
-- Tombol 🔊/🔇 di pojok kanan atas (tersimpan). Semua suara otomatis dibisukan selama iklan tayang (syarat platform).
-
-## Toko Skin
-7 skin (Klasik, Neon, Slime, Kucing, Robot, Api, Bintang Emas) dibeli dengan koin hasil bermain. Untuk menambah skin, cukup tambahkan objek baru di `SKINS` pada `src/skins.js`.
-
-![shop](docs/shop.png)
-
-## Monetisasi bawaan
-- **Rewarded ad**: tombol "Lanjutkan" setelah game over (sekali per run).
-- **Rewarded ad di Toko Skin**: +25 koin per iklan.
-- **Interstitial**: tiap 3 kali main ulang, minimal jarak 60 detik.
-- Progres (skor terbaik, koin) disimpan lewat penyimpanan milik platform.
+- `src/game.js`: alur game, fisika Puffy, perisai, penemuan, UI
+- `src/world.js`: terrain, palung, zona, bahaya, pickup, semua rendering dunia
+- `src/skins.js`: gambar Puffy + 7 skin
+- `src/creatures.js`: makhluk Ensiklopedia Laut + faktanya
+- `src/particles.js`: gelembung, kilau, ledakan
+- `src/audio.js`: efek suara & musik sintetis (Web Audio API)
+- `src/sdk/adapter.js`: satu antarmuka untuk semua platform
 
 ## Sebelum submit
 - Facebook: isi `FB_INTERSTITIAL_ID` / `FB_REWARDED_ID` di `src/sdk/adapter.js` dan tambahkan `fbapp-config.json`.
 - YouTube Playables: hanya iklan dari SDK YouTube, tanpa pembelian dalam game.
-- Poki: ukuran unduhan awal < 8 MB (saat ini hanya beberapa KB).

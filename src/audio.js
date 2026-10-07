@@ -70,11 +70,19 @@ function noise(dur = 0.3, vol = 0.4) {
 }
 
 export const sfx = {
-  flip(up) { tone({ type: "triangle", from: up ? 320 : 520, to: up ? 640 : 260, dur: 0.1, vol: 0.25 }); },
-  coin() {
-    tone({ type: "square", from: 988, dur: 0.06, vol: 0.12 });
-    tone({ type: "square", from: 1319, dur: 0.12, vol: 0.12, delay: 0.06 });
+  // Puffy inflates (bubbly rise) or deflates (falling "blup").
+  flip(up) {
+    tone({ type: "sine", from: up ? 220 : 700, to: up ? 760 : 180, dur: 0.14, vol: 0.3 });
+    tone({ type: "sine", from: up ? 900 : 400, to: up ? 1300 : 250, dur: 0.05, vol: 0.12, delay: 0.05 });
   },
+  pearl() {
+    tone({ type: "sine", from: 1320, dur: 0.08, vol: 0.18 });
+    tone({ type: "sine", from: 1760, dur: 0.16, vol: 0.14, delay: 0.06 });
+  },
+  shield() { [660, 880, 1100].forEach((f, i) => tone({ type: "sine", from: f, to: f * 1.5, dur: 0.12, vol: 0.18, delay: i * 0.05 })); },
+  shieldPop() { noise(0.12, 0.35); tone({ type: "sine", from: 900, to: 200, dur: 0.15, vol: 0.25 }); },
+  discover() { [523, 659, 784, 1047, 1319].forEach((f, i) => tone({ type: "triangle", from: f, dur: 0.18, vol: 0.18, delay: i * 0.09 })); },
+  zone() { [392, 523, 784].forEach((f, i) => tone({ type: "sine", from: f, dur: 0.4, vol: 0.15, delay: i * 0.15 })); },
   land() { tone({ type: "sine", from: 140, to: 70, dur: 0.06, vol: 0.18 }); },
   death() {
     noise(0.35, 0.5);
@@ -91,16 +99,21 @@ export const sfx = {
 };
 
 // ---------- Background music ----------
-// A small synthesized chiptune loop (bass + arpeggio + hi-hat), scheduled ahead of
+// A small synthesized underwater loop (bass + soft arpeggio + hi-hat), scheduled ahead of
 // time with the Web Audio clock so it stays in rhythm. Tempo follows game speed.
 
 const BASS = [45, 45, 41, 41, 48, 48, 43, 43];           // MIDI notes, one per half bar (Am F C G)
 const CHORDS = [[57, 60, 64], [53, 57, 60], [48, 52, 55], [55, 59, 62]];
 const midi = (n) => 440 * Math.pow(2, (n - 69) / 12);
 
-let musicGain = null, timer = null, step = 0, nextTime = 0, bpm = 112;
+let musicGain = null, musicFilter = null, timer = null, step = 0, nextTime = 0, bpm = 112;
 
-export function setTempo(v) { bpm = Math.max(100, Math.min(150, v)); }
+export function setTempo(v) { bpm = Math.max(96, Math.min(140, v)); }
+
+// Deeper water sounds more muffled: 0 = surface, 1 = abyss.
+export function setMuffle(m) {
+  if (musicFilter) musicFilter.frequency.setTargetAtTime(4000 - m * 3300, ctx.currentTime, 0.5);
+}
 
 function musicNote(freq, t, dur, type, vol) {
   const osc = ctx.createOscillator();
@@ -137,7 +150,7 @@ function scheduleStep(t) {
   if (s % 4 === 0) musicNote(midi(BASS[bar * 2 + (s >= 8 ? 1 : 0)]), t, sixteenth * 3, "triangle", 0.35);
   if (s % 2 === 0) {
     const chord = CHORDS[bar];
-    musicNote(midi(chord[(s / 2) % 3] + 12), t, sixteenth * 1.5, "square", 0.05);
+    musicNote(midi(chord[(s / 2) % 3] + 12), t, sixteenth * 2, "triangle", 0.12);
   }
   if (s % 4 === 2) hat(t);
   step++;
@@ -149,7 +162,10 @@ export function startMusic() {
   if (!musicGain) {
     musicGain = ctx.createGain();
     musicGain.gain.value = 0.6;
-    musicGain.connect(master);
+    musicFilter = ctx.createBiquadFilter();
+    musicFilter.type = "lowpass";
+    musicFilter.frequency.value = 4000;
+    musicGain.connect(musicFilter).connect(master);
   }
   step = 0;
   nextTime = ctx.currentTime + 0.05;
