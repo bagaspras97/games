@@ -2,6 +2,7 @@
 // Tap / click / space flips gravity. Avoid the spikes. Collect coins.
 import { createPlatform } from "./sdk/adapter.js";
 import { SKINS, getSkin } from "./skins.js";
+import { sfx, unlock, toggleMute, isMuted, setAdPlaying } from "./audio.js";
 import {
   W, H, createWorld, extend, prune, surfaceUnder,
   drawBackground, drawTerrain, drawSpikes, drawCoins,
@@ -36,6 +37,7 @@ let state = "menu";            // menu | play | over | ad | shop
 let shopReturn = null;         // panel to show again when the shop closes
 let runs = 0, lastAdAt = 0, revived = false;
 let player, world, scroll, speed, score, last, time = 0;
+let shake = 0;                 // screen shake strength in px, decays every frame
 
 function reset() {
   player = { x: 260, y: H - 160, vy: 0, size: 44, gravity: 1, rot: 0 };
@@ -60,8 +62,17 @@ function startRun() {
   platform.gameplayStart();
 }
 
+function addShake(amount) { shake = Math.max(shake, amount); }
+
+function vibrate(ms) {
+  try { navigator.vibrate && navigator.vibrate(ms); } catch (e) {}
+}
+
 function gameOver() {
   state = "over";
+  sfx.death();
+  addShake(22);
+  vibrate([60, 40, 90]);
   platform.gameplayStop();
   runs++;
   save.best = Math.max(save.best, score);
@@ -73,9 +84,11 @@ function gameOver() {
   show(ui.over, true);
 }
 
-function withAd(fn) {
+async function withAd(fn) {
   state = "ad";
-  return fn();
+  setAdPlaying(true);
+  try { return await fn(); }
+  finally { setAdPlaying(false); }
 }
 
 async function retry() {
@@ -93,6 +106,7 @@ async function revive() {
   const earned = await withAd(() => platform.rewarded());
   if (earned) {
     revived = true;
+    sfx.revive();
     // Clear nearby hazards and drop the player back on a safe flat strip.
     const wx = scroll + player.x;
     world.spikes = world.spikes.filter((o) => o.x > wx + 500 || o.x < wx - 100);
@@ -155,10 +169,12 @@ function renderShop() {
 
 function selectSkin(skin) {
   if (!save.owned.includes(skin.id)) {
-    if (save.coins < skin.price) return;
+    if (save.coins < skin.price) { sfx.denied(); addShake(6); return; }
     save.coins -= skin.price;
+    sfx.buy();
     save.owned.push(skin.id);
   }
+  else sfx.click();
   save.skin = skin.id;
   platform.save(save);
   renderShop();
@@ -166,10 +182,12 @@ function selectSkin(skin) {
 
 async function freeCoins() {
   ui.freeCoins.disabled = true;
-  const earned = await platform.rewarded();
+  const earned = await withAd(() => platform.rewarded());
+  state = "shop";
   ui.freeCoins.disabled = false;
   if (earned) {
     save.coins += FREE_COINS;
+    sfx.buy();
     platform.save(save);
   }
   renderShop();
@@ -179,6 +197,8 @@ function flip() {
   if (state !== "play") return;
   player.gravity *= -1;
   player.vy = 0;
+  sfx.flip(player.gravity < 0);
+  addShake(3);
 }
 
 const CLIMB = 48; // step height the player walks up automatically
@@ -203,8 +223,11 @@ function update(dt) {
 
   // Land on floor / ceiling (small steps are climbed automatically).
   const under = surfaceUnder(world, wx - half + 4, wx + half - 4);
-  if (under.floor !== null && player.y + half > under.floor) { player.y = under.floor - half; player.vy = Math.min(player.vy, 0); }
-  if (under.ceil !== null && player.y - half < under.ceil) { player.y = under.ceil + half; player.vy = Math.max(player.vy, 0); }
+  const impact = Math.abs(player.vy);
+  let landed = false;
+  if (under.floor !== null && player.y + half > under.floor) { player.y = under.floor - half; player.vy = Math.min(player.vy, 0); landed = true; }
+  if (under.ceil !== null && player.y - half < under.ceil) { player.y = under.ceil + half; player.vy = Math.max(player.vy, 0); landed = true; }
+  if (landed && impact > 500) { sfx.land(); addShake(Math.min(8, impact / 160)); vibrate(15); }
 
   // Fell into a trench.
   if (player.y - half > H || player.y + half < 0) return gameOver();
@@ -219,11 +242,19 @@ function update(dt) {
     if (!c.taken && Math.hypot(c.x - wx, c.y - player.y) < c.r + half) {
       c.taken = true;
       save.coins++;
+      sfx.coin();
     }
   }
 }
 
-function draw() {
+function draw(dt) {
+  ctx.save();
+  if (shake > 0.3) {
+    ctx.translate((Math.random() * 2 - 1) * shake, (Math.random() * 2 - 1) * shake);
+    shake *= Math.pow(0.002, dt); // fast exponential decay
+  } else shake = 0;
+  ctx.fillStyle = "#140f38";
+  ctx.fillRect(-40, -40, W + 80, H + 80); // cover edges revealed by the shake
   drawBackground(ctx, scroll);
   drawTerrain(ctx, world, scroll, time);
   drawSpikes(ctx, world, scroll);
@@ -239,6 +270,7 @@ function draw() {
     ctx.restore();
   }
 
+  ctx.restore();
   ui.score.textContent = state === "menu" ? "" : `${score}  •  🪙 ${save.coins}`;
 }
 
@@ -247,7 +279,7 @@ function loop(now) {
   last = now;
   time += dt;
   if (state === "play") update(dt);
-  draw();
+  draw(dt);
   requestAnimationFrame(loop);
 }
 
@@ -260,11 +292,17 @@ async function boot() {
   if (!save.owned.includes(save.skin)) save.skin = "classic";
   reset();
 
+  addEventListener("pointerdown", unlock, true);
+  addEventListener("keydown", unlock, true);
   canvas.addEventListener("pointerdown", flip);
+  const muteBtn = document.getElementById("mute");
+  const muteLabel = () => { muteBtn.textContent = isMuted() ? "🔇" : "🔊"; };
+  muteLabel();
+  muteBtn.onclick = (e) => { e.stopPropagation(); toggleMute(); muteLabel(); muteBtn.blur(); };
   addEventListener("keydown", (e) => {
     if (e.code === "Space" || e.code === "ArrowUp") { e.preventDefault(); flip(); }
   });
-  ui.play.onclick = startRun;
+  ui.play.onclick = () => { sfx.click(); startRun(); };
   ui.retry.onclick = retry;
   ui.revive.onclick = revive;
   document.querySelectorAll(".open-shop").forEach((b) => {
