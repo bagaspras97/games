@@ -314,8 +314,153 @@ function chooseSwap(id) {
   closeSwap();
 }
 
+// ---------- Active skills (Free mode only) ----------
+let skillCD = 0;                // seconds until the skill is ready
+let effects = [];               // short skill visuals: { kind, t, dur, ... }
+
+const onScreen = (h) => h.x - scroll > -80 && h.x - scroll < W + 80;
+// a hazard's visual centre (several hazard types store y differently)
+function hazardY(h) {
+  if (h.type === "coral") return h.base - h.h / 2;
+  if (h.type === "icicle") return h.base + h.h / 2;
+  if (h.type === "net") return h.fromTop ? h.base + h.h / 2 : h.base - h.h / 2;
+  return h.y;
+}
+
+function destroyHazard(h, color = "#ffffff") {
+  if (h.gone) return;
+  h.gone = true;
+  fx.sparkle(h.x, hazardY(h), color);
+  fx.puff(h.x, hazardY(h));
+}
+
+function updateSkillButton() {
+  const b = $("skill");
+  const visible = (state === "play" || state === "swap") && mode === "endless";
+  show(b, visible);
+  if (!visible) return;
+  const sk = hero().skill;
+  b.disabled = skillCD > 0;
+  b.innerHTML = skillCD > 0
+    ? `<span class="sk-icon">${sk.icon}</span><span class="sk-cd">${Math.ceil(skillCD)}</span>`
+    : `<span class="sk-icon">${sk.icon}</span><span class="sk-name">${sk.name}</span>`;
+  b.style.setProperty("--p", skillCD > 0 ? 1 - skillCD / sk.cd : 1);
+}
+
+function useSkill() {
+  if (state !== "play" || mode !== "endless" || skillCD > 0) return;
+  const ch = hero(), sk = ch.skill;
+  const wx = scroll + player.x, py = player.y;
+  skillCD = sk.cd;
+  sfx.shield();
+  fx.text(wx, py - 52, `${sk.icon} ${sk.name}!`, ch.color);
+  mission("ability");
+  switch (ch.id) {
+    case "puffy": { // spike burst: destroys hazards around
+      effects.push({ kind: "spikes", t: 0, dur: 0.45 });
+      for (const h of world.hazards) if (Math.hypot(h.x - wx, hazardY(h) - py) < 280) destroyHazard(h, "#ffe27a");
+      player.up = true; player.gravity = -1; // Puffy puffs up for the burst
+      break;
+    }
+    case "kudi": { // tail whirl: pulls all pearls on screen, blows small hazards away
+      effects.push({ kind: "whirl", t: 0, dur: 1.2 });
+      for (const p of world.pickups) if (p.kind === "pearl" && !p.taken && onScreen(p)) p.pulled = true;
+      for (const h of world.hazards) {
+        if (Math.hypot(h.x - wx, hazardY(h) - py) > 340) continue;
+        if (h.type === "bag") destroyHazard(h, "#ffc98a");
+        if (h.type === "jelly") h.stunUntil = time + 3;
+      }
+      break;
+    }
+    case "jeli": { // electric wave forward along the player's height
+      effects.push({ kind: "bolt", t: 0, dur: 0.5, y: py });
+      for (const h of world.hazards) {
+        const dx = h.x - wx;
+        if (dx > -20 && dx < 800 && Math.abs(hazardY(h) - py) < 240) destroyHazard(h, "#fff36b");
+      }
+      break;
+    }
+    case "okto": { // arms grab and fling up to 3 nearest hazards ahead
+      const targets = world.hazards.filter((h) => !h.gone && h.x > wx - 20 && h.x - wx < 520)
+        .sort((a, b) => a.x - b.x).slice(0, 3);
+      for (const h of targets) {
+        effects.push({ kind: "arm", t: 0, dur: 0.4, tx: h.x, ty: hazardY(h) });
+        destroyHazard(h, "#d6485c");
+      }
+      fx.ink(wx, py);
+      break;
+    }
+    case "mantra": { // 2 s charge: invulnerable and smashes through hazards
+      player.dash = 2;
+      player.invuln = Math.max(player.invuln, 2);
+      effects.push({ kind: "dash", t: 0, dur: 2 });
+      break;
+    }
+    case "lumi": { // lantern beam freezes everything on screen
+      effects.push({ kind: "beam", t: 0, dur: 0.6 });
+      for (const h of world.hazards) if (onScreen(h)) h.stunUntil = time + 3;
+      break;
+    }
+    case "bubu": { // giant water spout wipes the screen clean
+      effects.push({ kind: "wave", t: 0, dur: 0.8 });
+      for (const h of world.hazards) if (onScreen(h)) destroyHazard(h, "#a8dcff");
+      addShake(10);
+      break;
+    }
+  }
+}
+
+function drawEffects() {
+  for (const e of effects) {
+    const k = e.t / e.dur, a = 1 - k;
+    ctx.save();
+    switch (e.kind) {
+      case "spikes": // ring of flying spikes
+        ctx.fillStyle = `rgba(255,226,122,${a})`;
+        for (let i = 0; i < 16; i++) {
+          const an = (Math.PI * 2 * i) / 16, r = 30 + k * 260;
+          ctx.save(); ctx.translate(player.x + Math.cos(an) * r, player.y + Math.sin(an) * r); ctx.rotate(an);
+          ctx.beginPath(); ctx.moveTo(12, 0); ctx.lineTo(-8, -5); ctx.lineTo(-8, 5); ctx.fill(); ctx.restore();
+        }
+        break;
+      case "whirl":
+        ctx.strokeStyle = `rgba(255,201,138,${a})`; ctx.lineWidth = 3;
+        for (let i = 0; i < 3; i++) { ctx.beginPath(); ctx.arc(player.x, player.y, 40 + i * 30 + Math.sin(time * 10 + i) * 6, time * 8 + i, time * 8 + i + 4); ctx.stroke(); }
+        break;
+      case "bolt": // jagged lightning line forward
+        ctx.strokeStyle = `rgba(255,243,107,${a})`; ctx.lineWidth = 6; ctx.shadowColor = "#fff36b"; ctx.shadowBlur = 20;
+        ctx.beginPath(); ctx.moveTo(player.x + 20, e.y);
+        for (let x = 60; x <= 800; x += 40) ctx.lineTo(player.x + x, e.y + (Math.random() - 0.5) * 60);
+        ctx.stroke();
+        ctx.fillStyle = `rgba(255,243,107,${0.12 * a})`;            // the band it clears
+        ctx.fillRect(player.x, e.y - 240, 800, 480);
+        break;
+      case "arm": // tentacle reaching out to the grabbed hazard
+        ctx.strokeStyle = `rgba(214,72,92,${a})`; ctx.lineWidth = 12; ctx.lineCap = "round";
+        ctx.beginPath(); ctx.moveTo(player.x, player.y);
+        ctx.quadraticCurveTo((player.x + e.tx - scroll) / 2, player.y - 80, e.tx - scroll, e.ty); ctx.stroke();
+        break;
+      case "dash":
+        ctx.fillStyle = `rgba(159,195,255,${0.35 * a + 0.1})`;
+        for (let i = 1; i <= 5; i++) { ctx.beginPath(); ctx.ellipse(player.x - i * 26, player.y, 24 - i * 3, 8, 0, 0, Math.PI * 2); ctx.fill(); }
+        break;
+      case "beam": // lantern flash
+        ctx.fillStyle = `rgba(255,245,154,${0.45 * a})`;
+        ctx.fillRect(0, 0, W, H);
+        break;
+      case "wave": // water wall sweeping right
+        ctx.fillStyle = `rgba(168,220,255,${0.6 * a})`;
+        ctx.fillRect(player.x + k * W - 80, 0, 160, H);
+        break;
+    }
+    ctx.restore();
+  }
+}
+
 function startRun(withShield = false) {
   swapCooldown = 0;
+  skillCD = 0;
+  effects = [];
   reset(withShield);
   announce(missions.trackCharacter(save, save.char));
   resetMoments();
@@ -586,7 +731,7 @@ function renderShop() {
     card.append(c);
     card.insertAdjacentHTML("beforeend", hidden
       ? `<b>??? <small>Karakter Rahasia</small></b><p class="desc">Temukan semua makhluk di 📖 Ensiklopedia Laut untuk membukanya.</p><p class="ability">⚡ ???</p><span class="price">${label}</span>`
-      : `<b>${ch.name} <small>${ch.species}</small></b><p class="desc">${ch.desc}</p><p class="ability">⚡ ${ch.ability}</p><span class="price">${label}</span>`);
+      : `<b>${ch.name} <small>${ch.species}</small></b><p class="desc">${ch.desc}</p><p class="ability">⚡ ${ch.ability}</p><p class="skill">${ch.skill.icon} <b>${ch.skill.name}</b> (Mode Bebas): ${ch.skill.desc}</p><span class="price">${label}</span>`);
     if (hidden || (!owned && save.pearls < ch.price)) card.classList.add("locked");
     card.onclick = () => selectCharacter(ch);
     ui.shopGrid.append(card);
@@ -807,6 +952,14 @@ function update(dt) {
 
   if (player.invuln > 0) player.invuln -= dt;
   if (swapCooldown > 0) swapCooldown -= dt;
+  if (skillCD > 0) skillCD -= dt;
+  if (player.dash > 0) player.dash -= dt;
+  effects = effects.filter((e) => (e.t += dt) < e.dur);
+  for (const p of world.pickups) { // Kudi's whirl pulls pearls in
+    if (!p.pulled || p.taken) continue;
+    p.x += (scroll + player.x - p.x) * Math.min(1, dt * 8);
+    p.y += (player.y - p.y) * Math.min(1, dt * 8);
+  }
   if (player.moodT > 0 && (player.moodT -= dt) <= 0) player.mood = "normal";
 
   const ch = hero();
@@ -847,6 +1000,7 @@ function update(dt) {
 
   for (const h of world.hazards) {
     if (h.gone || isHarmless(h, time) || !hitsHazard(h, wx, player.y, r)) continue;
+    if (player.dash > 0) { destroyHazard(h, "#9fc3ff"); continue; } // Mantra's charge
     if (useAbility(h)) continue;
     if (player.invuln > 0) continue;
     if (player.shield) { popShield(); h.gone = true; continue; }
@@ -957,6 +1111,7 @@ function draw(dt) {
   if (boss && bossCtx && mode === "level" && state !== "menu") drawBoss(ctx, boss, bossCtx, time);
   drawPickups(ctx, world, scroll, time, getCreature);
   fx.draw(ctx, scroll);
+  if (effects.length) drawEffects();
   if (state === "dying") {
     const anim = DEATHS[dying.key];
     ctx.save();
@@ -980,6 +1135,7 @@ function loop(now) {
   last = now;
   time += dt;
   updateSwapButton();
+  updateSkillButton();
   if (state === "play") update(dt);
   else if (state === "dying") {
     const anim = DEATHS[dying.key];
@@ -1040,6 +1196,7 @@ async function boot() {
   canvas.addEventListener("pointerdown", flip);
   addEventListener("keydown", (e) => {
     if (e.code === "Space" || e.code === "ArrowUp") { e.preventDefault(); flip(); }
+    if (e.code === "KeyX") useSkill();
     if (e.code === "KeyC") { if (state === "swap") closeSwap(); else openSwap(); }
   });
 
@@ -1051,6 +1208,7 @@ async function boot() {
   ui.play.onclick = () => { sfx.click(); startEndless(); };
   $("swap").onclick = (e) => { e.stopPropagation(); $("swap").blur(); openSwap(); };
   $("swap-close").onclick = closeSwap;
+  $("skill").addEventListener("pointerdown", (e) => { e.stopPropagation(); e.preventDefault(); useSkill(); });
   document.querySelectorAll(".open-levels").forEach((b) => { b.onclick = () => openPanel($("levels"), b.closest(".panel"), renderLevels); });
   $("levels-close").onclick = () => closePanel($("levels"));
   $("done-next").onclick = nextLevel;
@@ -1076,7 +1234,7 @@ async function boot() {
   });
 
   // Dev helper (?debug): lets automated tests read the boss & player state.
-  if (new URLSearchParams(location.search).has("debug")) window.__dbg = () => ({ boss, bossCtx, player, state });
+  if (new URLSearchParams(location.search).has("debug")) window.__dbg = () => ({ boss, bossCtx, player, state, world, scroll, time });
 
   platform.loadingFinished();
   $("platform").textContent = platform.name;

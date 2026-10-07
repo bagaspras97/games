@@ -206,7 +206,7 @@ function spawnHazard(world, seg, type) {
 export function updateWorld(world, dt, scroll, t) {
   for (const h of world.hazards) {
     const sx = h.x - scroll;
-    if (h.type === "jelly" && h.stunUntil > t) continue; // frozen by ink
+    if (h.stunUntil > t) continue; // frozen (ink, whale song, lantern beam…)
     if (h.type === "jelly") h.y = h.baseY + Math.sin(t * 1.8 + h.phase) * h.amp;
     else if (h.type === "hook") {
       const progress = clamp((W + 100 - sx) / 500, 0, 1);

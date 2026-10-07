@@ -139,6 +139,21 @@ Setiap karakter punya cara mengapung & tenggelam sendiri. Makin mahal, makin uni
 | 🦈 Mantra (Pari Manta) | 🦪 1600 | Meluncur zig-zag kecepatan tetap, bisa belok di tengah | Sayap mengepak, ekor mencambuk, tubuh miring |
 | 🎣 Lumi (Ikan Sungut Ganda) | 🦪 2500 | Seperti Puffy + lentera menerangi laut gelap & menarik mutiara | Umpan berpegas, mulut terbuka saat mutiara dekat, bintik berpendar |
 
+### 🗡️ Skill aktif (Mode Bebas)
+Tombol bulat **⚡ kanan bawah** (atau tombol **X**). Setelah dipakai, tombol mengisi ulang (cooldown) sambil menampilkan hitung mundur. Tidak tersedia di Petualangan — di sana bos tetap ditaklukkan dengan bertahan sampai 🏁.
+
+| Karakter | Skill | Efek | Cooldown |
+|---|---|---|---|
+| 🐡 Puffy | 🦔 Ledakan Duri | Duri menyembur ke segala arah, memecahkan bahaya di sekitar | 12 dtk |
+| 🐴 Kudi | 🌀 Pusaran Ekor | Menyedot semua mutiara di layar, menghalau ubur-ubur & plastik di dekatnya | 12 dtk |
+| 🪼 Jeli | ⚡ Setrum Balik | Gelombang listrik ke depan menghancurkan bahaya di jalurnya | 14 dtk |
+| 🐙 Okto | 🐙 Lengan Gurita | Tentakel meraih & melempar hingga 3 bahaya terdekat di depan | 12 dtk |
+| 🦈 Mantra | 💨 Sayap Penerjang | Menerjang 2 detik: kebal & menembus bahaya yang ditabrak | 15 dtk |
+| 🎣 Lumi | 🔦 Sorot Lentera | Membekukan semua bahaya di layar selama 3 detik | 18 dtk |
+| 🐋 Bubu | 🌊 Semburan Paus | Menyapu bersih semua bahaya di layar | 20 dtk |
+
+![skills](docs/skills.png)
+
 ### 🔄 Ganti karakter di tengah penyelaman (Mode Bebas)
 Tombol **🐠 Ganti** (kiri atas, atau tombol **C**) menjeda permainan dan menampilkan karakter yang dimiliki beserta kemampuannya. Setelah berganti: kebal 1 detik, lalu jeda 8 detik sebelum bisa ganti lagi. Tidak tersedia di Petualangan.
 

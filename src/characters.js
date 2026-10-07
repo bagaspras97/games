@@ -1,6 +1,8 @@
 // Unlockable sea characters. Each one floats / sinks in its own way and gets a
 // more elaborate animation the more pearls it costs.
 //
+// skill = ACTIVE ability (⚡ button / X key), Free mode only, with a cooldown in seconds.
+//
 // Movement modes:
 //   toggle – tap flips buoyancy (float up ↔ sink down); g = acceleration, max = top speed
 //   pulse  – tap gives an upward push, otherwise sinks slowly (jellyfish)
@@ -323,6 +325,7 @@ export const CHARACTERS = [
     desc: "Ketuk: mengembang (naik) ↔ mengempis (turun).",
     mode: "toggle", g: 2000, max: 760,
     ability: "Saat mengembang, ikan pedang memantul dari durinya.",
+    skill: { icon: "🦔", name: "Ledakan Duri", cd: 12, desc: "Duri menyembur ke segala arah, memecahkan bahaya di sekitar." }, // active, Free mode only
     immune: (h, p) => h.type === "sword" && p.up,
     box: (up) => (up ? { hw: 28, hh: 28, r: 24 } : { hw: 21, hh: 14, r: 15 }),
     draw: drawPuffy,
@@ -332,6 +335,7 @@ export const CHARACTERS = [
     desc: "Melayang lembut & ramping: naik-turun lebih pelan, mudah dikendalikan.",
     mode: "toggle", g: 1100, max: 430,
     ability: "Tubuh ramping: lolos menyelinap di antara lubang jaring.",
+    skill: { icon: "🌀", name: "Pusaran Ekor", cd: 12, desc: "Menyedot semua mutiara di layar & menghalau ubur-ubur dan plastik di dekatnya." }, // active, Free mode only
     immune: (h) => h.type === "net",
     box: () => ({ hw: 14, hh: 26, r: 14 }),
     draw: drawKudi,
@@ -341,6 +345,7 @@ export const CHARACTERS = [
     desc: "Ketuk = denyut dorong ke atas. Tanpa ketukan, perlahan tenggelam.",
     mode: "pulse", g: 950, max: 620, impulse: 470,
     ability: "Kebal sengatan ubur-ubur listrik (sesama ubur-ubur!).",
+    skill: { icon: "⚡", name: "Setrum Balik", cd: 14, desc: "Gelombang listrik ke depan menghancurkan bahaya di jalurnya." }, // active, Free mode only
     immune: (h) => h.type === "jelly",
     box: () => ({ hw: 22, hh: 20, r: 19 }),
     draw: drawJeli,
@@ -350,6 +355,7 @@ export const CHARACTERS = [
     desc: "Semburan tinta: pindah sisi super cepat & kebal sesaat saat menyembur.",
     mode: "toggle", g: 3400, max: 1150, jet: true,
     ability: "Tinta membutakan ikan pedang & membekukan ubur-ubur di dekatnya.",
+    skill: { icon: "🐙", name: "Lengan Gurita", cd: 12, desc: "Tentakel meraih & melempar hingga 3 bahaya terdekat di depan." }, // active, Free mode only
     box: () => ({ hw: 22, hh: 22, r: 19 }),
     draw: drawOkto,
   },
@@ -358,6 +364,7 @@ export const CHARACTERS = [
     desc: "Meluncur zig-zag dengan kecepatan tetap; bisa berbelok di tengah air.",
     mode: "glide", speed: 300,
     ability: "Kulit licin & pipih: kail pancing selalu meleset.",
+    skill: { icon: "💨", name: "Sayap Penerjang", cd: 15, desc: "Menerjang 2 detik: kebal & menembus semua bahaya yang ditabrak." }, // active, Free mode only
     immune: (h) => h.type === "hook",
     box: () => ({ hw: 30, hh: 14, r: 15 }),
     draw: drawMantra,
@@ -367,6 +374,7 @@ export const CHARACTERS = [
     desc: "Lentera menerangi laut gelap & menarik mutiara di sekitarnya.",
     mode: "toggle", g: 2000, max: 760, light: 360, magnet: 150,
     ability: "Mulut besar menangkap sampah plastik untuk dibuang: laut bersih +2 🦪.",
+    skill: { icon: "🔦", name: "Sorot Lentera", cd: 18, desc: "Cahaya kuat membekukan semua bahaya di layar selama 3 detik." }, // active, Free mode only
     immune: (h) => h.type === "bag",
     box: () => ({ hw: 26, hh: 24, r: 21 }),
     draw: drawLumi,
@@ -379,6 +387,7 @@ CHARACTERS.push({
   desc: "Karakter rahasia! Besar & tenang: naik-turun sedang, menyembur dari lubang napas.",
   mode: "toggle", g: 1500, max: 600,
   ability: "Nyanyian paus tiap 6 detik: mengusir ikan pedang, kail & membekukan ubur-ubur di sekitarnya.",
+    skill: { icon: "🌊", name: "Semburan Paus", cd: 20, desc: "Semburan air raksasa menyapu bersih semua bahaya di layar." }, // active, Free mode only
   sonar: { every: 6, radius: 480 },
   box: () => ({ hw: 40, hh: 22, r: 22 }),
   draw: drawBubu,
