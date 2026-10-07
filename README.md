@@ -21,6 +21,12 @@ Ganti `?platform=` dengan `poki`, `crazygames`, `youtube`, atau `facebook` untuk
 - `src/sdk/adapter.js`: satu antarmuka untuk semua platform:
   `init`, `loadingFinished`, `gameplayStart/Stop`, `interstitial`, `rewarded`, `save/load`
 
+## Dunia gua
+- Lantai & langit-langit **berundak** naik-turun (undakan kecil dinaiki otomatis).
+- **Palung**: bagian lantai/langit-langit yang hilang. Jatuh = kalah, jadi balik gravitasi sebelum palung. Ada koin bonus di atas palung.
+- Background **parallax** (bintang + siluet stalaktit/stalagmit). Palung & duri makin sering seiring jarak.
+- Kode: `src/world.js`.
+
 ## Toko Skin
 7 skin (Klasik, Neon, Slime, Kucing, Robot, Api, Bintang Emas) dibeli dengan koin hasil bermain. Untuk menambah skin, cukup tambahkan objek baru di `SKINS` pada `src/skins.js`.
 

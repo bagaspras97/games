@@ -2,8 +2,11 @@
 // Tap / click / space flips gravity. Avoid the spikes. Collect coins.
 import { createPlatform } from "./sdk/adapter.js";
 import { SKINS, getSkin } from "./skins.js";
+import {
+  W, H, createWorld, extend, prune, surfaceUnder,
+  drawBackground, drawTerrain, drawSpikes, drawCoins,
+} from "./world.js";
 
-const W = 1280, H = 720; // 16:9 logical resolution (Poki requirement)
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 const ui = {
@@ -32,12 +35,13 @@ let save = { best: 0, coins: 0, skin: "classic", owned: ["classic"] };
 let state = "menu";            // menu | play | over | ad | shop
 let shopReturn = null;         // panel to show again when the shop closes
 let runs = 0, lastAdAt = 0, revived = false;
-let player, obstacles, pickups, speed, distance, score, spawnTimer, last;
+let player, world, scroll, speed, score, last, time = 0;
 
 function reset() {
-  player = { x: 260, y: H - 120, vy: 0, size: 44, gravity: 1, rot: 0 };
-  obstacles = []; pickups = [];
-  speed = 420; distance = 0; score = 0; spawnTimer = 0.8;
+  player = { x: 260, y: H - 160, vy: 0, size: 44, gravity: 1, rot: 0 };
+  world = createWorld();
+  scroll = 0; speed = 420; score = 0;
+  extend(world, W * 2, 0);
   revived = false;
 }
 
@@ -89,7 +93,18 @@ async function revive() {
   const earned = await withAd(() => platform.rewarded());
   if (earned) {
     revived = true;
-    obstacles = obstacles.filter((o) => o.x > player.x + 400 || o.x < player.x - 100);
+    // Clear nearby hazards and drop the player back on a safe flat strip.
+    const wx = scroll + player.x;
+    world.spikes = world.spikes.filter((o) => o.x > wx + 500 || o.x < wx - 100);
+    for (const seg of world.segs) {
+      if (seg.x + seg.w > wx - 100 && seg.x < wx + 500) {
+        seg.pit = null;
+        seg.floor = seg.floor ?? H - 90;
+        seg.ceil = seg.ceil ?? 90;
+      }
+    }
+    player.y = surfaceUnder(world, wx - 30, wx + 30).floor - player.size / 2;
+    player.gravity = 1; player.vy = 0;
     state = "play";
     platform.gameplayStart();
     last = performance.now();
@@ -166,79 +181,53 @@ function flip() {
   player.vy = 0;
 }
 
-function spawn() {
-  const top = Math.random() < 0.5;
-  const h = 60 + Math.random() * 120;
-  obstacles.push({ x: W + 40, w: 50, h, top });
-  if (Math.random() < 0.6) {
-    pickups.push({ x: W + 220, y: 160 + Math.random() * (H - 320), r: 16 });
-  }
-}
-
-const FLOOR = H - 80, CEIL = 80;
+const CLIMB = 48; // step height the player walks up automatically
 
 function update(dt) {
   speed += dt * 8;
-  distance += speed * dt;
-  score = Math.floor(distance / 100);
+  scroll += speed * dt;
+  score = Math.floor(scroll / 100);
+  extend(world, scroll + W * 2, Math.min(1, scroll / 40000));
+  prune(world, scroll);
 
+  const half = player.size / 2;
+  const wx = scroll + player.x;
   player.vy += 2600 * player.gravity * dt;
   player.y += player.vy * dt;
-  const half = player.size / 2;
-  if (player.y > FLOOR - half) { player.y = FLOOR - half; player.vy = 0; }
-  if (player.y < CEIL + half) { player.y = CEIL + half; player.vy = 0; }
   player.rot += dt * 6;
 
-  spawnTimer -= dt;
-  if (spawnTimer <= 0) {
-    spawn();
-    spawnTimer = Math.max(0.55, 1.3 - speed / 1500) + Math.random() * 0.4;
-  }
+  // Hitting the side of a wall (e.g. the far edge of a trench) is fatal.
+  const front = surfaceUnder(world, wx + half - 4, wx + half);
+  if (front.floor !== null && player.y + half > front.floor + CLIMB) return gameOver();
+  if (front.ceil !== null && player.y - half < front.ceil - CLIMB) return gameOver();
 
-  for (const o of obstacles) o.x -= speed * dt;
-  for (const p of pickups) p.x -= speed * dt;
-  obstacles = obstacles.filter((o) => o.x + o.w > -50);
-  pickups = pickups.filter((p) => p.x > -50 && !p.taken);
+  // Land on floor / ceiling (small steps are climbed automatically).
+  const under = surfaceUnder(world, wx - half + 4, wx + half - 4);
+  if (under.floor !== null && player.y + half > under.floor) { player.y = under.floor - half; player.vy = Math.min(player.vy, 0); }
+  if (under.ceil !== null && player.y - half < under.ceil) { player.y = under.ceil + half; player.vy = Math.max(player.vy, 0); }
 
-  const px = player.x - half + 6, py = player.y - half + 6, ps = player.size - 12;
-  for (const o of obstacles) {
-    const oy = o.top ? CEIL : FLOOR - o.h;
-    if (px < o.x + o.w && px + ps > o.x && py < oy + o.h && py + ps > oy) return gameOver();
+  // Fell into a trench.
+  if (player.y - half > H || player.y + half < 0) return gameOver();
+
+  const px = wx - half + 6, py = player.y - half + 6, ps = player.size - 12;
+  for (const o of world.spikes) {
+    const ox = o.x + o.w * 0.2, ow = o.w * 0.6;
+    const oy = o.top ? o.base : o.base - o.h;
+    if (px < ox + ow && px + ps > ox && py < oy + o.h && py + ps > oy) return gameOver();
   }
-  for (const p of pickups) {
-    if (Math.hypot(p.x - player.x, p.y - player.y) < p.r + half) {
-      p.taken = true;
+  for (const c of world.coins) {
+    if (!c.taken && Math.hypot(c.x - wx, c.y - player.y) < c.r + half) {
+      c.taken = true;
       save.coins++;
     }
   }
 }
 
 function draw() {
-  const g = ctx.createLinearGradient(0, 0, 0, H);
-  g.addColorStop(0, "#1b1446");
-  g.addColorStop(1, "#3a1d6e");
-  ctx.fillStyle = g;
-  ctx.fillRect(0, 0, W, H);
-
-  ctx.fillStyle = "#ff4fa3";
-  ctx.fillRect(0, 0, W, CEIL);
-  ctx.fillRect(0, FLOOR, W, H - FLOOR);
-
-  ctx.fillStyle = "#ffe14f";
-  for (const o of obstacles) {
-    ctx.beginPath();
-    if (o.top) {
-      ctx.moveTo(o.x, CEIL); ctx.lineTo(o.x + o.w, CEIL); ctx.lineTo(o.x + o.w / 2, CEIL + o.h);
-    } else {
-      ctx.moveTo(o.x, FLOOR); ctx.lineTo(o.x + o.w, FLOOR); ctx.lineTo(o.x + o.w / 2, FLOOR - o.h);
-    }
-    ctx.fill();
-  }
-
-  ctx.fillStyle = "#4fffd2";
-  for (const p of pickups) {
-    ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill();
-  }
+  drawBackground(ctx, scroll);
+  drawTerrain(ctx, world, scroll, time);
+  drawSpikes(ctx, world, scroll);
+  drawCoins(ctx, world, scroll, time);
 
   if (player) {
     const skin = getSkin(save.skin);
@@ -256,6 +245,7 @@ function draw() {
 function loop(now) {
   const dt = Math.min(0.033, (now - last) / 1000 || 0);
   last = now;
+  time += dt;
   if (state === "play") update(dt);
   draw();
   requestAnimationFrame(loop);
