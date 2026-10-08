@@ -196,6 +196,14 @@ python3 -m http.server 8000 --bind 127.0.0.1
 ```
 `?platform=` bisa `poki`, `crazygames`, `youtube`, `facebook`, atau `local` (iklan simulasi).
 
+## 🌐 Bahasa
+Indonesia & Inggris (`src/i18n.js`). Otomatis mengikuti bahasa browser (Indonesia → ID, lainnya → EN) dan bisa diganti lewat tombol 🌐 di menu utama (tersimpan). Teks sumber tetap bahasa Indonesia di file data; terjemahan Inggris ada di `i18n.js`.
+
+## 📱 HP
+Di HP yang dipegang tegak muncul layar "Putar HP-mu" (permainan otomatis dijeda).
+
+![english](docs/english.png)
+
 ## Parameter pengembang
 `?start=`, `?hazard=`, `?finish=`, `?moment=`, `?debug` **hanya aktif di localhost** (`src/dev.js`). Di portal, parameter ini diabaikan supaya tidak bisa dipakai curang. `?platform=` tetap aktif.
 

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  <title>Puffy: Petualangan Laut Dalam</title>
+  <title>Puffy: Deep Sea Adventure</title>
   <style>
     html, body { margin: 0; height: 100%; background: #04122a; overflow: hidden;
       font-family: system-ui, sans-serif; color: #fff; touch-action: none; user-select: none; }
@@ -29,6 +29,10 @@
       background: rgba(255,255,255,.18); }
     #swap:disabled { opacity: .55; cursor: default; }
     #swap-panel .grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+    #rotate { position: fixed; inset: 0; z-index: 20; background: #04122a; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 10px; text-align: center; padding: 24px; font-size: 20px; font-weight: 700; }
+    #rotate div { font-size: 64px; animation: tilt 1.6s ease-in-out infinite; }
+    @keyframes tilt { 0%, 30% { transform: rotate(0); } 60%, 100% { transform: rotate(-90deg); } }
     #banner { position: fixed; top: 22%; left: 0; right: 0; text-align: center; font-size: 40px;
       font-weight: 900; pointer-events: none; text-shadow: 0 3px 12px rgba(0,0,0,.6); }
     #banner.pop { animation: pop 2.4s ease forwards; }
@@ -133,101 +137,102 @@
   <div id="platform"></div>
   <div id="banner" class="hidden"></div>
   <div id="toast" class="hidden"></div>
-  <button id="mute" aria-label="Suara"></button>
-  <button id="pause" class="hidden" aria-label="Jeda">⏸</button>
+  <button id="mute" data-i18n-aria="sound"></button>
+  <div id="rotate" class="hidden"><div>📱↻</div><p data-i18n="rotate"></p></div>
+  <button id="pause" class="hidden" data-i18n-aria="pause">⏸</button>
   <div id="pause-panel" class="panel hidden">
-    <h2>⏸ Dijeda</h2>
-    <p>Tarik napas dulu, Puffy 🐡</p>
-    <button id="pause-resume">▶ Lanjut</button>
-    <button id="pause-quit" class="ghost">🏠 Menu utama</button>
+    <h2 data-i18n="paused"></h2>
+    <p data-i18n="pausedSub"></p>
+    <button id="pause-resume" data-i18n="resume"></button>
+    <button id="pause-quit" class="ghost" data-i18n="mainMenu"></button>
   </div>
   <button id="skill" class="hidden" aria-label="Skill"></button>
-  <button id="swap" class="hidden" aria-label="Ganti karakter">🐠 Ganti</button>
+  <button id="swap" class="hidden" data-i18n-aria="swapTitle"></button>
 
   <div id="swap-panel" class="panel hidden">
-    <h2>🐠 Ganti karakter</h2>
-    <p>Permainan dijeda. Setelah berganti: kebal 1 detik, lalu tunggu 8 detik untuk ganti lagi. (Tombol <b>C</b>)</p>
+    <h2 data-i18n="swapTitle"></h2>
+    <p data-i18n="swapSub"></p>
     <div id="swap-grid" class="grid"></div>
-    <button id="swap-close" class="ghost">▶ Lanjut menyelam</button>
+    <button id="swap-close" class="ghost" data-i18n="swapClose"></button>
   </div>
 
   <div id="menu" class="panel">
-    <h1>🐡 Puffy<small>Petualangan Laut Dalam</small></h1>
-    <p>Tap / klik / spasi: Puffy <b>mengembang</b> (naik) atau <b>mengempis</b> (turun).<br>
-      Hindari bahaya, kumpulkan 🦪 mutiara, temukan makhluk langka!</p>
-    <button class="open-levels">🗺️ Petualangan</button>
+    <h1>🐡 Puffy<small data-i18n="subtitle"></small></h1>
+    <p data-i18n="intro"></p>
+    <button class="open-levels" data-i18n="adventure"></button>
     <div class="row">
-      <button id="play" class="alt">♾️ Mode Bebas</button>
-      <button class="shield-start ghost">🫧 Bebas + perisai (iklan)</button>
+      <button id="play" class="alt" data-i18n="freeMode"></button>
+      <button class="shield-start ghost" data-i18n="freeShield"></button>
     </div>
     <div class="row">
-      <button class="open-shop ghost">🐠 Karakter</button>
-      <button class="open-dex ghost">📖 Ensiklopedia</button>
-      <button class="open-missions ghost">🎯 Misi</button>
+      <button class="open-shop ghost" data-i18n="characters"></button>
+      <button class="open-dex ghost" data-i18n="encyclopedia"></button>
+      <button class="open-missions ghost" data-i18n="missions"></button>
     </div>
+    <button id="lang" class="ghost small" data-i18n-aria="language"></button>
   </div>
 
   <div id="over" class="panel hidden">
     <h1 id="over-title">Aduh!</h1>
     <p id="over-cause" class="cause"></p>
-    <p id="over-stats">Kedalaman: <b id="final">0</b> m &nbsp; Terbaik: <b id="best">0</b> m &nbsp; 🦪 <b id="pearls">0</b></p>
+    <p id="over-stats"><span data-i18n="depthLbl"></span> <b id="final">0</b> m &nbsp; <span data-i18n="bestLbl"></span> <b id="best">0</b> m &nbsp; 🦪 <b id="pearls">0</b></p>
     <p id="over-level" class="hidden"></p>
-    <button id="revive" class="alt">▶ Lanjutkan (tonton iklan)</button>
-    <button id="retry">Selam lagi</button>
-    <button class="shield-start ghost">🫧 Selam lagi + perisai (iklan)</button>
-    <button id="over-map" class="ghost hidden">🗺️ Peta level</button>
+    <button id="revive" class="alt" data-i18n="revive"></button>
+    <button id="retry" data-i18n="retry"></button>
+    <button class="shield-start ghost" data-i18n="retryShield"></button>
+    <button id="over-map" class="ghost hidden" data-i18n="levelMap"></button>
     <div class="row">
-      <button class="open-shop ghost">🐠 Karakter</button>
-      <button class="open-dex ghost">📖 Ensiklopedia</button>
-      <button class="open-missions ghost">🎯 Misi</button>
+      <button class="open-shop ghost" data-i18n="characters"></button>
+      <button class="open-dex ghost" data-i18n="encyclopedia"></button>
+      <button class="open-missions ghost" data-i18n="missions"></button>
     </div>
   </div>
 
   <div id="shop" class="panel hidden">
-    <h2>🐠 Karakter Laut</h2>
-    <p>Setiap karakter punya cara mengapung & tenggelam sendiri.</p>
+    <h2 data-i18n="shopTitle"></h2>
+    <p data-i18n="shopSub"></p>
     <p>🦪 <b id="shop-pearls">0</b></p>
     <div id="shop-grid" class="grid"></div>
     <button id="free-pearls" class="alt"></button>
-    <button id="shop-close" class="ghost">Kembali</button>
+    <button id="shop-close" class="ghost" data-i18n="back"></button>
   </div>
 
   <div id="progress" class="hidden"><i id="progress-fill"></i><span>🏁</span></div>
 
   <div id="levels" class="panel hidden">
-    <h2>🗺️ Petualangan</h2>
-    <p>Bintang: ★ <b id="levels-stars">0</b> &nbsp;·&nbsp; ★ selesai · ★★ + 70% mutiara · ★★★ + tanpa kalah (perisai boleh pecah)</p>
-    <p class="cause">🦪 Mutiara di level dihitung untuk bintang; hadiahnya dibayar lewat bonus bintang baru.</p>
+    <h2 data-i18n="levelsTitle"></h2>
+    <p><span data-i18n="starsLbl"></span> ★ <b id="levels-stars">0</b> &nbsp;·&nbsp; <span data-i18n="levelsRules"></span></p>
+    <p class="cause" data-i18n="levelsPearls"></p>
     <div id="levels-grid"></div>
-    <button id="levels-close" class="ghost">Kembali</button>
+    <button id="levels-close" class="ghost" data-i18n="back"></button>
   </div>
 
   <div id="level-done" class="panel hidden">
-    <h1 id="done-title">Level selesai!</h1>
+    <h1 id="done-title" data-i18n="levelDoneTitle"></h1>
     <p id="done-name" class="cause"></p>
     <div id="done-stars"></div>
     <div id="done-info"></div>
-    <button id="done-next">Level berikutnya ▶</button>
+    <button id="done-next" data-i18n="doneNext"></button>
     <div class="row">
-      <button id="done-retry" class="ghost">↻ Ulangi</button>
-      <button id="done-map" class="ghost">🗺️ Peta</button>
+      <button id="done-retry" class="ghost" data-i18n="doneRetry"></button>
+      <button id="done-map" class="ghost" data-i18n="doneMap"></button>
     </div>
   </div>
 
   <div id="missions" class="panel hidden">
-    <h2>🎯 Misi Harian</h2>
-    <p>Misi baru setiap hari. Ada yang serius, ada yang… kocak 😜</p>
+    <h2 data-i18n="missionsTitle"></h2>
+    <p data-i18n="missionsSub"></p>
     <div id="streak"></div>
     <div id="missions-list"></div>
-    <button id="missions-close" class="ghost">Kembali</button>
+    <button id="missions-close" class="ghost" data-i18n="back"></button>
   </div>
 
   <div id="dex" class="panel hidden">
-    <h2>📖 Ensiklopedia Laut</h2>
-    <p>Makhluk langka hanya muncul di <b>♾️ Mode Bebas</b>. Ditemukan: <b id="dex-count">0</b></p>
+    <h2 data-i18n="dexTitle"></h2>
+    <p><span data-i18n="dexSub"></span> <b id="dex-count">0</b></p>
     <div id="dex-grid" class="grid"></div>
     <p id="dex-reward" class="reward"></p>
-    <button id="dex-close" class="ghost">Kembali</button>
+    <button id="dex-close" class="ghost" data-i18n="back"></button>
   </div>
 
   <script type="module" src="src/game.js"></script>

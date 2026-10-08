@@ -1,3 +1,4 @@
+import { t } from "../i18n.js";
 // Platform SDK adapter.
 // The game only talks to this interface; each platform gets its own implementation:
 //   init(onProgress)       -> Promise, load + initialise the SDK
@@ -36,7 +37,7 @@ function fakeAd(label, seconds) {
   return new Promise((resolve) => {
     const el = document.createElement("div");
     el.className = "fake-ad";
-    el.innerHTML = `<div><b>${label}</b><br>Iklan simulasi… <span>${seconds}</span>s<br><button>Lewati</button></div>`;
+    el.innerHTML = `<div><b>${label}</b><br>${t("fakeAd")} <span>${seconds}</span>s<br><button>${t("skip")}</button></div>`;
     document.body.appendChild(el);
     let left = seconds;
     const finish = (completed) => { clearInterval(t); el.remove(); resolve(completed); };

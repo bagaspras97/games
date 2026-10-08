@@ -1,4 +1,5 @@
 import { devParam, devFlag } from "./dev.js";
+import { t, tr, getLang, setLang, applyStatic } from "./i18n.js";
 // "Puffy: Petualangan Laut Dalam" — one-tap hyper-casual deep-sea runner.
 // Tap / click / space: Puffy inflates (floats up) or deflates (sinks down).
 // Avoid hazards, collect pearls, grab shield bubbles, discover rare creatures.
@@ -93,6 +94,10 @@ function resize() {
   const scale = Math.min(innerWidth / W, innerHeight / H);
   canvas.style.width = W * scale + "px";
   canvas.style.height = H * scale + "px";
+  // Phones held upright get a "turn your phone" screen (and the dive pauses).
+  const portraitPhone = innerHeight > innerWidth && matchMedia("(pointer: coarse)").matches;
+  show($("rotate"), portraitPhone);
+  if (portraitPhone && state === "play") pauseGame();
 }
 
 function show(el, visible) { el.classList.toggle("hidden", !visible); }
@@ -122,14 +127,14 @@ function mission(event, amount = 1) {
 function announce(done) {
   for (const m of done) {
     sfx.discover();
-    toast(`🎯 <b>Misi selesai!</b> ${m.text}<br>Ambil +${m.reward} 🦪 di menu 🎯 Misi`, 3500);
+    toast(t("missionDone", { text: tr(m.text), n: m.reward }), 3500);
   }
   const streakDay = done.length ? missions.checkStreak(save) : 0;
   if (streakDay) {
     platform.save(save);
     setTimeout(() => {
-      banner(`🔥 Streak ${streakDay} hari!`);
-      toast(`🔥 <b>Semua misi hari ini selesai!</b><br>Bonus streak hari ke-${streakDay}: +${missions.streakReward(streakDay)} 🦪 menunggu di menu 🎯 Misi`, 4500);
+      banner(t("streakBanner", { n: streakDay }));
+      toast(t("streakToast", { n: streakDay, r: missions.streakReward(streakDay) }), 4500);
       sfx.buy();
     }, 1800);
   }
@@ -153,19 +158,19 @@ function renderStreak() {
   for (let i = 1; i <= 7; i++) {
     const day = weekStart + i - 1;
     const cls = day < st.day || (day === st.day && st.doneToday) ? "done" : day === st.day ? "today" : "";
-    dots += `<div class="s-day ${cls}"><b>${i === 7 ? "🎁" : "Hari " + i}</b><span>${missions.streakReward(day)} 🦪</span></div>`;
+    dots += `<div class="s-day ${cls}"><b>${i === 7 ? "🎁" : t("streakDay", { n: i })}</b><span>${missions.streakReward(day)} 🦪</span></div>`;
   }
   const status = st.doneToday
-    ? `Streak hari ini aman! Kembali besok untuk hari ke-${st.count + 1} 🔥`
+    ? t("streakSafe", { n: st.count + 1 })
     : st.count > 0
-      ? `Selesaikan ketiga misi hari ini agar streak tidak putus!`
-      : `Selesaikan ketiga misi hari ini untuk memulai streak!`;
-  box.innerHTML = `<div class="s-head">🔥 Streak: <b>${st.count}</b> hari</div><div class="s-row">${dots}</div><div class="s-status">${status}</div><div class="s-actions"></div>`;
+      ? t("streakKeep")
+      : t("streakStart");
+  box.innerHTML = `<div class="s-head">${t("streakHead", { n: st.count })}</div><div class="s-row">${dots}</div><div class="s-status">${status}</div><div class="s-actions"></div>`;
   if (st.doneToday && !st.claimed) {
     const reward = missions.streakReward(st.count);
     const claim = document.createElement("button");
     claim.className = "alt small";
-    claim.textContent = `Ambil bonus +${reward} 🦪`;
+    claim.textContent = t("streakClaim", { n: reward });
     claim.onclick = () => claimStreak(1);
     const double = document.createElement("button");
     double.className = "ghost small";
@@ -173,7 +178,7 @@ function renderStreak() {
     double.onclick = () => claimStreak(2);
     box.querySelector(".s-actions").append(claim, double);
   } else if (st.doneToday) {
-    box.querySelector(".s-actions").innerHTML = `<span class="m-done">✅ Bonus hari ini sudah diambil</span>`;
+    box.querySelector(".s-actions").innerHTML = `<span class="m-done">${t("streakClaimed")}</span>`;
   }
 }
 
@@ -194,7 +199,7 @@ async function claimStreak(mult) {
   ui.pearls.textContent = save.pearls;
   renderMissions();
   updateMissionBadges();
-  toast(`🔥 Bonus streak +${reward} 🦪!`, 1800);
+  toast(t("streakGot", { n: reward }), 1800);
 }
 
 function renderMissions() {
@@ -208,22 +213,22 @@ function renderMissions() {
     card.className = "mission" + (d.claimed ? " claimed" : d.done ? " ready" : "");
     const pct = Math.round((d.progress / d.target) * 100);
     card.innerHTML = `
-      <div class="m-text">${d.funny ? "😜 " : ""}${d.text}</div>
+      <div class="m-text">${d.funny ? "😜 " : ""}${tr(d.text)}</div>
       <div class="m-bar"><i style="width:${pct}%"></i><span>${d.progress} / ${d.target}</span></div>
       <div class="m-actions"></div>`;
     const actions = card.querySelector(".m-actions");
-    if (d.claimed) actions.innerHTML = `<span class="m-done">✅ Hadiah diambil</span>`;
+    if (d.claimed) actions.innerHTML = `<span class="m-done">${t("claimed")}</span>`;
     else if (d.done) {
       const claim = document.createElement("button");
       claim.className = "alt small";
-      claim.textContent = `Ambil +${d.reward} 🦪`;
+      claim.textContent = t("claim", { n: d.reward });
       claim.onclick = () => claimMission(i, 1);
       const double = document.createElement("button");
       double.className = "ghost small";
       double.textContent = `🎬 x2 (+${d.reward * 2})`;
       double.onclick = () => claimMission(i, 2);
       actions.append(claim, double);
-    } else actions.innerHTML = `<span class="m-reward">Hadiah: ${d.reward} 🦪</span>`;
+    } else actions.innerHTML = `<span class="m-reward">${t("rewardLabel", { n: d.reward })}</span>`;
     list.append(card);
   });
 }
@@ -244,7 +249,7 @@ async function claimMission(i, mult) {
   ui.pearls.textContent = save.pearls;
   renderMissions();
   updateMissionBadges();
-  toast(`+${reward} 🦪 masuk ke kantong!`, 1800);
+  toast(t("pocket", { n: reward }), 1800);
 }
 
 // ---------- Pause ----------
@@ -290,7 +295,7 @@ function updateSwapButton() {
   show(b, visible);
   if (!visible) return;
   b.disabled = swapCooldown > 0;
-  b.textContent = swapCooldown > 0 ? `🐠 ${Math.ceil(swapCooldown)}` : "🐠 Ganti";
+  b.textContent = swapCooldown > 0 ? `🐠 ${Math.ceil(swapCooldown)}` : t("swapBtn");
 }
 
 function openSwap() {
@@ -308,7 +313,7 @@ function openSwap() {
     cx.translate(60, 64);
     ch.draw(cx, { t: time, up: true, vy: 0, mood: "happy", pulse: 0, flash: 0, near: 0 });
     b.append(cv);
-    b.insertAdjacentHTML("beforeend", `<b>${ch.name}</b><p class="ability">⚡ ${ch.ability}</p>`);
+    b.insertAdjacentHTML("beforeend", `<b>${ch.name}</b><p class="ability">⚡ ${tr(ch.ability)}</p>`);
     b.onclick = () => chooseSwap(ch.id);
     grid.append(b);
   }
@@ -336,7 +341,7 @@ function chooseSwap(id) {
     player.invuln = Math.max(player.invuln, 1);  // a short grace period
     swapCooldown = SWAP_COOLDOWN;
     fx.puff(scroll + player.x, player.y);
-    fx.text(scroll + player.x, player.y - 46, `Ganti ke ${ch.name}!`, ch.color);
+    fx.text(scroll + player.x, player.y - 46, t("swapTo", { name: ch.name }), ch.color);
     sfx.buy();
     platform.save(save);
     announce(missions.trackCharacter(save, id));
@@ -373,7 +378,7 @@ function updateSkillButton() {
   b.disabled = skillCD > 0;
   b.innerHTML = skillCD > 0
     ? `<span class="sk-icon">${sk.icon}</span><span class="sk-cd">${Math.ceil(skillCD)}</span>`
-    : `<span class="sk-icon">${sk.icon}</span><span class="sk-name">${sk.name}</span>`;
+    : `<span class="sk-icon">${sk.icon}</span><span class="sk-name">${tr(sk.name)}</span>`;
   b.style.setProperty("--p", skillCD > 0 ? 1 - skillCD / sk.cd : 1);
 }
 
@@ -383,7 +388,7 @@ function useSkill() {
   const wx = scroll + player.x, py = player.y;
   skillCD = sk.cd;
   sfx.shield();
-  fx.text(wx, py - 52, `${sk.icon} ${sk.name}!`, ch.color);
+  fx.text(wx, py - 52, `${sk.icon} ${tr(sk.name)}!`, ch.color);
   mission("ability");
   switch (ch.id) {
     case "puffy": { // spike burst: destroys hazards around
@@ -499,17 +504,17 @@ function startRun(withShield = false) {
   fx.clear();
   startMusic();
   platform.gameplayStart();
-  if (mode === "level") banner(`🗺️ Level ${lvl.n}: ${lvl.name}`);
+  if (mode === "level") banner(t("levelBanner", { n: lvl.n, name: tr(lvl.name) }));
   if (boss) {
     const d = boss.def;
     setTimeout(() => {
       if (state !== "play") return;
-      banner(`👑 BOS: ${d.icon} ${d.name}!`);
-      toast("Bagian yang <b>berkedip merah</b> akan diserang — pindah ke sisi lain! Bertahanlah sampai 🏁", 3800);
+      banner(t("bossBanner", { icon: d.icon, name: tr(d.name) }));
+      toast(t("bossHint"), 3800);
       sfx.abyss();
     }, 2300);
   }
-  else banner(`${ZONES[zone].icon} ${ZONES[zone].name}`);
+  else banner(`${ZONES[zone].icon} ${tr(ZONES[zone].name)}`);
   show($("progress"), mode === "level");
 }
 
@@ -534,13 +539,13 @@ function renderLevels() {
   ZONES.forEach((z, zi) => {
     const row = document.createElement("div");
     row.className = "lv-zone";
-    row.innerHTML = `<div class="lv-zone-name">${z.icon} ${z.name}</div><div class="lv-row"></div>`;
+    row.innerHTML = `<div class="lv-zone-name">${z.icon} ${tr(z.name)}</div><div class="lv-row"></div>`;
     for (const L of LEVELS.filter((l) => l.zone === zi)) {
       const stars = (save.levels || {})[L.n] || 0;
       const open = isUnlocked(save, L.n);
       const b = document.createElement("button");
       b.className = "lv" + (open ? "" : " locked") + (L.exam ? " exam" : "") + (stars ? " cleared" : "");
-      b.title = L.name;
+      b.title = tr(L.name);
       b.innerHTML = open
         ? `<b>${L.exam ? "👑" : ""}${L.n}</b><span>${"★".repeat(stars)}${"☆".repeat(3 - stars)}</span>`
         : `<b>🔒</b><span>${L.n}</span>`;
@@ -574,14 +579,14 @@ function levelComplete() {
   sfx.discover();
   for (let i = 0; i < 4; i++) fx.sparkle(scroll + player.x + 40, player.y, ["#ffe27a", "#7ff0ff", "#ff9ab5", "#fff"][i]);
 
-  $("done-title").textContent = `Level ${lvl.n} selesai!`;
-  $("done-name").textContent = lvl.name;
+  $("done-title").textContent = t("levelDone", { n: lvl.n });
+  $("done-name").textContent = tr(lvl.name);
   $("done-stars").innerHTML = [1, 2, 3].map((i) => `<span class="star ${i <= stars ? "on" : ""}" style="animation-delay:${i * 0.25}s">★</span>`).join("");
   $("done-info").innerHTML = `
-    <div>${pearlOk ? "✅" : "▫️"} Mutiara ${lvlPearls} / ${world.pearlTotal} (butuh ${Math.round(STAR_PEARL_RATIO * 100)}%)</div>
-    <div>${clean ? "✅" : "▫️"} Tanpa kalah (tanpa "Lanjutkan")</div>
-    ${boss ? `<div>👑 Berhasil lolos dari ${boss.def.icon} ${boss.def.name}!</div>` : ""}
-    <div class="done-reward">${reward ? `+${reward} 🦪 untuk ${gained} bintang baru!` : "Coba raih bintang yang belum didapat!"}</div>`;
+    <div>${pearlOk ? "✅" : "▫️"} ${t("donePearls", { got: lvlPearls, total: world.pearlTotal, pct: Math.round(STAR_PEARL_RATIO * 100) })}</div>
+    <div>${clean ? "✅" : "▫️"} ${t("doneClean")}</div>
+    ${boss ? `<div>${t("doneBoss", { icon: boss.def.icon, name: tr(boss.def.name) })}</div>` : ""}
+    <div class="done-reward">${reward ? t("doneReward", { n: reward, s: gained }) : t("doneNoReward")}</div>`;
   const next = LEVELS[lvl.n];
   show($("done-next"), !!next);
   show($("level-done"), true);
@@ -656,10 +661,10 @@ function finishGameOver() {
   show($("over-map"), mode === "level");
   if (mode === "level") {
     const done = Math.max(0, Math.round((scroll + player.x - (world.finishX - lvl.meters * PX_PER_M)) / PX_PER_M));
-    $("over-level").textContent = `🗺️ Level ${lvl.n}: ${lvl.name} — ${Math.min(done, lvl.meters)} / ${lvl.meters} m`;
+    $("over-level").textContent = t("overLevel", { n: lvl.n, name: tr(lvl.name), done: Math.min(done, lvl.meters), total: lvl.meters });
   }
-  $("over-title").textContent = `Aduh, ${hero().name}!`;
-  $("over-cause").textContent = dying ? dying.label : "";
+  $("over-title").textContent = t("overTitle", { name: hero().name });
+  $("over-cause").textContent = dying ? tr(dying.label) : "";
   ui.final.textContent = depth;
   ui.best.textContent = save.best;
   ui.pearls.textContent = save.pearls;
@@ -756,12 +761,12 @@ function renderShop() {
     const c = document.createElement("canvas");
     c.width = c.height = 120;
     shopCanvases.push({ c, ch, hidden });
-    const label = equipped ? "Dipakai" : owned ? "Pakai"
-      : hidden ? `🔒 Lengkapi Ensiklopedia (${save.dex.length}/${CREATURES.length})` : `🦪 ${ch.price}`;
+    const label = equipped ? t("inUse") : owned ? t("use")
+      : hidden ? t("lockedDex", { n: save.dex.length, total: CREATURES.length }) : `🦪 ${ch.price}`;
     card.append(c);
     card.insertAdjacentHTML("beforeend", hidden
-      ? `<b>??? <small>Karakter Rahasia</small></b><p class="desc">Temukan semua makhluk di 📖 Ensiklopedia Laut untuk membukanya.</p><p class="ability">⚡ ???</p><span class="price">${label}</span>`
-      : `<b>${ch.name} <small>${ch.species}</small></b><p class="desc">${ch.desc}</p><p class="ability">⚡ ${ch.ability}</p><p class="skill">${ch.skill.icon} <b>${ch.skill.name}</b> (Mode Bebas): ${ch.skill.desc}</p><span class="price">${label}</span>`);
+      ? `<b>??? <small>${t("secretTitle")}</small></b><p class="desc">${t("secretDesc")}</p><p class="ability">⚡ ???</p><span class="price">${label}</span>`
+      : `<b>${ch.name} <small>${tr(ch.species)}</small></b><p class="desc">${tr(ch.desc)}</p><p class="ability">⚡ ${tr(ch.ability)}</p><p class="skill">${ch.skill.icon} <b>${tr(ch.skill.name)}</b> ${t("skillFree")}: ${tr(ch.skill.desc)}</p><span class="price">${label}</span>`);
     if (hidden || (!owned && save.pearls < ch.price)) card.classList.add("locked");
     card.onclick = () => selectCharacter(ch);
     ui.shopGrid.append(card);
@@ -813,8 +818,8 @@ function updateFreePearlsButton() {
   const left = adPearlsLeft();
   ui.freePearls.disabled = left <= 0;
   ui.freePearls.textContent = left > 0
-    ? `🎬 +${FREE_PEARLS} mutiara (tonton iklan) · sisa ${left}/${FREE_PEARLS_PER_DAY} hari ini`
-    : `🎬 Jatah iklan hari ini habis — kembali besok!`;
+    ? t("freePearls", { n: FREE_PEARLS, left, max: FREE_PEARLS_PER_DAY })
+    : t("freePearlsOut");
 }
 
 async function freePearls() {
@@ -836,8 +841,8 @@ function renderDex() {
   ui.dexCount.textContent = `${save.dex.length} / ${CREATURES.length}`;
   const left = CREATURES.length - save.dex.length;
   $("dex-reward").innerHTML = left > 0
-    ? `🔒 Temukan <b>${left}</b> makhluk lagi untuk membuka <b>karakter rahasia</b>!`
-    : `🐋 Lengkap! <b>Bubu si Paus Biru Mini</b> sudah terbuka di menu 🐠 Karakter.`;
+    ? t("dexLeft", { n: left })
+    : t("dexDone");
   ui.dexGrid.innerHTML = "";
   for (const c of CREATURES) {
     const found = save.dex.includes(c.id);
@@ -850,9 +855,9 @@ function renderDex() {
       cx.translate(48, 48);
       c.draw(cx, 76);
       card.append(cv);
-      card.insertAdjacentHTML("beforeend", `<b>${c.name}</b><span>${c.fact}</span>`);
+      card.insertAdjacentHTML("beforeend", `<b>${tr(c.name)}</b><span>${tr(c.fact)}</span>`);
     } else {
-      card.insertAdjacentHTML("beforeend", `<div class="q">❓</div><b>???</b><span>Temukan di ♾️ Mode Bebas, ${ZONES[c.zone].icon} ${ZONES[c.zone].name}</span>`);
+      card.insertAdjacentHTML("beforeend", `<div class="q">❓</div><b>???</b><span>${t("dexFindIn", { zone: ZONES[c.zone].icon + " " + tr(ZONES[c.zone].name) })}</span>`);
     }
     ui.dexGrid.append(card);
   }
@@ -899,7 +904,7 @@ function unlockSecret() {
 function whaleSong(ch) {
   const wx = scroll + player.x;
   fx.sonar(wx, player.y);
-  fx.text(wx, player.y - 46, "♪ Nyanyian paus!", "#a8dcff");
+  fx.text(wx, player.y - 46, tr("♪ Nyanyian paus!"), "#a8dcff");
   sfx.zone();
   player.flash = 1;
   mission("ability");
@@ -916,8 +921,8 @@ function inkBlast() {
   let hit = false;
   for (const h of world.hazards) {
     if (Math.hypot(h.x - wx, (h.y ?? player.y) - player.y) > 380 || isHarmless(h, time)) continue;
-    if (h.type === "sword" && h.active) { h.fleeing = true; hit = true; fx.text(h.x, h.y - 30, "Buta tinta!", "#d6c8ff"); }
-    if (h.type === "jelly") { h.stunUntil = time + 2.5; hit = true; fx.text(h.x, h.y - 34, "Beku!", "#d6c8ff"); }
+    if (h.type === "sword" && h.active) { h.fleeing = true; hit = true; fx.text(h.x, h.y - 30, tr("Buta tinta!"), "#d6c8ff"); }
+    if (h.type === "jelly") { h.stunUntil = time + 2.5; hit = true; fx.text(h.x, h.y - 34, tr("Beku!"), "#d6c8ff"); }
   }
   if (hit) { sfx.shieldPop(); mission("ability"); }
 }
@@ -932,19 +937,19 @@ function useAbility(h) {
     case "sword":
       h.fleeing = true;
       sfx.denied();
-      fx.text(h.x, h.y - 30, "Boing! Memantul", "#ffe27a");
+      fx.text(h.x, h.y - 30, tr("Boing! Memantul"), "#ffe27a");
       break;
-    case "net": fx.text(scroll + player.x, player.y - 40, "Lolos dari jaring!", "#ffc98a"); sfx.click(); break;
-    case "jelly": fx.text(h.x, h.y - 40, "Halo, teman! 🪼", "#ff9fe0"); sfx.pearl(); break;
-    case "hook": fx.text(h.x, h.y - 24, "Meleset!", "#9fc3ff"); sfx.click(); break;
+    case "net": fx.text(scroll + player.x, player.y - 40, tr("Lolos dari jaring!"), "#ffc98a"); sfx.click(); break;
+    case "jelly": fx.text(h.x, h.y - 40, tr("Halo, teman! 🪼"), "#ff9fe0"); sfx.pearl(); break;
+    case "hook": fx.text(h.x, h.y - 24, tr("Meleset!"), "#9fc3ff"); sfx.click(); break;
     case "bag":
       h.gone = true;
       fx.sparkle(h.x, h.y, "#7ffff0");
       if (mode === "endless") {
         save.pearls += 2;
         mission("pearls", 2);
-        fx.text(h.x, h.y - 30, "Laut bersih! +2 🦪", "#7ffff0");
-      } else fx.text(h.x, h.y - 30, "Laut bersih!", "#7ffff0");
+        fx.text(h.x, h.y - 30, tr("Laut bersih! +2 🦪"), "#7ffff0");
+      } else fx.text(h.x, h.y - 30, tr("Laut bersih!"), "#7ffff0");
       sfx.pearl();
       break;
   }
@@ -974,7 +979,7 @@ function update(dt) {
   const z = zoneIndex(depth);
   if (z !== zone && mode === "endless") {
     zone = z;
-    banner(`${ZONES[z].icon} ${ZONES[z].name} · ${ZONES[z].from} m`);
+    banner(t("zoneBanner", { icon: ZONES[z].icon, name: tr(ZONES[z].name), m: ZONES[z].from }));
     sfx.zone();
   }
   setTempo(96 + (speed - 400) / 8);
@@ -1087,18 +1092,18 @@ function update(dt) {
         save.dex.push(c.id);
         platform.save(save);
         sfx.discover();
-        toast(`📖 <b>Penemuan baru: ${c.name}!</b><br>${c.fact}`, 5000);
+        toast(t("discovered", { name: tr(c.name), fact: tr(c.fact) }), 5000);
         if (unlockSecret()) {
           setTimeout(() => {
-            banner("🐋 Karakter rahasia terbuka!");
-            toast("🎉 <b>Ensiklopedia lengkap!</b><br>Bubu si Paus Biru Mini kini bisa dipilih di menu 🐠 Karakter.", 6000);
+            banner(t("secretBanner"));
+            toast(t("secretToast"), 6000);
             sfx.buy();
           }, 2500);
         }
       } else {
         save.pearls += 5;
         sfx.pearl();
-        toast(`${c.name} menyapa! +5 🦪`, 1800);
+        toast(t("greets", { name: tr(c.name) }), 1800);
       }
     }
   }
@@ -1187,12 +1192,12 @@ function loop(now) {
   const ev = updateMoments(dt, zoneIndex(depth), state === "play");
   if (ev && ev.started) {
     const m = ev.started.def;
-    toast(`✨ <b>Momen langka!</b> ${m.icon} ${m.name}`, 4000);
+    toast(t("momentToast", { icon: m.icon, name: tr(m.name) }), 4000);
     (sfx[m.sound] || sfx.zone)();
   } else if (ev && ev.ended && state === "play") { // witnessed it to the end
     const paid = mode === "endless"; // Adventure pays out through star bonuses only
     if (paid) save.pearls += MOMENT_REWARD;
-    fx.text(scroll + player.x, player.y - 50, `${ev.ended.def.icon} Saksi momen langka!${paid ? ` +${MOMENT_REWARD} 🦪` : ""}`, "#fff6a8");
+    fx.text(scroll + player.x, player.y - 50, `${t("momentSeen", { icon: ev.ended.def.icon })}${paid ? ` +${MOMENT_REWARD} 🦪` : ""}`, "#fff6a8");
     sfx.pearl();
     mission("moment");
   }
@@ -1202,6 +1207,7 @@ function loop(now) {
 }
 
 async function boot() {
+  applyStatic();
   resize();
   addEventListener("resize", resize);
   platform = await createPlatform();
@@ -1238,6 +1244,16 @@ async function boot() {
   muteBtn.onclick = (e) => { e.stopPropagation(); toggleMute(); muteLabel(); muteBtn.blur(); };
 
   ui.play.onclick = () => { sfx.click(); startEndless(); };
+  const langBtn = $("lang");
+  const langLabel = () => { langBtn.textContent = getLang() === "id" ? "🌐 Bahasa Indonesia" : "🌐 English"; };
+  langLabel();
+  langBtn.onclick = () => {
+    setLang(getLang() === "id" ? "en" : "id");
+    langLabel();
+    updateMissionBadges();
+    updateFreePearlsButton();
+    sfx.click();
+  };
   $("swap").onclick = (e) => { e.stopPropagation(); $("swap").blur(); openSwap(); };
   $("swap-close").onclick = closeSwap;
   $("skill").addEventListener("pointerdown", (e) => { e.stopPropagation(); e.preventDefault(); useSkill(); });
