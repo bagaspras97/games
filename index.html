@@ -33,6 +33,11 @@
       align-items: center; justify-content: center; gap: 10px; text-align: center; padding: 24px; font-size: 20px; font-weight: 700; }
     #rotate div { font-size: 64px; animation: tilt 1.6s ease-in-out infinite; }
     @keyframes tilt { 0%, 30% { transform: rotate(0); } 60%, 100% { transform: rotate(-90deg); } }
+    #hint { position: fixed; top: 64px; left: 50%; transform: translateX(-50%); width: min(620px, 86vw);
+      background: rgba(4,18,42,.85); border: 2px solid #7ff0ff; border-radius: 16px; padding: 10px 16px;
+      font-size: 20px; text-align: center; pointer-events: none; z-index: 4; box-sizing: border-box;
+      animation: hintbob 1.4s ease-in-out infinite; }
+    @keyframes hintbob { 50% { transform: translate(-50%, 6px); } }
     #banner { position: fixed; top: 22%; left: 0; right: 0; text-align: center; font-size: 40px;
       font-weight: 900; pointer-events: none; text-shadow: 0 3px 12px rgba(0,0,0,.6); }
     #banner.pop { animation: pop 2.4s ease forwards; }
@@ -129,6 +134,42 @@
     .fake-ad { position: fixed; inset: 0; background: #000; display: flex; align-items: center;
       justify-content: center; text-align: center; font-size: 22px; z-index: 10; }
     .fake-ad button { margin-top: 16px; font-size: 16px; padding: 8px 20px; }
+    /* Compact layout for short screens (phones held sideways) */
+    @media (max-height: 520px) {
+      .panel { gap: 6px; padding: 8px; justify-content: flex-start; overflow-y: auto; }
+      .panel > * { flex-shrink: 0; }   /* scroll the panel instead of squashing its content */
+      .panel h1 { font-size: 30px; }
+      .panel h1 small { font-size: 15px; }
+      .panel h2 { font-size: 22px; }
+      .panel p { font-size: 13px; }
+      button { font-size: 15px; padding: 8px 18px; }
+      button.ghost { font-size: 13px; padding: 6px 14px; }
+      button.small { font-size: 12px; padding: 5px 10px; }
+      .grid { max-height: none; gap: 8px; }
+      #shop .grid, #swap-panel .grid { display: flex; overflow-x: auto; overflow-y: hidden; width: 94vw; padding-bottom: 4px; }
+      #shop .grid, #swap-panel .grid { align-items: stretch; }
+      #shop .char-card, #swap-panel .char-card { flex: 0 0 172px; padding: 6px; height: auto; }
+      #shop .char-card .desc { display: none; }   /* keep ability + skill; the card stays readable */
+      .char-card canvas { width: 56px; height: 56px; }
+      .char-card .desc, .char-card .ability, .char-card .skill { font-size: 10px; line-height: 1.25; min-height: 0; }
+      #dex .grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+      .dex-card canvas { width: 52px; height: 52px; }
+      #missions-list { max-height: none; }
+      #streak { padding: 6px 10px; }
+      .s-row { gap: 4px; margin: 4px 0; }
+      .lv { padding: 4px 0; font-size: 16px; }
+      #levels-grid { max-height: none; }
+      #done-stars { font-size: 44px; }
+      #score { font-size: 20px; top: 6px; }
+      #toast { font-size: 13px; bottom: 8px; padding: 8px 12px; }
+      #banner { font-size: 28px; }
+      #hint { top: 40px; font-size: 15px; padding: 6px 12px; }
+      #skill { width: 80px; height: 80px; right: 12px; bottom: 12px; }
+      #skill .sk-icon { font-size: 26px; }
+      #skill .sk-name { font-size: 9px; }
+      #mute, #pause, #swap { font-size: 15px; padding: 5px 10px; }
+      #pause { right: 60px; }
+    }
   </style>
 </head>
 <body>
@@ -136,6 +177,7 @@
   <div id="score"></div>
   <div id="platform"></div>
   <div id="banner" class="hidden"></div>
+  <div id="hint" class="hidden"></div>
   <div id="toast" class="hidden"></div>
   <button id="mute" data-i18n-aria="sound"></button>
   <div id="rotate" class="hidden"><div>📱↻</div><p data-i18n="rotate"></p></div>

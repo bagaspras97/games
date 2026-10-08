@@ -199,8 +199,16 @@ python3 -m http.server 8000 --bind 127.0.0.1
 ## 🌐 Bahasa
 Indonesia & Inggris (`src/i18n.js`). Otomatis mengikuti bahasa browser (Indonesia → ID, lainnya → EN) dan bisa diganti lewat tombol 🌐 di menu utama (tersimpan). Teks sumber tetap bahasa Indonesia di file data; terjemahan Inggris ada di `i18n.js`.
 
+## 🎓 Pemain baru
+- **Tutorial interaktif** di Mode Bebas pertama: (1) game menunggu sampai pemain mencoba tap naik/turun, (2) deretan mutiara latihan, (3) satu bulu babi latihan yang tidak membuat kalah. Selesai → "🎉 Kamu siap menyelam!", tidak muncul lagi.
+- **Tips bertahap** (masing-masing sekali): skill ⚡, ganti karakter 🐠, misi harian, karakter yang sudah terbeli, dan ajakan mencoba Petualangan — muncul saat fiturnya mulai relevan.
+
+![onboarding](docs/onboarding.png)
+
 ## 📱 HP
-Di HP yang dipegang tegak muncul layar "Putar HP-mu" (permainan otomatis dijeda).
+Di HP yang dipegang tegak muncul layar "Putar HP-mu" (permainan otomatis dijeda). Di layar pendek (HP mendatar) semua panel memakai tata letak ringkas: kartu karakter bisa digeser ke samping, panel bisa digulir.
+
+![compact](docs/compact.png)
 
 ![english](docs/english.png)
 

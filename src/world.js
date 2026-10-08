@@ -57,7 +57,8 @@ export function createWorld(dex = [], startX = 0, opts = {}) {
     floor: BASE_FLOOR, ceil: BASE_CEIL, lastPit: true, dex, opts,
     finishX: opts.length ? startX + opts.length : null, pearlTotal: 0,
   };
-  const start = addSeg(world, 1400, BASE_FLOOR, BASE_CEIL); // flat, safe, calm start
+  // flat, safe, calm start (longer during the first-time tutorial)
+  const start = addSeg(world, opts.tutorial ? 4600 : 1400, BASE_FLOOR, BASE_CEIL);
   start.deco = start.deco.filter((_, i) => i % 2 === 0);
   start.cdeco = [];
   return world;

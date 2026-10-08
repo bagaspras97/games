@@ -165,6 +165,16 @@ const UI = {
   zoneBanner: { id: "{icon} {name} · {m} m", en: "{icon} {name} · {m} m" },
   fakeAd: { id: "Iklan simulasi…", en: "Simulated ad…" },
   skip: { id: "Lewati", en: "Skip" },
+  tut1: { id: "👆 <b>Tap</b> (atau Spasi) untuk <b>naik</b>… tap lagi untuk <b>turun</b>!", en: "👆 <b>Tap</b> (or Space) to <b>rise</b>… tap again to <b>sink</b>!" },
+  tut2: { id: "🦪 Kumpulkan <b>mutiara</b> — pakai untuk membuka karakter baru!", en: "🦪 Collect <b>pearls</b> — use them to unlock new characters!" },
+  tut3: { id: "⚠️ Ada <b>bahaya</b> di bawah! Tap untuk <b>pindah ke atas</b>!", en: "⚠️ <b>Hazard</b> below! Tap to <b>move up</b>!" },
+  tutOops: { id: "Hampir! Pindah sisi lebih cepat ya 😉", en: "Close one! Switch sides a bit earlier 😉" },
+  tutDone: { id: "🎉 Hebat! Kamu siap menyelam!", en: "🎉 Great! You're ready to dive!" },
+  tip_skill: { id: "💡 <b>Tips:</b> tombol bulat ⚡ di kanan bawah (atau <b>X</b>) memakai <b>skill khusus</b> karaktermu!", en: "💡 <b>Tip:</b> the round ⚡ button bottom-right (or <b>X</b>) uses your character's <b>special skill</b>!" },
+  tip_swap: { id: "💡 <b>Tips:</b> di Mode Bebas kamu bisa <b>ganti karakter</b> di tengah jalan — tombol 🐠 kiri atas (atau <b>C</b>).", en: "💡 <b>Tip:</b> in Free Dive you can <b>swap characters</b> mid-dive — 🐠 button top-left (or <b>C</b>)." },
+  tip_missions: { id: "💡 <b>Tips:</b> cek <b>🎯 Misi</b> harian — kalah dengan cara lucu pun bisa dapat mutiara!", en: "💡 <b>Tip:</b> check the daily <b>🎯 Missions</b> — even silly knock-outs can earn pearls!" },
+  tip_shop: { id: "💡 Mutiaramu cukup untuk <b>karakter baru</b>! Buka <b>🐠 Karakter</b>.", en: "💡 You have enough pearls for a <b>new character</b>! Open <b>🐠 Characters</b>." },
+  tip_adventure: { id: "💡 <b>Tips:</b> coba <b>🗺️ Petualangan</b> — 20 level, bintang, dan bos!", en: "💡 <b>Tip:</b> try <b>🗺️ Adventure</b> — 20 levels, stars and bosses!" },
   rotate: { id: "🔄 Putar HP-mu ke posisi mendatar untuk bermain", en: "🔄 Turn your phone sideways to play" },
 };
 

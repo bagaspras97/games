@@ -67,6 +67,7 @@ function reset(withShield = false) {
     pulse: 0, flash: 0, near: 0, sonarT: 3, flips: 0,
   };
   if (mode === "level") {
+    tut = null;
     useSeed(lvl.seed); // same layout on every attempt
     const { startX, opts } = worldOptions(lvl);
     scroll = startX;
@@ -76,7 +77,8 @@ function reset(withShield = false) {
   } else {
     useSeed(null);
     scroll = START_M * PX_PER_M;
-    world = createWorld(save.dex, scroll);
+    tut = save.tutorialDone ? null : { step: 0 };
+    world = createWorld(save.dex, scroll, tut ? { tutorial: true } : {});
     speed = 400;
     zone = zoneIndex(START_M);
   }
@@ -273,6 +275,7 @@ function resumeGame() {
 // Leave the current dive without a Game Over (pearls already earned are kept).
 function quitToMenu() {
   show($("pause-panel"), false); show($("progress"), false);
+  showHint(""); tut = null;
   if (mode === "endless") save.best = Math.max(save.best, depth);
   platform.save(save);
   mode = "endless"; lvl = null;
@@ -505,6 +508,11 @@ function startRun(withShield = false) {
   startMusic();
   platform.gameplayStart();
   if (mode === "level") banner(t("levelBanner", { n: lvl.n, name: tr(lvl.name) }));
+  if (tut) showHint(t("tut1"));
+  else if (mode === "endless") {
+    tipLater("skill", 3500);
+    if (save.owned.length > 1) tipLater("swap", 9000);
+  }
   if (boss) {
     const d = boss.def;
     setTimeout(() => {
@@ -514,8 +522,64 @@ function startRun(withShield = false) {
       sfx.abyss();
     }, 2300);
   }
-  else banner(`${ZONES[zone].icon} ${tr(ZONES[zone].name)}`);
+  else if (mode !== "level" && !tut) banner(`${ZONES[zone].icon} ${tr(ZONES[zone].name)}`);
   show($("progress"), mode === "level");
+}
+
+// ---------- First-time tutorial & one-time tips ----------
+// tut: null, or { step } — 0: try tapping (the world waits), 1: collect pearls,
+// 2: dodge a practice urchin, then done. Runs once, on the very first Free Dive.
+let tut = null;
+let tutPearls = 0;
+
+function showHint(html) {
+  const el = $("hint");
+  el.innerHTML = html;
+  show(el, !!html);
+}
+
+function tutorialAhead(kind) {
+  const wx = scroll + player.x;
+  const top = 90, bottom = H - 90;
+  if (kind === "pearls") {
+    for (let i = 0; i < 5; i++) world.pickups.push({ kind: "pearl", x: wx + 420 + i * 46, y: bottom - 60 - i * 40, r: 12 });
+  } else {
+    world.hazards.push({ type: "urchin", x: wx + 650, y: bottom - 20, r: 22, tutorial: true });
+    tut.urchinX = wx + 650;
+  }
+}
+
+function updateTutorial() {
+  if (!tut) return;
+  const wx = scroll + player.x;
+  if (tut.step === 0 && player.flips >= 2) {
+    tut.step = 1; tutPearls = 0;
+    showHint(t("tut2")); tutorialAhead("pearls");
+    tut.until = wx + 420 + 5 * 46 + 80;
+  } else if (tut.step === 1 && wx > tut.until) {
+    tut.step = 2;
+    showHint(t("tut3")); tutorialAhead("urchin");
+  } else if (tut.step === 2 && wx > tut.urchinX + 60) {
+    tut = null;
+    showHint("");
+    banner(t("tutDone"));
+    sfx.discover();
+    save.tutorialDone = true;
+    platform.save(save);
+  }
+}
+
+// Each tip is shown once ever, a little later than the moment that triggers it.
+function tipLater(key, ms = 0) {
+  if (!Array.isArray(save.tips)) save.tips = [];
+  if (save.tips.includes(key)) return;
+  setTimeout(() => {
+    if (save.tips.includes(key)) return;
+    if (ms && state !== "play" && state !== "over") return; // context gone; try another time
+    save.tips.push(key);
+    platform.save(save);
+    toast(t("tip_" + key), 5200);
+  }, ms);
 }
 
 // ---------- Adventure mode ----------
@@ -646,6 +710,11 @@ function heroSprite(tint, alpha = 0.6) {
 
 function finishGameOver() {
   state = "over";
+  showHint("");
+  tipLater("missions", 600);
+  if (runs >= 2 && mode === "endless") tipLater("adventure", 600);
+  const cheapest = CHARACTERS.filter((c) => !c.secret && !save.owned.includes(c.id)).map((c) => c.price).sort((a, b) => a - b)[0];
+  if (cheapest && save.pearls >= cheapest) tipLater("shop", 600);
   show($("progress"), false);
   runs++;
   if (dying) {
@@ -968,8 +1037,9 @@ function popShield() {
 }
 
 function update(dt) {
-  if (mode === "endless") speed += dt * 7;
-  scroll += speed * dt;
+  if (mode === "endless" && !tut) speed += dt * 7;
+  scroll += (tut && tut.step === 0 ? 0 : speed) * dt;   // the tutorial waits for the first taps
+  updateTutorial();
   if (world.finishX && scroll + player.x >= world.finishX) return levelComplete();
   depth = Math.floor(scroll / PX_PER_M);
   extend(world, scroll + W * 2);
@@ -1036,6 +1106,7 @@ function update(dt) {
   for (const h of world.hazards) {
     if (h.gone || isHarmless(h, time) || !hitsHazard(h, wx, player.y, r)) continue;
     if (player.dash > 0) { destroyHazard(h, "#9fc3ff"); continue; } // Mantra's charge
+    if (h.tutorial) { destroyHazard(h); toast(t("tutOops"), 2200); player.invuln = 1; continue; }
     if (useAbility(h)) continue;
     if (player.invuln > 0) continue;
     if (player.shield) { popShield(); h.gone = true; continue; }
