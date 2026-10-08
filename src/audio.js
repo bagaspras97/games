@@ -21,8 +21,15 @@ export function unlock() {
   if (ctx.state === "suspended") ctx.resume();
 }
 
+let platformMuted = false; // e.g. CrazyGames' muteAudio setting
+
 function applyVolume() {
-  if (master) master.gain.value = muted || adPlaying ? 0 : 0.5;
+  if (master) master.gain.value = muted || adPlaying || platformMuted ? 0 : 0.5;
+}
+
+export function setPlatformMuted(v) {
+  platformMuted = v;
+  applyVolume();
 }
 
 export function isMuted() { return muted; }
@@ -41,7 +48,7 @@ export function setAdPlaying(v) {
 
 // One oscillator note with a pitch sweep and a quick decay envelope.
 function tone({ type = "square", from, to = from, dur = 0.12, vol = 0.3, delay = 0 }) {
-  if (!ctx || muted || adPlaying || !settings.sfx) return;
+  if (!ctx || muted || adPlaying || platformMuted || !settings.sfx) return;
   const t = ctx.currentTime + delay;
   const osc = ctx.createOscillator();
   const g = ctx.createGain();

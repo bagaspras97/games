@@ -85,6 +85,13 @@ const crazygames = {
     window.CrazyGames.SDK.game.loadingStart();
   },
   loadingFinished() { window.CrazyGames.SDK.game.loadingStop(); },
+  // CrazyGames "muteAudio" setting (required for Full Launch): report the current
+  // value and every change to the game.
+  onMuteChange(cb) {
+    const game = window.CrazyGames.SDK.game;
+    cb(!!(game.settings && game.settings.muteAudio));
+    if (game.addSettingsChangeListener) game.addSettingsChangeListener((s) => cb(!!s.muteAudio));
+  },
   gameplayStart() { window.CrazyGames.SDK.game.gameplayStart(); },
   gameplayStop() { window.CrazyGames.SDK.game.gameplayStop(); },
   _ad(type) {
@@ -170,7 +177,8 @@ const facebook = {
 const adapters = { local, poki, crazygames, youtube, facebook };
 
 export async function createPlatform() {
-  const requested = new URLSearchParams(location.search).get("platform") || "local";
+  // ?platform= wins (testing); release builds set window.PUFFY_PLATFORM in index.html.
+  const requested = new URLSearchParams(location.search).get("platform") || window.PUFFY_PLATFORM || "local";
   const adapter = adapters[requested] || local;
   try {
     await adapter.init();

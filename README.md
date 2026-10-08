@@ -238,6 +238,13 @@ Tap/klik/Spasi: naik-turun · **X**: skill (Mode Bebas) · **C**: ganti karakter
 - `src/audio.js`: efek suara & musik sintetis (Web Audio API)
 - `src/sdk/adapter.js`: satu antarmuka untuk semua platform
 
+## 📦 Rilis
+- `python3 tools/build.py [platform]` → `release/puffy-<platform>.zip` siap unggah (platform sudah tertanam, tanpa parameter URL).
+- Cover & ikon: `release/covers/` (dibuat oleh `tools/covers.html` dari aset game).
+- Teks halaman toko EN/ID: `release/STORE_LISTING.md`. Daftar periksa CrazyGames: `release/CHECKLIST.md`.
+
+![cover](release/covers/cover-1920x1080.png)
+
 ## Sebelum submit
 - Facebook: isi `FB_INTERSTITIAL_ID` / `FB_REWARDED_ID` di `src/sdk/adapter.js` dan tambahkan `fbapp-config.json`.
 - YouTube Playables: hanya iklan dari SDK YouTube, tanpa pembelian dalam game.

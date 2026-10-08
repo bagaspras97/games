@@ -10,7 +10,7 @@ import { CREATURES, getCreature } from "./creatures.js";
 
 const SECRET_ID = "bubu";
 import {
-  sfx, unlock, toggleMute, isMuted, setAdPlaying, applyMusicSetting, startMusic, stopMusic, setTempo, setMuffle,
+  sfx, unlock, toggleMute, isMuted, setAdPlaying, applyMusicSetting, setPlatformMuted, startMusic, stopMusic, setTempo, setMuffle,
 } from "./audio.js";
 import * as fx from "./particles.js";
 import { updateAmbient, drawAmbient } from "./ambient.js";
@@ -256,11 +256,15 @@ async function claimMission(i, mult) {
 }
 
 // ---------- Pause ----------
-function pauseGame() {
+// auto: paused because the tab was hidden. Portals (e.g. CrazyGames) handle focus
+// loss themselves and ask us NOT to send gameplayStop for it.
+let autoPaused = false;
+function pauseGame(auto = false) {
   if (state !== "play") return;
   state = "paused";
+  autoPaused = auto;
   stopMusic();
-  platform.gameplayStop();
+  if (!auto) platform.gameplayStop();
   show(ui.banner, false); show(ui.toast, false);
   show($("pause-panel"), true);
 }
@@ -270,12 +274,15 @@ function resumeGame() {
   state = "play";
   last = performance.now();
   startMusic();
-  platform.gameplayStart();
+  if (!autoPaused) platform.gameplayStart();
+  autoPaused = false;
 }
 
 // Leave the current dive without a Game Over (pearls already earned are kept).
 function quitToMenu() {
   show($("pause-panel"), false); show($("progress"), false);
+  if (autoPaused) platform.gameplayStop(); // the dive is really over now
+  autoPaused = false;
   showHint(""); tut = null;
   if (mode === "endless") save.best = Math.max(save.best, depth);
   platform.save(save);
@@ -1430,7 +1437,7 @@ async function boot() {
 
   // Switching tabs / a phone notification pauses the dive instead of ending it.
   document.addEventListener("visibilitychange", () => {
-    if (document.hidden && state === "play") pauseGame();
+    if (document.hidden && state === "play") pauseGame(true);
   });
   $("pause").onclick = (e) => { e.stopPropagation(); $("pause").blur(); pauseGame(); };
   $("pause-resume").onclick = resumeGame;
@@ -1439,6 +1446,7 @@ async function boot() {
   // Dev helper (?debug): lets automated tests read the boss & player state.
   if (devFlag("debug")) window.__dbg = () => ({ boss, bossCtx, player, state, world, scroll, time });
 
+  if (platform.onMuteChange) platform.onMuteChange(setPlatformMuted);
   platform.loadingFinished();
   $("platform").textContent = platform.name;
   last = performance.now();
