@@ -38,6 +38,10 @@
       font-size: 20px; text-align: center; pointer-events: none; z-index: 4; box-sizing: border-box;
       animation: hintbob 1.4s ease-in-out infinite; }
     @keyframes hintbob { 50% { transform: translate(-50%, 6px); } }
+    .settings-list { display: flex; flex-direction: column; gap: 8px; width: min(420px, 90vw); }
+    .settings-list button { width: 100%; }
+    .settings-list button.off { background: rgba(255,255,255,.18); color: #fff; }
+    button.danger { border-color: #ff6b81; color: #ffb3bf; }
     #banner { position: fixed; top: 22%; left: 0; right: 0; text-align: center; font-size: 40px;
       font-weight: 900; pointer-events: none; text-shadow: 0 3px 12px rgba(0,0,0,.6); }
     #banner.pop { animation: pop 2.4s ease forwards; }
@@ -186,6 +190,7 @@
     <h2 data-i18n="paused"></h2>
     <p data-i18n="pausedSub"></p>
     <button id="pause-resume" data-i18n="resume"></button>
+    <button class="open-settings ghost" data-i18n="settings"></button>
     <button id="pause-quit" class="ghost" data-i18n="mainMenu"></button>
   </div>
   <button id="skill" class="hidden" aria-label="Skill"></button>
@@ -211,7 +216,7 @@
       <button class="open-dex ghost" data-i18n="encyclopedia"></button>
       <button class="open-missions ghost" data-i18n="missions"></button>
     </div>
-    <button id="lang" class="ghost small" data-i18n-aria="language"></button>
+    <button class="open-settings ghost small" data-i18n="settings"></button>
   </div>
 
   <div id="over" class="panel hidden">
@@ -259,6 +264,20 @@
       <button id="done-retry" class="ghost" data-i18n="doneRetry"></button>
       <button id="done-map" class="ghost" data-i18n="doneMap"></button>
     </div>
+  </div>
+
+  <div id="settings" class="panel hidden">
+    <h2 data-i18n="settings"></h2>
+    <div class="settings-list">
+      <button id="set-music" class="alt"></button>
+      <button id="set-sfx" class="alt"></button>
+      <button id="set-vibrate" class="alt"></button>
+      <button id="set-gfx" class="alt"></button>
+      <p class="cause" data-i18n="gfxHint"></p>
+      <button id="set-lang" class="alt"></button>
+      <button id="set-reset" class="ghost danger"></button>
+    </div>
+    <button id="settings-close" class="ghost" data-i18n="back"></button>
   </div>
 
   <div id="missions" class="panel hidden">

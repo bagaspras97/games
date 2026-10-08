@@ -1,6 +1,8 @@
 // Tiny synthesized sound effects (Web Audio API, no asset files → stays far under size limits).
 // Platforms require game audio to be silent while an ad plays: call setAdPlaying(true/false).
 
+import { settings } from "./settings.js";
+
 let ctx = null, master = null;
 let muted = false, adPlaying = false;
 
@@ -39,7 +41,7 @@ export function setAdPlaying(v) {
 
 // One oscillator note with a pitch sweep and a quick decay envelope.
 function tone({ type = "square", from, to = from, dur = 0.12, vol = 0.3, delay = 0 }) {
-  if (!ctx || muted || adPlaying) return;
+  if (!ctx || muted || adPlaying || !settings.sfx) return;
   const t = ctx.currentTime + delay;
   const osc = ctx.createOscillator();
   const g = ctx.createGain();
@@ -54,7 +56,7 @@ function tone({ type = "square", from, to = from, dur = 0.12, vol = 0.3, delay =
 }
 
 function noise(dur = 0.3, vol = 0.4) {
-  if (!ctx || muted || adPlaying) return;
+  if (!ctx || muted || adPlaying || !settings.sfx) return;
   const buf = ctx.createBuffer(1, ctx.sampleRate * dur, ctx.sampleRate);
   const data = buf.getChannelData(0);
   for (let i = 0; i < data.length; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / data.length);
@@ -164,6 +166,7 @@ function hat(t) {
 
 function scheduleStep(t) {
   const sixteenth = 60 / bpm / 4;
+  if (!settings.music) { step++; return sixteenth; } // keep time, create no notes
   const bar = Math.floor(step / 16) % 4;
   const s = step % 16;
   if (s % 4 === 0) musicNote(midi(BASS[bar * 2 + (s >= 8 ? 1 : 0)]), t, sixteenth * 3, "triangle", 0.35);
@@ -176,6 +179,11 @@ function scheduleStep(t) {
   return sixteenth;
 }
 
+// Re-apply the music on/off setting (called when the setting changes).
+export function applyMusicSetting() {
+  if (musicGain) musicGain.gain.value = settings.music ? 0.6 : 0;
+}
+
 export function startMusic() {
   if (!ctx || timer) return;
   if (!musicGain) {
@@ -186,6 +194,7 @@ export function startMusic() {
     musicFilter.frequency.value = 4000;
     musicGain.connect(musicFilter).connect(master);
   }
+  applyMusicSetting();
   step = 0;
   nextTime = ctx.currentTime + 0.05;
   timer = setInterval(() => {

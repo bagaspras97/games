@@ -196,8 +196,17 @@ python3 -m http.server 8000 --bind 127.0.0.1
 ```
 `?platform=` bisa `poki`, `crazygames`, `youtube`, `facebook`, atau `local` (iklan simulasi).
 
+## ⚙️ Pengaturan
+Tombol **⚙️ Pengaturan** di menu utama dan di panel jeda (`src/settings.js`, tersimpan terpisah dari progres):
+- 🎵 Musik, 🔊 Efek suara, 📳 Getar — nyala/mati masing-masing.
+- ✨ Grafis: **Otomatis** (beralih ke ringan kalau FPS < 45 di detik-detik awal), **Tinggi**, atau **Ringan** (resolusi 75%, tanpa efek cahaya/glow, tanpa lapisan latar dekoratif & ikan latar).
+- 🌐 Bahasa (ID/EN).
+- 🗑️ Hapus semua progres (harus ditekan 2×; pengaturan tetap disimpan).
+
+![settings](docs/settings.png)
+
 ## 🌐 Bahasa
-Indonesia & Inggris (`src/i18n.js`). Otomatis mengikuti bahasa browser (Indonesia → ID, lainnya → EN) dan bisa diganti lewat tombol 🌐 di menu utama (tersimpan). Teks sumber tetap bahasa Indonesia di file data; terjemahan Inggris ada di `i18n.js`.
+Indonesia & Inggris (`src/i18n.js`). Otomatis mengikuti bahasa browser (Indonesia → ID, lainnya → EN) dan bisa diganti lewat ⚙️ Pengaturan (tersimpan). Teks sumber tetap bahasa Indonesia di file data; terjemahan Inggris ada di `i18n.js`.
 
 ## 🎓 Pemain baru
 - **Tutorial interaktif** di Mode Bebas pertama: (1) game menunggu sampai pemain mencoba tap naik/turun, (2) deretan mutiara latihan, (3) satu bulu babi latihan yang tidak membuat kalah. Selesai → "🎉 Kamu siap menyelam!", tidak muncul lagi.

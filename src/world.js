@@ -297,6 +297,10 @@ const ICE_DARK = [[0, "#8ccbe6"], [300, "#5d98b8"], [800, "#2c3550"], [1500, "#1
 const snow = Array.from({ length: 60 }, () => ({ x: Math.random() * W, y: Math.random() * H, r: Math.random() * 2 + 0.5, s: Math.random() * 0.3 + 0.1 }));
 const glows = Array.from({ length: 26 }, () => ({ x: Math.random() * W, y: Math.random() * H, c: pick(["#7ffff0", "#9fb7ff", "#ff9ff3"]), p: Math.random() * 6 }));
 
+// Light graphics mode skips the purely decorative background layers.
+let lowQuality = false;
+export function setLowQuality(v) { lowQuality = v; }
+
 export function drawBackground(ctx, scroll, depth, t) {
   const g = ctx.createLinearGradient(0, 0, 0, H);
   g.addColorStop(0, byDepth(SEA_TOP, depth));
@@ -317,6 +321,7 @@ export function drawBackground(ctx, scroll, depth, t) {
   }
 
   // distant reef mounds & the odd shipwreck (far parallax)
+  if (lowQuality) return;                // light mode: plain water + rays only
   drawFarScenery(ctx, scroll, depth);
 
   // kelp forest silhouette (parallax)
@@ -395,7 +400,7 @@ export function drawTerrain(ctx, world, scroll, depth, t, dt = 0, px = -999, py 
       g.addColorStop(0, sand); g.addColorStop(1, sandDark);
       ctx.fillStyle = g;
       ctx.fillRect(x, s.floor, w, H - s.floor);
-      drawCaustics(ctx, x, s.floor, w, t, caustic);
+      if (!lowQuality) drawCaustics(ctx, x, s.floor, w, t, caustic);
       ctx.globalAlpha = 0.7; // decoration stays in the background, hazards & pearls pop
       for (const d of s.deco) drawFloorDeco(ctx, x + d.dx, s.floor, d, t, dt, px, py, dark);
       ctx.globalAlpha = 1;

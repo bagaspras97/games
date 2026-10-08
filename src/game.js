@@ -1,5 +1,6 @@
 import { devParam, devFlag } from "./dev.js";
 import { t, tr, getLang, setLang, applyStatic } from "./i18n.js";
+import { settings, saveSettings } from "./settings.js";
 // "Puffy: Petualangan Laut Dalam" — one-tap hyper-casual deep-sea runner.
 // Tap / click / space: Puffy inflates (floats up) or deflates (sinks down).
 // Avoid hazards, collect pearls, grab shield bubbles, discover rare creatures.
@@ -9,7 +10,7 @@ import { CREATURES, getCreature } from "./creatures.js";
 
 const SECRET_ID = "bubu";
 import {
-  sfx, unlock, toggleMute, isMuted, setAdPlaying, startMusic, stopMusic, setTempo, setMuffle,
+  sfx, unlock, toggleMute, isMuted, setAdPlaying, applyMusicSetting, startMusic, stopMusic, setTempo, setMuffle,
 } from "./audio.js";
 import * as fx from "./particles.js";
 import { updateAmbient, drawAmbient } from "./ambient.js";
@@ -22,7 +23,7 @@ import { createBoss, updateBoss, bossHits, drawBoss } from "./bosses.js";
 import { LEVELS, STAR_PEARL_RATIO, rewardPerStar, worldOptions, isUnlocked, totalStars } from "./levels.js";
 import {
   W, H, PX_PER_M, ZONES, zoneIndex, createWorld, extend, prune, surfaceUnder, updateWorld, hitsHazard, isHarmless,
-  drawBackground, drawTerrain, drawDarkness, drawHazards, drawPickups, drawFinish, useSeed,
+  setLowQuality, drawBackground, drawTerrain, drawDarkness, drawHazards, drawPickups, drawFinish, useSeed,
 } from "./world.js";
 
 const canvas = document.getElementById("game");
@@ -666,7 +667,68 @@ async function nextLevel() {
 }
 
 function addShake(amount) { shake = Math.max(shake, amount); }
-function vibrate(ms) { try { navigator.vibrate && navigator.vibrate(ms); } catch (e) {} }
+function vibrate(ms) { if (!settings.vibrate) return; try { navigator.vibrate && navigator.vibrate(ms); } catch (e) {} }
+
+// ---------- Graphics quality ----------
+// Light mode: renders at 75% resolution, turns off glow (shadowBlur — the most
+// expensive effect) and skips decorative background layers & ambient fish.
+let lowGfx = false, gfxScale = 1;
+const shadowDesc = Object.getOwnPropertyDescriptor(CanvasRenderingContext2D.prototype, "shadowBlur");
+Object.defineProperty(ctx, "shadowBlur", {
+  get() { return shadowDesc.get.call(this); },
+  set(v) { shadowDesc.set.call(this, lowGfx ? 0 : v); },
+});
+
+function applyGraphics(low) {
+  lowGfx = low;
+  gfxScale = low ? 0.75 : 1;
+  canvas.width = W * gfxScale;
+  canvas.height = H * gfxScale;
+  setLowQuality(low);
+}
+
+// "auto": watch the first seconds of play; if it runs slowly, switch to light.
+let fpsFrames = 0, fpsTime = 0;
+function autoGraphics(rawDt) {
+  if (settings.graphics !== "auto" || lowGfx || state !== "play") return;
+  fpsFrames++; fpsTime += rawDt;
+  if (fpsTime < 4) return;
+  const fps = fpsFrames / fpsTime;
+  fpsFrames = 0; fpsTime = 0;
+  if (fps < 45) { applyGraphics(true); toast(t("gfxAutoToast"), 3500); }
+}
+
+// ---------- Settings panel ----------
+let settingsReturn = null;
+function renderSettings() {
+  const onOff = (v) => (v ? t("on") : t("off"));
+  $("set-music").textContent = `🎵 ${t("musicLbl")}: ${onOff(settings.music)}`;
+  $("set-sfx").textContent = `🔊 ${t("sfxLbl")}: ${onOff(settings.sfx)}`;
+  $("set-vibrate").textContent = `📳 ${t("vibrateLbl")}: ${onOff(settings.vibrate)}`;
+  $("set-gfx").textContent = `✨ ${t("gfxLbl")}: ${t("gfx_" + settings.graphics)}`;
+  $("set-lang").textContent = getLang() === "id" ? "🌐 Bahasa Indonesia" : "🌐 English";
+  $("set-reset").textContent = resetArmed ? t("resetConfirm") : t("resetProgress");
+  ["set-music", "set-sfx", "set-vibrate"].forEach((id) => $(id).classList.toggle("off", !settings[id.slice(4)]));
+}
+function openSettings(from) {
+  settingsReturn = from;
+  resetArmed = false;
+  show(from, false);
+  renderSettings();
+  show($("settings"), true);
+}
+function closeSettings() {
+  show($("settings"), false);
+  show(settingsReturn, true);
+}
+let resetArmed = false;
+function toggleSetting(key) {
+  settings[key] = !settings[key];
+  saveSettings();
+  if (key === "music") applyMusicSetting();
+  sfx.click();
+  renderSettings();
+}
 
 // cause: "hazard" | "wall" | "pit" | "hidden". Each hazard plays its own knock-out
 // animation (see deaths.js) before the Game Over panel. Shake & vibration only on hazards.
@@ -1199,6 +1261,7 @@ function drawPlayer() {
 }
 
 function draw(dt) {
+  ctx.setTransform(gfxScale, 0, 0, gfxScale, 0, 0);
   ctx.save();
   if (shake > 0.3) {
     ctx.translate((Math.random() * 2 - 1) * shake, (Math.random() * 2 - 1) * shake);
@@ -1209,7 +1272,7 @@ function draw(dt) {
 
   drawBackground(ctx, scroll, depth, time);
   drawMoment(ctx, W, H, time);
-  drawAmbient(ctx, time, Math.min(1, Math.max(0, (depth - 500) / 1200)));
+  if (!lowGfx) drawAmbient(ctx, time, Math.min(1, Math.max(0, (depth - 500) / 1200)));
   drawTerrain(ctx, world, scroll, depth, time, dt, player.x, player.y);
   drawDarkness(ctx, depth, player.x, player.y, hero().light);
   drawFinish(ctx, world, scroll, time);
@@ -1237,6 +1300,7 @@ function draw(dt) {
 }
 
 function loop(now) {
+  autoGraphics((now - last) / 1000 || 0);
   const dt = Math.min(0.033, (now - last) / 1000 || 0);
   last = now;
   time += dt;
@@ -1315,15 +1379,31 @@ async function boot() {
   muteBtn.onclick = (e) => { e.stopPropagation(); toggleMute(); muteLabel(); muteBtn.blur(); };
 
   ui.play.onclick = () => { sfx.click(); startEndless(); };
-  const langBtn = $("lang");
-  const langLabel = () => { langBtn.textContent = getLang() === "id" ? "🌐 Bahasa Indonesia" : "🌐 English"; };
-  langLabel();
-  langBtn.onclick = () => {
+  applyGraphics(settings.graphics === "low");
+  document.querySelectorAll(".open-settings").forEach((b) => { b.onclick = () => openSettings(b.closest(".panel")); });
+  $("settings-close").onclick = closeSettings;
+  $("set-music").onclick = () => toggleSetting("music");
+  $("set-sfx").onclick = () => toggleSetting("sfx");
+  $("set-vibrate").onclick = () => { toggleSetting("vibrate"); vibrate(40); };
+  $("set-gfx").onclick = () => {
+    const order = ["auto", "high", "low"];
+    settings.graphics = order[(order.indexOf(settings.graphics) + 1) % order.length];
+    saveSettings();
+    applyGraphics(settings.graphics === "low");
+    sfx.click();
+    renderSettings();
+  };
+  $("set-lang").onclick = () => {
     setLang(getLang() === "id" ? "en" : "id");
-    langLabel();
     updateMissionBadges();
     updateFreePearlsButton();
     sfx.click();
+    renderSettings();
+  };
+  $("set-reset").onclick = () => {
+    if (!resetArmed) { resetArmed = true; sfx.denied(); renderSettings(); return; }
+    try { localStorage.removeItem("hop_save"); } catch (e) {}
+    location.reload();
   };
   $("swap").onclick = (e) => { e.stopPropagation(); $("swap").blur(); openSwap(); };
   $("swap-close").onclick = closeSwap;
