@@ -1,3 +1,4 @@
+import { devParam } from "./dev.js";
 // Rare special moments: big, slow background events (a whale passing, a dolphin
 // pod, a giant squid…). One happens every so often, chosen by depth zone.
 // They are purely visual — drawn behind the terrain — and the player gets a few
@@ -19,7 +20,7 @@ export const MOMENTS = {
 };
 
 // Dev helper: ?moment=humpback starts that moment a few seconds into a dive.
-const FORCED = new URLSearchParams(location.search).get("moment");
+const FORCED = devParam("moment");
 
 let current = null;
 let cooldown = FORCED ? 3 : rand(25, 45);

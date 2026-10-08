@@ -1,3 +1,4 @@
+import { devParam } from "./dev.js";
 // Deep-sea world: seabed (floor) and ice/rock ceiling made of stepped segments,
 // trenches ("palung"), zone-based hazards, pearls, shield bubbles and rare creatures.
 // All x values are world coordinates; the camera scrolls by `scroll`.
@@ -179,7 +180,7 @@ function addPearl(world, x, y) {
 }
 
 // Dev helper (?hazard=jelly): every hazard becomes this type, to test abilities.
-const FORCED = new URLSearchParams(location.search).get("hazard");
+const FORCED = devParam("hazard");
 
 function spawnHazard(world, seg, type) {
   if (FORCED) type = FORCED;

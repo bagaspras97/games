@@ -1,3 +1,4 @@
+import { devParam, devFlag } from "./dev.js";
 // "Puffy: Petualangan Laut Dalam" — one-tap hyper-casual deep-sea runner.
 // Tap / click / space: Puffy inflates (floats up) or deflates (sinks down).
 // Avoid hazards, collect pearls, grab shield bubbles, discover rare creatures.
@@ -42,7 +43,7 @@ const FREE_PEARLS = 40;        // reward for watching an ad in the shop…
 const FREE_PEARLS_PER_DAY = 5; // …at most this many times per day
 const CLIMB = 48;              // step height Puffy swims over automatically
 // Dev helper: ?start=1000 begins the dive at 1000 m to test deeper zones.
-const START_M = Number(new URLSearchParams(location.search).get("start")) || 0;
+const START_M = Number(devParam("start")) || 0;
 
 let platform;
 let save = { best: 0, pearls: 0, char: "puffy", owned: ["puffy"], dex: [] };
@@ -244,6 +245,35 @@ async function claimMission(i, mult) {
   renderMissions();
   updateMissionBadges();
   toast(`+${reward} 🦪 masuk ke kantong!`, 1800);
+}
+
+// ---------- Pause ----------
+function pauseGame() {
+  if (state !== "play") return;
+  state = "paused";
+  stopMusic();
+  platform.gameplayStop();
+  show(ui.banner, false); show(ui.toast, false);
+  show($("pause-panel"), true);
+}
+
+function resumeGame() {
+  show($("pause-panel"), false);
+  state = "play";
+  last = performance.now();
+  startMusic();
+  platform.gameplayStart();
+}
+
+// Leave the current dive without a Game Over (pearls already earned are kept).
+function quitToMenu() {
+  show($("pause-panel"), false); show($("progress"), false);
+  if (mode === "endless") save.best = Math.max(save.best, depth);
+  platform.save(save);
+  mode = "endless"; lvl = null;
+  reset();
+  state = "menu";
+  show(ui.menu, true);
 }
 
 // ---------- Mid-dive character swap (Free mode only) ----------
@@ -1135,6 +1165,7 @@ function loop(now) {
   last = now;
   time += dt;
   updateSwapButton();
+  show($("pause"), state === "play");
   updateSkillButton();
   if (state === "play") update(dt);
   else if (state === "dying") {
@@ -1196,6 +1227,7 @@ async function boot() {
   canvas.addEventListener("pointerdown", flip);
   addEventListener("keydown", (e) => {
     if (e.code === "Space" || e.code === "ArrowUp") { e.preventDefault(); flip(); }
+    if (e.code === "KeyP" || e.code === "Escape") { if (state === "play") pauseGame(); else if (state === "paused") resumeGame(); }
     if (e.code === "KeyX") useSkill();
     if (e.code === "KeyC") { if (state === "swap") closeSwap(); else openSwap(); }
   });
@@ -1229,12 +1261,16 @@ async function boot() {
   ui.freePearls.onclick = freePearls;
   updateFreePearlsButton();
 
+  // Switching tabs / a phone notification pauses the dive instead of ending it.
   document.addEventListener("visibilitychange", () => {
-    if (document.hidden && state === "play") gameOver("hidden");
+    if (document.hidden && state === "play") pauseGame();
   });
+  $("pause").onclick = (e) => { e.stopPropagation(); $("pause").blur(); pauseGame(); };
+  $("pause-resume").onclick = resumeGame;
+  $("pause-quit").onclick = quitToMenu;
 
   // Dev helper (?debug): lets automated tests read the boss & player state.
-  if (new URLSearchParams(location.search).has("debug")) window.__dbg = () => ({ boss, bossCtx, player, state, world, scroll, time });
+  if (devFlag("debug")) window.__dbg = () => ({ boss, bossCtx, player, state, world, scroll, time });
 
   platform.loadingFinished();
   $("platform").textContent = platform.name;

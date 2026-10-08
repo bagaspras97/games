@@ -196,6 +196,12 @@ python3 -m http.server 8000 --bind 127.0.0.1
 ```
 `?platform=` bisa `poki`, `crazygames`, `youtube`, `facebook`, atau `local` (iklan simulasi).
 
+## Parameter pengembang
+`?start=`, `?hazard=`, `?finish=`, `?moment=`, `?debug` **hanya aktif di localhost** (`src/dev.js`). Di portal, parameter ini diabaikan supaya tidak bisa dipakai curang. `?platform=` tetap aktif.
+
+## Kontrol
+Tap/klik/Spasi: naik-turun · **X**: skill (Mode Bebas) · **C**: ganti karakter (Mode Bebas) · **P / Esc / ⏸**: jeda. Pindah tab otomatis menjeda permainan.
+
 ## Struktur
 - `src/game.js`: alur game, fisika Puffy, perisai, penemuan, UI
 - `src/world.js`: terrain, palung, zona, bahaya, pickup, semua rendering dunia

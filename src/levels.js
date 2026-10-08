@@ -1,3 +1,4 @@
+import { devParam } from "./dev.js";
 // Adventure mode: 20 hand-tuned levels, 5 per depth zone. Each level has a fixed
 // seed so its layout is the same on every attempt, a length to the finish line
 // and a difficulty (hazard & trench density). The 5th level of a zone is a
@@ -32,7 +33,7 @@ for (let z = 0; z < 4; z++) {
 }
 
 // Dev helper: ?finish=20 shortens every level to 20 m to test the finish screen.
-const SHORT = Number(new URLSearchParams(location.search).get("finish")) || 0;
+const SHORT = Number(devParam("finish")) || 0;
 if (SHORT) for (const L of LEVELS) L.meters = SHORT;
 
 export const STAR_PEARL_RATIO = 0.7;
