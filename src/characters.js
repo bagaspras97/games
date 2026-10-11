@@ -322,7 +322,7 @@ function mixRGB(a, b, t) {
 export const CHARACTERS = [
   {
     id: "puffy", name: "Puffy", species: "Pufferfish", price: 0, color: "#ffe27a",
-    desc: "Tap: puff up (rise) ↔ deflate (sink).",
+    desc: "Tap to puff up (rise) or deflate (sink).",
     mode: "toggle", g: 2000, max: 760,
     ability: "When puffed up, swordfish bounce off its spikes.",
     skill: { icon: "🦔", name: "Spike Burst", cd: 12, desc: "Spikes fly in every direction, popping nearby hazards." }, // active, Free mode only
@@ -332,39 +332,39 @@ export const CHARACTERS = [
   },
   {
     id: "kudi", name: "Kudi", species: "Seahorse", price: 150, color: "#ffc98a",
-    desc: "Slim and gentle: rises and sinks slower, easy to control.",
+    desc: "Slim and gentle: rises and sinks more slowly, easy to control.",
     mode: "toggle", g: 1100, max: 430,
     ability: "Slim body: slips right through fishing nets.",
-    skill: { icon: "🌀", name: "Tail Whirl", cd: 12, desc: "Pulls in every pearl on screen and blows away nearby jellyfish and plastic." }, // active, Free mode only
+    skill: { icon: "🌀", name: "Tail Whirl", cd: 12, desc: "Pulls in every pearl on screen and blows nearby jellyfish and plastic away." }, // active, Free mode only
     immune: (h) => h.type === "net",
     box: () => ({ hw: 14, hh: 26, r: 14 }),
     draw: drawKudi,
   },
   {
     id: "jeli", name: "Jeli", species: "Jellyfish", price: 400, color: "#ff9fe0",
-    desc: "Tap = a pulse upward. Without taps it slowly sinks.",
+    desc: "Each tap gives an upward pulse. Without taps, it slowly sinks.",
     mode: "pulse", g: 950, max: 620, impulse: 470,
     ability: "Immune to electric jellyfish (they're family!).",
-    skill: { icon: "⚡", name: "Shock Wave", cd: 14, desc: "An electric wave forward destroys hazards in its path." }, // active, Free mode only
+    skill: { icon: "⚡", name: "Shock Wave", cd: 14, desc: "An electric wave surges forward and destroys hazards in its path." }, // active, Free mode only
     immune: (h) => h.type === "jelly",
     box: () => ({ hw: 22, hh: 20, r: 19 }),
     draw: drawJeli,
   },
   {
     id: "okto", name: "Okto", species: "Octopus", price: 900, color: "#2a1a36",
-    desc: "Ink jet: switches sides super fast and is briefly invulnerable.",
+    desc: "Ink jet: switches sides lightning-fast and is briefly invulnerable.",
     mode: "toggle", g: 3400, max: 1150, jet: true,
     ability: "Ink blinds swordfish and freezes nearby jellyfish.",
-    skill: { icon: "🐙", name: "Octo Arms", cd: 12, desc: "Tentacles grab and fling up to 3 nearest hazards ahead." }, // active, Free mode only
+    skill: { icon: "🐙", name: "Octo Arms", cd: 12, desc: "Tentacles grab and fling the 3 nearest hazards ahead." }, // active, Free mode only
     box: () => ({ hw: 22, hh: 22, r: 19 }),
     draw: drawOkto,
   },
   {
     id: "mantra", name: "Mantra", species: "Manta Ray", price: 1600, color: "#9fc3ff",
-    desc: "Glides in zig-zags at a steady speed; can turn mid-water.",
+    desc: "Glides in steady zig-zags and can turn mid-water.",
     mode: "glide", speed: 300,
     ability: "Slippery and flat: fishing hooks always miss.",
-    skill: { icon: "💨", name: "Wing Charge", cd: 15, desc: "Charge for 2 s: invulnerable and smashing through every hazard." }, // active, Free mode only
+    skill: { icon: "💨", name: "Wing Charge", cd: 15, desc: "Charge for 2 s: invulnerable and smashes through every hazard." }, // active, Free mode only
     immune: (h) => h.type === "hook",
     box: () => ({ hw: 30, hh: 14, r: 15 }),
     draw: drawMantra,
@@ -373,7 +373,7 @@ export const CHARACTERS = [
     id: "lumi", name: "Lumi", species: "Anglerfish", price: 2500, color: "#7ffff0",
     desc: "Its lantern lights up the dark sea and attracts nearby pearls.",
     mode: "toggle", g: 2000, max: 760, light: 360, magnet: 150,
-    ability: "Big mouth catches plastic trash to bin it: clean sea +2 🦪.",
+    ability: "Its big mouth catches plastic trash: clean sea, +2 🦪.",
     skill: { icon: "🔦", name: "Lantern Flash", cd: 18, desc: "A bright flash freezes every hazard on screen for 3 s." }, // active, Free mode only
     immune: (h) => h.type === "bag",
     box: () => ({ hw: 26, hh: 24, r: 21 }),
@@ -384,7 +384,7 @@ export const CHARACTERS = [
 // Unlocked for free once every creature in the Sea Encyclopedia is found.
 CHARACTERS.push({
   id: "bubu", name: "Bubu", species: "Mini Blue Whale", price: 0, secret: true, color: "#a8dcff",
-  desc: "Secret character! Big and calm: medium rise/sink, spouts from its blowhole.",
+  desc: "Secret character! Big and calm: medium rise and sink, spouts from its blowhole.",
   mode: "toggle", g: 1500, max: 600,
   ability: "Whale song every 6 s: scares off swordfish and hooks, freezes nearby jellyfish.",
     skill: { icon: "🌊", name: "Whale Spout", cd: 20, desc: "A giant water spout washes every hazard off the screen." }, // active, Free mode only

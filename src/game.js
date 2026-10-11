@@ -1087,7 +1087,7 @@ function useAbility(h) {
     case "sword":
       h.fleeing = true;
       sfx.denied();
-      fx.text(h.x, h.y - 30, "Boing! Bounced", "#ffe27a");
+      fx.text(h.x, h.y - 30, "Boing!", "#ffe27a");
       break;
     case "net": fx.text(scroll + player.x, player.y - 40, "Slipped through!", "#ffc98a"); sfx.click(); break;
     case "jelly": fx.text(h.x, h.y - 40, "Hi, buddy! 🪼", "#ff9fe0"); sfx.pearl(); break;
