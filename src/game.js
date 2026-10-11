@@ -1457,7 +1457,7 @@ async function boot() {
   $("pause-quit").onclick = quitToMenu;
 
   // Dev helper (?debug): lets automated tests read the boss & player state.
-  if (devFlag("debug")) window.__dbg = () => ({ boss, bossCtx, player, state, world, scroll, time });
+  if (devFlag("debug")) window.__dbg = () => ({ boss, bossCtx, player, state, world, scroll, time, gameOver, levelComplete });
 
   if (platform.onMuteChange) platform.onMuteChange(setPlatformMuted);
   platform.loadingFinished();
