@@ -132,6 +132,14 @@
     .reward { font-size: 15px; color: #ffe27a; }
     .char-card .price { font-size: 14px; font-weight: 700; opacity: 1; }
     #dex .grid { grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); }
+    #finale > p { max-width: min(640px, 92vw); }
+    #finale-chars { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; }
+    #finale-chars canvas { width: 88px; height: 88px; }
+    #finale-stats { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+    #finale-stats .chip { background: rgba(255,255,255,.12); border-radius: 12px; padding: 6px 12px; min-width: 96px; text-align: center; }
+    #finale-stats .chip b { display: block; font-size: 22px; }
+    #finale-stats .chip span { font-size: 12px; opacity: .85; }
+    .finale-thanks { font-size: 15px; opacity: .9; }
     .dex-card span { font-size: 12px; line-height: 1.35; }
     .dex-card.unknown { opacity: .6; }
     .dex-card .q { font-size: 44px; height: 72px; display: flex; align-items: center; }
@@ -157,6 +165,10 @@
       .char-card canvas { width: 56px; height: 56px; }
       .char-card .desc, .char-card .ability, .char-card .skill { font-size: 10px; line-height: 1.25; min-height: 0; }
       #dex .grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+      #finale-chars canvas { width: 52px; height: 52px; }
+      #finale-stats .chip { padding: 3px 8px; min-width: 70px; }
+      #finale-stats .chip b { font-size: 16px; }
+      .finale-thanks { display: none; }
       .dex-card canvas { width: 52px; height: 52px; }
       #missions-list { max-height: none; }
       #streak { padding: 6px 10px; }
@@ -216,7 +228,10 @@
       <button class="open-dex ghost" data-i18n="encyclopedia"></button>
       <button class="open-missions ghost" data-i18n="missions"></button>
     </div>
-    <button class="open-settings ghost small" data-i18n="settings"></button>
+    <div class="row">
+      <button id="menu-finale" class="open-finale alt small hidden" data-i18n="finaleBtn"></button>
+      <button class="open-settings ghost small" data-i18n="settings"></button>
+    </div>
   </div>
 
   <div id="over" class="panel hidden">
@@ -252,6 +267,16 @@
     <p class="cause" data-i18n="levelsPearls"></p>
     <div id="levels-grid"></div>
     <button id="levels-close" class="ghost" data-i18n="back"></button>
+  </div>
+
+  <div id="finale" class="panel hidden">
+    <h1 data-i18n="finaleTitle"></h1>
+    <p data-i18n="finaleSub"></p>
+    <div id="finale-chars"></div>
+    <div id="finale-stats"></div>
+    <p id="finale-note" class="cause"></p>
+    <p class="finale-thanks" data-i18n="finaleThanks"></p>
+    <button id="finale-close" data-i18n="finaleKeep"></button>
   </div>
 
   <div id="level-done" class="panel hidden">

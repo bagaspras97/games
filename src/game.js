@@ -59,6 +59,8 @@ let boss = null, bossCtx = null; // exam-level boss and its last corridor info
 let player, world, scroll, speed, depth, last, time = 0, zone = 0;
 let shake = 0;
 let shopCanvases = [];         // animated character previews in the shop
+let finaleCanvases = [];       // ...and on the finale screen
+let pendingFinale = false;     // finale unlocked but not shown yet
 const hero = () => getCharacter(save.char);
 
 function reset(withShield = false) {
@@ -646,6 +648,7 @@ function levelComplete() {
   save.levels[lvl.n] = Math.max(before, stars);
   save.pearls += reward;
   platform.save(save);
+  checkFinale();
   mission("depth", depth);
   mission("flips", player.flips);
   sfx.discover();
@@ -665,6 +668,7 @@ function levelComplete() {
 }
 
 async function nextLevel() {
+  if (maybeShowFinale()) return;
   show($("level-done"), false);
   if (runs % INTERSTITIAL_EVERY === 0 && Date.now() - lastAdAt > MIN_AD_GAP_MS) {
     await withAd(() => platform.interstitial());
@@ -807,6 +811,8 @@ function finishGameOver() {
   ui.pearls.textContent = save.pearls;
   show(ui.revive, !revived);
   show(ui.over, true);
+  checkFinale();
+  maybeShowFinale();
 }
 
 async function withAd(fn) {
@@ -924,8 +930,8 @@ function renderShop() {
 }
 
 // Shop previews loop each character's "float ↔ sink" animation.
-function drawShopPreviews() {
-  for (const { c, ch, hidden } of shopCanvases) {
+function drawPreviews(list) {
+  for (const { c, ch, hidden } of list) {
     const cx = c.getContext("2d");
     cx.clearRect(0, 0, c.width, c.height);
     const phase = Math.floor(time / 1.4) % 2 === 0;
@@ -955,7 +961,9 @@ function selectCharacter(ch) {
   } else sfx.click();
   save.char = ch.id;
   platform.save(save);
+  checkFinale();
   renderShop();
+  maybeShowFinale();
 }
 
 function adPearlsLeft() {
@@ -1048,6 +1056,58 @@ function unlockSecret() {
   save.owned.push(SECRET_ID);
   platform.save(save);
   return true;
+}
+
+// ---------- Finale ----------
+// Reached once every level is cleared, every character (Bubu included) is owned and
+// the Encyclopedia is complete. Shown once, at a calm moment, then from the menu.
+function gameComplete() {
+  return LEVELS.every((L) => (save.levels?.[L.n] || 0) >= 1)
+    && CHARACTERS.every((c) => save.owned.includes(c.id))
+    && save.dex.length >= CREATURES.length;
+}
+
+function updateFinaleButton() { show($("menu-finale"), !!save.finale); }
+
+function checkFinale() {
+  if (save.finale || !gameComplete()) return;
+  save.finale = true;
+  pendingFinale = true;
+  platform.save(save);
+  updateFinaleButton();
+}
+
+function maybeShowFinale() {
+  if (!pendingFinale) return false;
+  pendingFinale = false;
+  showFinale();
+  return true;
+}
+
+function showFinale() {
+  show($("level-done"), false); show(ui.shop, false); show(ui.over, false);
+  openPanel($("finale"), ui.menu, renderFinale);
+  sfx.discover();
+}
+
+function renderFinale() {
+  const cleared = LEVELS.filter((L) => (save.levels?.[L.n] || 0) >= 1).length;
+  const stars = totalStars(save), maxStars = LEVELS.length * 3;
+  const chip = (v, label) => `<div class="chip"><b>${v}</b><span>${t(label)}</span></div>`;
+  $("finale-stats").innerHTML =
+    chip(`${cleared}/${LEVELS.length}`, "finaleLevels") + chip(`${stars}/${maxStars}`, "finaleStars") +
+    chip(`${save.owned.length}/${CHARACTERS.length}`, "finaleChars") + chip(`${save.dex.length}/${CREATURES.length}`, "finaleCreatures") +
+    chip(`${save.best} m`, "finaleBest");
+  $("finale-note").textContent = stars >= maxStars ? t("finalePerfect") : t("finaleStarsLeft", { n: maxStars - stars });
+  const row = $("finale-chars");
+  row.innerHTML = "";
+  finaleCanvases = [];
+  for (const ch of CHARACTERS) {
+    const c = document.createElement("canvas");
+    c.width = c.height = 120;
+    finaleCanvases.push({ c, ch, hidden: false });
+    row.append(c);
+  }
 }
 
 // Bubu's whale song: scares off swordfish & hooks and freezes jellyfish nearby.
@@ -1309,7 +1369,7 @@ function draw(dt) {
   } else if (state !== "over" && state !== "ad") drawPlayer();
   ctx.restore();
 
-  if (state === "menu") ui.hud.textContent = "";
+  if (state === "menu" || state === "finale") ui.hud.textContent = "";
   else if (mode === "level") {
     const startX = world.finishX - lvl.meters * PX_PER_M;
     const k = Math.max(0, Math.min(1, (scroll + player.x - startX) / (world.finishX - startX)));
@@ -1334,14 +1394,14 @@ function loop(now) {
     anim.step(dying, dt, fx);
     if (dying.t >= anim.dur + 0.25) finishGameOver();
   }
-  else if (state === "menu") { // idle animation behind the title screen
+  else if (state === "menu" || state === "finale") { // idle animation behind the title screen
     scroll += 60 * dt;
     updateWorld(world, dt, scroll, time);
     player.y = H - 140 + Math.sin(time * 2) * 6;
     player.vy = Math.cos(time * 2) * 12;
   }
   fx.update(dt);
-  const swimSpeed = state === "play" ? speed : state === "menu" ? 60 : 0;
+  const swimSpeed = state === "play" ? speed : state === "menu" || state === "finale" ? 60 : 0;
   updateAmbient(dt, zoneIndex(depth), W, H, swimSpeed);
   const ev = updateMoments(dt, zoneIndex(depth), state === "play");
   if (ev && ev.started) {
@@ -1356,7 +1416,8 @@ function loop(now) {
     mission("moment");
   }
   draw(dt);
-  if (state === "shop") drawShopPreviews();
+  if (state === "shop") drawPreviews(shopCanvases);
+  else if (state === "finale") drawPreviews(finaleCanvases);
   requestAnimationFrame(loop);
 }
 
@@ -1379,6 +1440,9 @@ async function boot() {
   if (!Array.isArray(save.dex)) save.dex = [];
   save.owned = save.owned.filter((id) => id !== SECRET_ID || save.dex.length >= CREATURES.length);
   unlockSecret();
+  checkFinale();
+  pendingFinale = false;   // an already-complete save just gets the 🏆 button
+  updateFinaleButton();
   if (!save.owned.includes(save.char)) save.char = "puffy";
   reset();
 
@@ -1423,8 +1487,8 @@ async function boot() {
   document.querySelectorAll(".open-levels").forEach((b) => { b.onclick = () => openPanel($("levels"), b.closest(".panel"), renderLevels); });
   $("levels-close").onclick = () => closePanel($("levels"));
   $("done-next").onclick = nextLevel;
-  $("done-retry").onclick = () => startLevel(lvl.n);
-  $("done-map").onclick = () => { show($("level-done"), false); state = "menu"; openPanel($("levels"), ui.menu, renderLevels); };
+  $("done-retry").onclick = () => { if (!maybeShowFinale()) startLevel(lvl.n); };
+  $("done-map").onclick = () => { if (maybeShowFinale()) return; show($("level-done"), false); state = "menu"; openPanel($("levels"), ui.menu, renderLevels); };
   $("over-map").onclick = () => openPanel($("levels"), ui.menu, renderLevels);
   ui.retry.onclick = retry;
   ui.revive.onclick = revive;
@@ -1433,6 +1497,8 @@ async function boot() {
   document.querySelectorAll(".open-dex").forEach((b) => { b.onclick = () => openPanel(ui.dex, b.closest(".panel"), renderDex); });
   document.querySelectorAll(".open-missions").forEach((b) => { b.onclick = () => openPanel($("missions"), b.closest(".panel"), renderMissions); });
   $("missions-close").onclick = () => closePanel($("missions"));
+  $("menu-finale").onclick = () => { sfx.click(); showFinale(); };
+  $("finale-close").onclick = () => { sfx.click(); closePanel($("finale")); };
   missions.ensureDaily(save);
   updateMissionBadges();
   ui.shopClose.onclick = () => closePanel(ui.shop);
@@ -1449,7 +1515,7 @@ async function boot() {
   $("pause-quit").onclick = quitToMenu;
 
   // Dev helper (?debug): lets automated tests read the boss & player state.
-  if (devFlag("debug")) window.__dbg = () => ({ boss, bossCtx, player, state, world, scroll, time, gameOver, levelComplete });
+  if (devFlag("debug")) window.__dbg = () => ({ boss, bossCtx, player, state, world, scroll, time, gameOver, levelComplete, save, unlockSecret });
 
   if (platform.onMuteChange) platform.onMuteChange(setPlatformMuted);
   platform.loadingFinished();

@@ -197,7 +197,7 @@ python3 -m http.server 8000 --bind 127.0.0.1
 ```
 `?platform=` can be `poki`, `crazygames`, `youtube`, `facebook` or `local` (simulated ads).
 
-Automated ad-flow tests (Playwright + Chromium) are in `tools/tests/`.
+Automated tests (Playwright + Chromium) for the ad flows and the finale are in `tools/tests/`.
 
 ## ⚙️ Settings
 The **⚙️ Settings** button in the main menu and the pause panel (`src/settings.js`, stored separately from progress):
@@ -209,6 +209,13 @@ The **⚙️ Settings** button in the main menu and the pause panel (`src/settin
 
 ## 🌐 Language
 English only. All UI text lives in `src/i18n.js` (`t(key, vars)` for templated UI text, `data-i18n="key"` in the HTML); names, facts and labels are written directly in the data files.
+
+## 🏆 Finale
+When **all 20 levels are cleared, all 7 characters are owned (Bubu included) and the Sea Encyclopedia is 8/8**, a finale screen congratulates the player: all characters swimming in a row, plus a summary (levels, stars, characters, creatures, best depth) and a note on how many stars are left for a perfect 60/60 run (`checkFinale` in `src/game.js`).
+- It appears **once**, at a calm moment: right after buying the last character, when leaving the level-complete screen, or at the Game Over screen of the dive in which the last creature was found. It never interrupts a run.
+- Afterwards a **🏆 Finale** button in the main menu shows it again. A save that was already complete before this feature only gets the button, no surprise screen.
+- "Keep diving" returns to the menu; Free Dive, missions and streaks continue as usual.
+- Tests: `tools/tests/finale.mjs`.
 
 ## 🎓 New players
 - **Interactive tutorial** in the first Free Dive: (1) the game waits until the player tries tapping up/down, (2) a row of practice pearls, (3) one practice urchin that can't defeat you. Done → "🎉 Great! You're ready to dive!", never shown again.
