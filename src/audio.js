@@ -62,8 +62,8 @@ function tone({ type = "square", from, to = from, dur = 0.12, vol = 0.3, delay =
   osc.stop(t + dur + 0.02);
 }
 
-function noise(dur = 0.3, vol = 0.4) {
-  if (!ctx || muted || adPlaying || !settings.sfx) return;
+function noise(dur = 0.3, vol = 0.4, cutoff = 900, delay = 0) {
+  if (!ctx || muted || adPlaying || platformMuted || !settings.sfx) return;
   const buf = ctx.createBuffer(1, ctx.sampleRate * dur, ctx.sampleRate);
   const data = buf.getChannelData(0);
   for (let i = 0; i < data.length; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / data.length);
@@ -71,11 +71,11 @@ function noise(dur = 0.3, vol = 0.4) {
   const g = ctx.createGain();
   const f = ctx.createBiquadFilter();
   f.type = "lowpass";
-  f.frequency.value = 900;
+  f.frequency.value = cutoff;
   src.buffer = buf;
   g.gain.value = vol;
   src.connect(f).connect(g).connect(master);
-  src.start();
+  src.start(ctx.currentTime + delay);
 }
 
 export const sfx = {
@@ -90,6 +90,14 @@ export const sfx = {
   },
   shield() { [660, 880, 1100].forEach((f, i) => tone({ type: "sine", from: f, to: f * 1.5, dur: 0.12, vol: 0.18, delay: i * 0.05 })); },
   shieldPop() { noise(0.12, 0.35); tone({ type: "sine", from: 900, to: 200, dur: 0.15, vol: 0.25 }); },
+  // Finale confetti cannons: two quick "pop"s (left, then right) with a bright fizz.
+  confetti() {
+    [0, 0.16].forEach((d, i) => {
+      tone({ type: "sine", from: i ? 380 : 460, to: 70, dur: 0.14, vol: 0.4, delay: d });   // thump
+      noise(0.09, 0.32, 5200, d);                                                          // pop crack
+      tone({ type: "triangle", from: 1568 + i * 262, to: 2637, dur: 0.12, vol: 0.1, delay: d + 0.04 }); // fizz
+    });
+  },
   discover() { [523, 659, 784, 1047, 1319].forEach((f, i) => tone({ type: "triangle", from: f, dur: 0.18, vol: 0.18, delay: i * 0.09 })); },
   zone() { [392, 523, 784].forEach((f, i) => tone({ type: "sine", from: f, dur: 0.4, vol: 0.15, delay: i * 0.15 })); },
   land() { tone({ type: "sine", from: 140, to: 70, dur: 0.06, vol: 0.18 }); },

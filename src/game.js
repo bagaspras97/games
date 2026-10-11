@@ -1123,6 +1123,7 @@ function startConfetti() {
   const cv = $("confetti");
   cv.width = window.innerWidth; cv.height = window.innerHeight;
   show(cv, true);
+  sfx.confetti();
   confetti.parts = []; confetti.age = 0; confetti.last = performance.now();
   const n = lowGfx ? 45 : 90;
   for (let side = 0; side < 2; side++) {

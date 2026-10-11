@@ -71,5 +71,16 @@ const vis = (p,sel)=>p.isVisible(sel);
   await q.addInitScript(([s])=>localStorage.setItem('hop_save',s),[JSON.stringify({levels:ALL_LEVELS,owned:ALL_CHARS,dex:DEX})]);
   await q.goto('http://127.0.0.1:8123/'); await q.waitForTimeout(600); await q.click('#menu-finale'); await q.waitForTimeout(600);
   ok('E: no confetti with reduced motion', (await px(q))===-1 && await q.isVisible('#finale')); }
+// F: cannon "pop" sound (two noise bursts + thumps) plays on the finale, and respects the SFX setting
+for (const sfxOn of [true,false]) {
+  const ctx=await b.newContext({viewport:{width:1280,height:720}}); const p=await ctx.newPage(); p.errs=[]; p.on('pageerror',e=>p.errs.push(e.message));
+  await p.addInitScript(([s,on])=>{ localStorage.setItem('hop_save',s); localStorage.setItem('hop_settings',JSON.stringify({sfx:on,music:true,vibrate:true,graphics:'auto'}));
+    window.__n=0; const AC=window.AudioContext||window.webkitAudioContext; const o=AC.prototype.createBufferSource; AC.prototype.createBufferSource=function(){window.__n++;return o.call(this)}; },
+    [JSON.stringify({levels:ALL_LEVELS,owned:ALL_CHARS,dex:DEX}),sfxOn]);
+  await p.goto('http://127.0.0.1:8123/'); await p.waitForTimeout(600);
+  const before=await p.evaluate(()=>window.__n);
+  await p.click('#menu-finale');                                          // the click is also the gesture that unlocks audio await p.waitForTimeout(500);
+  const got=(await p.evaluate(()=>window.__n))-before;
+  ok(`F: pop noise bursts ${sfxOn?'play (>=2)':'silent when SFX off'}`, sfxOn ? got>=2 : got===0); ok('F: no errors',!p.errs.length); }
 await b.close();
 console.log(`\n${results.filter(Boolean).length}/${results.length} passed`);
