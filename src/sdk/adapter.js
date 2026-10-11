@@ -40,8 +40,8 @@ function fakeAd(label, seconds) {
     el.innerHTML = `<div><b>${label}</b><br>${t("fakeAd")} <span>${seconds}</span>s<br><button>${t("skip")}</button></div>`;
     document.body.appendChild(el);
     let left = seconds;
-    const finish = (completed) => { clearInterval(t); el.remove(); resolve(completed); };
-    const t = setInterval(() => {
+    const finish = (completed) => { clearInterval(timer); el.remove(); resolve(completed); };
+    const timer = setInterval(() => {
       left--;
       el.querySelector("span").textContent = left;
       if (left <= 0) finish(true);

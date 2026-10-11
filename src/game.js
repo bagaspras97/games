@@ -813,8 +813,21 @@ function finishGameOver() {
 async function withAd(fn) {
   state = "ad";
   setAdPlaying(true);
-  try { return await fn(); }
-  finally { setAdPlaying(false); }
+  // Fail-safe: an ad that errors or never answers must not freeze the game.
+  const AD_TIMEOUT_MS = 45000;
+  let timer;
+  try {
+    return await Promise.race([
+      Promise.resolve().then(fn),
+      new Promise((resolve) => { timer = setTimeout(() => resolve(false), AD_TIMEOUT_MS); }),
+    ]);
+  } catch (e) {
+    console.warn("[ad] failed:", e);
+    return false;
+  } finally {
+    clearTimeout(timer);
+    setAdPlaying(false);
+  }
 }
 
 async function retry() {
