@@ -10,10 +10,10 @@ import { devParam } from "./dev.js";
 import { ZONES, PX_PER_M } from "./world.js";
 
 const NAMES = [
-  ["Kolam Terumbu", "Taman Anemon", "Lorong Karang", "Celah Es", "Ujian Dangkal"],
-  ["Padang Lamun", "Arus Biru", "Jalur Penyu", "Kail Nelayan", "Ujian Laut Terbuka"],
-  ["Lembah Senja", "Jaring Hantu", "Lintasan Ikan Pedang", "Gua Plastik", "Ujian Senja"],
-  ["Gerbang Gelap", "Hutan Bercahaya", "Palung Sunyi", "Sarang Ubur-ubur", "Ujian Palung Terdalam"],
+  ["Reef Pool", "Anemone Garden", "Coral Alley", "Ice Crack", "Shallows Trial"],
+  ["Seagrass Meadow", "Blue Current", "Turtle Route", "Fisher's Hooks", "Open Sea Trial"],
+  ["Twilight Valley", "Ghost Nets", "Swordfish Run", "Plastic Cave", "Twilight Trial"],
+  ["Dark Gate", "Glowing Forest", "Silent Trench", "Jellyfish Nest", "Deepest Trench Trial"],
 ];
 
 export const LEVELS = [];

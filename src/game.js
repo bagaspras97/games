@@ -1,7 +1,7 @@
 import { devParam, devFlag } from "./dev.js";
-import { t, tr, getLang, setLang, applyStatic } from "./i18n.js";
+import { t, applyStatic } from "./i18n.js";
 import { settings, saveSettings } from "./settings.js";
-// "Puffy: Petualangan Laut Dalam" — one-tap hyper-casual deep-sea runner.
+// "Puffy: Deep Sea Adventure" — one-tap hyper-casual deep-sea runner.
 // Tap / click / space: Puffy inflates (floats up) or deflates (sinks down).
 // Avoid hazards, collect pearls, grab shield bubbles, discover rare creatures.
 import { createPlatform } from "./sdk/adapter.js";
@@ -130,7 +130,7 @@ function mission(event, amount = 1) {
 function announce(done) {
   for (const m of done) {
     sfx.discover();
-    toast(t("missionDone", { text: tr(m.text), n: m.reward }), 3500);
+    toast(t("missionDone", { text: m.text, n: m.reward }), 3500);
   }
   const streakDay = done.length ? missions.checkStreak(save) : 0;
   if (streakDay) {
@@ -216,7 +216,7 @@ function renderMissions() {
     card.className = "mission" + (d.claimed ? " claimed" : d.done ? " ready" : "");
     const pct = Math.round((d.progress / d.target) * 100);
     card.innerHTML = `
-      <div class="m-text">${d.funny ? "😜 " : ""}${tr(d.text)}</div>
+      <div class="m-text">${d.funny ? "😜 " : ""}${d.text}</div>
       <div class="m-bar"><i style="width:${pct}%"></i><span>${d.progress} / ${d.target}</span></div>
       <div class="m-actions"></div>`;
     const actions = card.querySelector(".m-actions");
@@ -324,7 +324,7 @@ function openSwap() {
     cx.translate(60, 64);
     ch.draw(cx, { t: time, up: true, vy: 0, mood: "happy", pulse: 0, flash: 0, near: 0 });
     b.append(cv);
-    b.insertAdjacentHTML("beforeend", `<b>${ch.name}</b><p class="ability">⚡ ${tr(ch.ability)}</p>`);
+    b.insertAdjacentHTML("beforeend", `<b>${ch.name}</b><p class="ability">⚡ ${ch.ability}</p>`);
     b.onclick = () => chooseSwap(ch.id);
     grid.append(b);
   }
@@ -389,7 +389,7 @@ function updateSkillButton() {
   b.disabled = skillCD > 0;
   b.innerHTML = skillCD > 0
     ? `<span class="sk-icon">${sk.icon}</span><span class="sk-cd">${Math.ceil(skillCD)}</span>`
-    : `<span class="sk-icon">${sk.icon}</span><span class="sk-name">${tr(sk.name)}</span>`;
+    : `<span class="sk-icon">${sk.icon}</span><span class="sk-name">${sk.name}</span>`;
   b.style.setProperty("--p", skillCD > 0 ? 1 - skillCD / sk.cd : 1);
 }
 
@@ -399,7 +399,7 @@ function useSkill() {
   const wx = scroll + player.x, py = player.y;
   skillCD = sk.cd;
   sfx.shield();
-  fx.text(wx, py - 52, `${sk.icon} ${tr(sk.name)}!`, ch.color);
+  fx.text(wx, py - 52, `${sk.icon} ${sk.name}!`, ch.color);
   mission("ability");
   switch (ch.id) {
     case "puffy": { // spike burst: destroys hazards around
@@ -515,7 +515,7 @@ function startRun(withShield = false) {
   fx.clear();
   startMusic();
   platform.gameplayStart();
-  if (mode === "level") banner(t("levelBanner", { n: lvl.n, name: tr(lvl.name) }));
+  if (mode === "level") banner(t("levelBanner", { n: lvl.n, name: lvl.name }));
   if (tut) showHint(t("tut1"));
   else if (mode === "endless") {
     tipLater("skill", 3500);
@@ -525,12 +525,12 @@ function startRun(withShield = false) {
     const d = boss.def;
     setTimeout(() => {
       if (state !== "play") return;
-      banner(t("bossBanner", { icon: d.icon, name: tr(d.name) }));
+      banner(t("bossBanner", { icon: d.icon, name: d.name }));
       toast(t("bossHint"), 3800);
       sfx.abyss();
     }, 2300);
   }
-  else if (mode !== "level" && !tut) banner(`${ZONES[zone].icon} ${tr(ZONES[zone].name)}`);
+  else if (mode !== "level" && !tut) banner(`${ZONES[zone].icon} ${ZONES[zone].name}`);
   show($("progress"), mode === "level");
 }
 
@@ -611,13 +611,13 @@ function renderLevels() {
   ZONES.forEach((z, zi) => {
     const row = document.createElement("div");
     row.className = "lv-zone";
-    row.innerHTML = `<div class="lv-zone-name">${z.icon} ${tr(z.name)}</div><div class="lv-row"></div>`;
+    row.innerHTML = `<div class="lv-zone-name">${z.icon} ${z.name}</div><div class="lv-row"></div>`;
     for (const L of LEVELS.filter((l) => l.zone === zi)) {
       const stars = (save.levels || {})[L.n] || 0;
       const open = isUnlocked(save, L.n);
       const b = document.createElement("button");
       b.className = "lv" + (open ? "" : " locked") + (L.exam ? " exam" : "") + (stars ? " cleared" : "");
-      b.title = tr(L.name);
+      b.title = L.name;
       b.innerHTML = open
         ? `<b>${L.exam ? "👑" : ""}${L.n}</b><span>${"★".repeat(stars)}${"☆".repeat(3 - stars)}</span>`
         : `<b>🔒</b><span>${L.n}</span>`;
@@ -652,12 +652,12 @@ function levelComplete() {
   for (let i = 0; i < 4; i++) fx.sparkle(scroll + player.x + 40, player.y, ["#ffe27a", "#7ff0ff", "#ff9ab5", "#fff"][i]);
 
   $("done-title").textContent = t("levelDone", { n: lvl.n });
-  $("done-name").textContent = tr(lvl.name);
+  $("done-name").textContent = lvl.name;
   $("done-stars").innerHTML = [1, 2, 3].map((i) => `<span class="star ${i <= stars ? "on" : ""}" style="animation-delay:${i * 0.25}s">★</span>`).join("");
   $("done-info").innerHTML = `
     <div>${pearlOk ? "✅" : "▫️"} ${t("donePearls", { got: lvlPearls, total: world.pearlTotal, pct: Math.round(STAR_PEARL_RATIO * 100) })}</div>
     <div>${clean ? "✅" : "▫️"} ${t("doneClean")}</div>
-    ${boss ? `<div>${t("doneBoss", { icon: boss.def.icon, name: tr(boss.def.name) })}</div>` : ""}
+    ${boss ? `<div>${t("doneBoss", { icon: boss.def.icon, name: boss.def.name })}</div>` : ""}
     <div class="done-reward">${reward ? t("doneReward", { n: reward, s: gained }) : t("doneNoReward")}</div>`;
   const next = LEVELS[lvl.n];
   show($("done-next"), !!next);
@@ -713,7 +713,6 @@ function renderSettings() {
   $("set-sfx").textContent = `🔊 ${t("sfxLbl")}: ${onOff(settings.sfx)}`;
   $("set-vibrate").textContent = `📳 ${t("vibrateLbl")}: ${onOff(settings.vibrate)}`;
   $("set-gfx").textContent = `✨ ${t("gfxLbl")}: ${t("gfx_" + settings.graphics)}`;
-  $("set-lang").textContent = getLang() === "id" ? "🌐 Bahasa Indonesia" : "🌐 English";
   $("set-reset").textContent = resetArmed ? t("resetConfirm") : t("resetProgress");
   ["set-music", "set-sfx", "set-vibrate"].forEach((id) => $(id).classList.toggle("off", !settings[id.slice(4)]));
 }
@@ -799,10 +798,10 @@ function finishGameOver() {
   show($("over-map"), mode === "level");
   if (mode === "level") {
     const done = Math.max(0, Math.round((scroll + player.x - (world.finishX - lvl.meters * PX_PER_M)) / PX_PER_M));
-    $("over-level").textContent = t("overLevel", { n: lvl.n, name: tr(lvl.name), done: Math.min(done, lvl.meters), total: lvl.meters });
+    $("over-level").textContent = t("overLevel", { n: lvl.n, name: lvl.name, done: Math.min(done, lvl.meters), total: lvl.meters });
   }
   $("over-title").textContent = t("overTitle", { name: hero().name });
-  $("over-cause").textContent = dying ? tr(dying.label) : "";
+  $("over-cause").textContent = dying ? dying.label : "";
   ui.final.textContent = depth;
   ui.best.textContent = save.best;
   ui.pearls.textContent = save.pearls;
@@ -917,7 +916,7 @@ function renderShop() {
     card.append(c);
     card.insertAdjacentHTML("beforeend", hidden
       ? `<b>??? <small>${t("secretTitle")}</small></b><p class="desc">${t("secretDesc")}</p><p class="ability">⚡ ???</p><span class="price">${label}</span>`
-      : `<b>${ch.name} <small>${tr(ch.species)}</small></b><p class="desc">${tr(ch.desc)}</p><p class="ability">⚡ ${tr(ch.ability)}</p><p class="skill">${ch.skill.icon} <b>${tr(ch.skill.name)}</b> ${t("skillFree")}: ${tr(ch.skill.desc)}</p><span class="price">${label}</span>`);
+      : `<b>${ch.name} <small>${ch.species}</small></b><p class="desc">${ch.desc}</p><p class="ability">⚡ ${ch.ability}</p><p class="skill">${ch.skill.icon} <b>${ch.skill.name}</b> ${t("skillFree")}: ${ch.skill.desc}</p><span class="price">${label}</span>`);
     if (hidden || (!owned && save.pearls < ch.price)) card.classList.add("locked");
     card.onclick = () => selectCharacter(ch);
     ui.shopGrid.append(card);
@@ -987,7 +986,7 @@ async function freePearls() {
   renderShop();
 }
 
-// ---------- Ensiklopedia Laut ----------
+// ---------- Sea Encyclopedia ----------
 function renderDex() {
   ui.dexCount.textContent = `${save.dex.length} / ${CREATURES.length}`;
   const left = CREATURES.length - save.dex.length;
@@ -1006,9 +1005,9 @@ function renderDex() {
       cx.translate(48, 48);
       c.draw(cx, 76);
       card.append(cv);
-      card.insertAdjacentHTML("beforeend", `<b>${tr(c.name)}</b><span>${tr(c.fact)}</span>`);
+      card.insertAdjacentHTML("beforeend", `<b>${c.name}</b><span>${c.fact}</span>`);
     } else {
-      card.insertAdjacentHTML("beforeend", `<div class="q">❓</div><b>???</b><span>${t("dexFindIn", { zone: ZONES[c.zone].icon + " " + tr(ZONES[c.zone].name) })}</span>`);
+      card.insertAdjacentHTML("beforeend", `<div class="q">❓</div><b>???</b><span>${t("dexFindIn", { zone: ZONES[c.zone].icon + " " + ZONES[c.zone].name })}</span>`);
     }
     ui.dexGrid.append(card);
   }
@@ -1055,7 +1054,7 @@ function unlockSecret() {
 function whaleSong(ch) {
   const wx = scroll + player.x;
   fx.sonar(wx, player.y);
-  fx.text(wx, player.y - 46, tr("♪ Nyanyian paus!"), "#a8dcff");
+  fx.text(wx, player.y - 46, "♪ Whale song!", "#a8dcff");
   sfx.zone();
   player.flash = 1;
   mission("ability");
@@ -1072,8 +1071,8 @@ function inkBlast() {
   let hit = false;
   for (const h of world.hazards) {
     if (Math.hypot(h.x - wx, (h.y ?? player.y) - player.y) > 380 || isHarmless(h, time)) continue;
-    if (h.type === "sword" && h.active) { h.fleeing = true; hit = true; fx.text(h.x, h.y - 30, tr("Buta tinta!"), "#d6c8ff"); }
-    if (h.type === "jelly") { h.stunUntil = time + 2.5; hit = true; fx.text(h.x, h.y - 34, tr("Beku!"), "#d6c8ff"); }
+    if (h.type === "sword" && h.active) { h.fleeing = true; hit = true; fx.text(h.x, h.y - 30, "Inked!", "#d6c8ff"); }
+    if (h.type === "jelly") { h.stunUntil = time + 2.5; hit = true; fx.text(h.x, h.y - 34, "Frozen!", "#d6c8ff"); }
   }
   if (hit) { sfx.shieldPop(); mission("ability"); }
 }
@@ -1088,19 +1087,19 @@ function useAbility(h) {
     case "sword":
       h.fleeing = true;
       sfx.denied();
-      fx.text(h.x, h.y - 30, tr("Boing! Memantul"), "#ffe27a");
+      fx.text(h.x, h.y - 30, "Boing! Bounced", "#ffe27a");
       break;
-    case "net": fx.text(scroll + player.x, player.y - 40, tr("Lolos dari jaring!"), "#ffc98a"); sfx.click(); break;
-    case "jelly": fx.text(h.x, h.y - 40, tr("Halo, teman! 🪼"), "#ff9fe0"); sfx.pearl(); break;
-    case "hook": fx.text(h.x, h.y - 24, tr("Meleset!"), "#9fc3ff"); sfx.click(); break;
+    case "net": fx.text(scroll + player.x, player.y - 40, "Slipped through!", "#ffc98a"); sfx.click(); break;
+    case "jelly": fx.text(h.x, h.y - 40, "Hi, buddy! 🪼", "#ff9fe0"); sfx.pearl(); break;
+    case "hook": fx.text(h.x, h.y - 24, "Missed!", "#9fc3ff"); sfx.click(); break;
     case "bag":
       h.gone = true;
       fx.sparkle(h.x, h.y, "#7ffff0");
       if (mode === "endless") {
         save.pearls += 2;
         mission("pearls", 2);
-        fx.text(h.x, h.y - 30, tr("Laut bersih! +2 🦪"), "#7ffff0");
-      } else fx.text(h.x, h.y - 30, tr("Laut bersih!"), "#7ffff0");
+        fx.text(h.x, h.y - 30, "Clean sea! +2 🦪", "#7ffff0");
+      } else fx.text(h.x, h.y - 30, "Clean sea!", "#7ffff0");
       sfx.pearl();
       break;
   }
@@ -1131,7 +1130,7 @@ function update(dt) {
   const z = zoneIndex(depth);
   if (z !== zone && mode === "endless") {
     zone = z;
-    banner(t("zoneBanner", { icon: ZONES[z].icon, name: tr(ZONES[z].name), m: ZONES[z].from }));
+    banner(t("zoneBanner", { icon: ZONES[z].icon, name: ZONES[z].name, m: ZONES[z].from }));
     sfx.zone();
   }
   setTempo(96 + (speed - 400) / 8);
@@ -1245,7 +1244,7 @@ function update(dt) {
         save.dex.push(c.id);
         platform.save(save);
         sfx.discover();
-        toast(t("discovered", { name: tr(c.name), fact: tr(c.fact) }), 5000);
+        toast(t("discovered", { name: c.name, fact: c.fact }), 5000);
         if (unlockSecret()) {
           setTimeout(() => {
             banner(t("secretBanner"));
@@ -1256,7 +1255,7 @@ function update(dt) {
       } else {
         save.pearls += 5;
         sfx.pearl();
-        toast(t("greets", { name: tr(c.name) }), 1800);
+        toast(t("greets", { name: c.name }), 1800);
       }
     }
   }
@@ -1347,7 +1346,7 @@ function loop(now) {
   const ev = updateMoments(dt, zoneIndex(depth), state === "play");
   if (ev && ev.started) {
     const m = ev.started.def;
-    toast(t("momentToast", { icon: m.icon, name: tr(m.name) }), 4000);
+    toast(t("momentToast", { icon: m.icon, name: m.name }), 4000);
     (sfx[m.sound] || sfx.zone)();
   } else if (ev && ev.ended && state === "play") { // witnessed it to the end
     const paid = mode === "endless"; // Adventure pays out through star bonuses only
@@ -1410,13 +1409,6 @@ async function boot() {
     settings.graphics = order[(order.indexOf(settings.graphics) + 1) % order.length];
     saveSettings();
     applyGraphics(settings.graphics === "low");
-    sfx.click();
-    renderSettings();
-  };
-  $("set-lang").onclick = () => {
-    setLang(getLang() === "id" ? "en" : "id");
-    updateMissionBadges();
-    updateFreePearlsButton();
     sfx.click();
     renderSettings();
   };

@@ -26,7 +26,7 @@ The zip already contains `window.PUFFY_PLATFORM = "crazygames"`, so it loads the
 | Progress saved via the SDK data module (`SDK.data`) | ✅ (settings & language use localStorage — small UI prefs) |
 | Interstitials not too frequent | ✅ every 3 runs, ≥ 60 s apart |
 | Works on desktop and mobile (landscape), pause on tab switch, rotate-phone screen | ✅ |
-| English text | ✅ (+ Indonesian) |
+| English text | ✅ |
 | Dev URL cheats disabled on real domains | ✅ |
 
 ## 3. Still to do by hand ⏳

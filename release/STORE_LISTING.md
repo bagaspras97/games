@@ -1,10 +1,8 @@
 # Puffy — Store listing / Teks halaman game
 
-Ready-to-paste text for the portal submission forms. English first (the main audience on CrazyGames/Poki), Indonesian below.
+Ready-to-paste text for the portal submission forms. English only.
 
 ---
-
-## 🇬🇧 English
 
 **Title:** Puffy: Deep Sea Adventure
 
@@ -30,35 +28,13 @@ Dive from sunny shallow reefs into the glowing Midnight Zone. Dodge sea urchins,
 
 **Tags / categories:** Casual, Arcade, One Button, Endless Runner, Underwater, Fish, Ocean, Animals, Cute, Kids, Mobile, Boss
 
-**Languages:** English, Indonesian (auto-detected, switchable in Settings)
+**Languages:** English
 
 **Devices:** Desktop and mobile (landscape)
 
 ---
 
-## 🇮🇩 Bahasa Indonesia
-
-**Judul:** Puffy: Petualangan Laut Dalam
-
-**Deskripsi singkat (1 baris):**
-Tap untuk mengembang dan menyelam! Hindari bulu babi, ubur-ubur, dan kail pancing, kumpulkan mutiara, dan temukan makhluk-makhluk laut dalam.
-
-**Deskripsi:**
-Puffy si ikan buntal siap berpetualang ke laut dalam! Tap untuk mengembang dan mengapung, tap lagi untuk mengempis dan tenggelam — kontrol satu sentuhan yang mudah dipelajari namun menantang untuk dikuasai.
-
-Menyelam dari terumbu karang yang cerah sampai ke Zona Gelap yang penuh cahaya makhluk laut. Hindari bulu babi, ubur-ubur listrik, ikan pedang, kail pancing, jaring, dan sampah plastik — dan waspadai palung yang dalam!
-
-🗺️ **Petualangan** – 20 level di 4 zona laut, 3 bintang per level, dan bos seru di akhir setiap zona: Kepiting Raksasa, Hiu Martil, Gurita Raksasa, dan Anglerfish Raksasa.
-♾️ **Mode Bebas** – menyelam tanpa batas: pecahkan rekor kedalaman, pakai skill khusus, ganti karakter di tengah jalan, dan saksikan momen langka seperti paus bungkuk yang melintas.
-🐠 **7 karakter laut** – masing-masing mengapung dan tenggelam dengan cara berbeda dan punya kemampuan sendiri.
-📖 **Ensiklopedia Laut** – temukan 8 makhluk langka beserta fakta aslinya, dan buka karakter rahasia.
-🎯 **Misi harian & streak** – termasuk misi-misi yang kocak!
-
-**Kontrol:** Tap/klik/Spasi – naik/turun · X/⚡ – skill · C/🐠 – ganti karakter · P/Esc – jeda
-
----
-
-## 🖼️ Covers / Gambar (in `release/covers/`)
+## 🖼️ Covers (in `release/covers/`)
 
 | File | Size | Use |
 |---|---|---|

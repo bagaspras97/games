@@ -1,250 +1,250 @@
-# 🐡 Puffy: Petualangan Laut Dalam
+# 🐡 Puffy: Deep Sea Adventure
 
-Game web hyper-casual satu tombol (HTML5 + Canvas, tanpa build step, tanpa file aset) dengan **adapter SDK** untuk Poki, CrazyGames, YouTube Playables, dan Facebook Instant Games.
+A one-button hyper-casual web game (HTML5 + Canvas, no build step, no asset files) with an **SDK adapter** for Poki, CrazyGames, YouTube Playables and Facebook Instant Games. The game is English only.
 
 ![screenshot](docs/screenshot.png)
 
-## Konsep
-Puffy si ikan buntal menyelam makin dalam. **Tap / klik / Spasi**: Puffy **mengembang** (mengapung ke atas) atau **mengempis** (tenggelam ke bawah). Skor = **kedalaman (m)**.
+## Concept
+Puffy the pufferfish dives deeper and deeper. **Tap / click / Space**: Puffy **puffs up** (floats up) or **deflates** (sinks down). The score is the **depth (m)**.
 
-| Zona | Kedalaman | Bahaya |
+| Zone | Depth | Hazards |
 |---|---|---|
-| 🌤️ Perairan Dangkal | 0–300 m | Bulu babi, karang tajam, es runcing |
-| 🌊 Laut Terbuka | 300–800 m | + Ubur-ubur listrik, kail pancing |
-| 🌑 Zona Senja | 800–1500 m | + Ikan pedang (didahului tanda "!"), jaring, sampah plastik |
-| ✨ Zona Gelap | 1500 m+ | Semua, lebih rapat; laut gelap dengan cahaya di sekitar Puffy |
+| 🌤️ Shallow Waters | 0–300 m | Sea urchins, sharp coral, icicles |
+| 🌊 Open Sea | 300–800 m | + Electric jellyfish, fishing hooks |
+| 🌑 Twilight Zone | 800–1500 m | + Swordfish (announced by a "!" sign), nets, plastic trash |
+| ✨ Midnight Zone | 1500 m+ | Everything, more densely; a dark sea lit only around Puffy |
 
-- **Palung**: lantai/atap hilang. Jatuh = kalah, jadi pindah sisi sebelum palung.
-- Warna laut, terrain, dan musik (makin teredam) berubah mengikuti kedalaman.
+- **Trenches**: the floor/ceiling disappears. Falling in means game over, so switch sides before a trench.
+- Sea colour, terrain and music (increasingly muffled) change with depth.
 
 ![deep](docs/deep.png)
 
-## ⚖️ Peran kedua mode & ekonomi mutiara
-Satu kantong mutiara untuk semua, dipakai membeli karakter.
+## ⚖️ The two modes & the pearl economy
+One pearl purse for everything, spent on buying characters.
 
-| | ♾️ Mode Bebas — *jelajahi laut* | 🗺️ Petualangan — *taklukkan tantangan* |
+| | ♾️ Free Dive — *explore the sea* | 🗺️ Adventure — *beat the challenges* |
 |---|---|---|
-| Mutiara yang diambil | Langsung masuk kantong | Dihitung untuk ★★, dibayar lewat **bonus bintang baru** (tidak bisa ditambang dengan mengulang level) |
-| 📖 Makhluk Ensiklopedia | ✅ Hanya di sini | ❌ |
-| Momen langka | ✅ +5 🦪 | Tetap tampil, tanpa hadiah |
-| Rekor kedalaman / bintang & bos | Rekor | Bintang & bos |
-| Misi harian & streak | ✅ | ✅ |
+| Collected pearls | Go straight into the purse | Count towards ★★, paid out through **new-star bonuses** (can't be farmed by replaying a level) |
+| 📖 Encyclopedia creatures | ✅ Only here | ❌ |
+| Rare moments | ✅ +5 🦪 | Still shown, no reward |
+| Depth record / stars & bosses | Record | Stars & bosses |
+| Daily missions & streak | ✅ | ✅ |
 
-Harga karakter dirancang agar karakter terakhir jadi target ± 1–2 minggu bermain rutin (± 350–450 🦪/hari dari menyelam, misi & streak). Tombol iklan **+40 🦪** dibatasi **5× per hari**.
+Character prices are tuned so the last character is a goal of roughly 1–2 weeks of regular play (about 350–450 🦪/day from diving, missions and streaks). The **+40 🦪** ad button is limited to **5× per day**.
 
-## 🗺️ Mode Petualangan (level)
-Selain **♾️ Mode Bebas** (endless), ada **20 level** (5 per zona) dengan garis **FINISH** dan progress bar.
-- Setiap level punya **susunan tetap** (seed), jadi bisa dihafal dan diulang untuk bintang lebih banyak.
-- Level ke-5 tiap zona adalah **Ujian** (lebih panjang & sulit, tombol ungu).
-- ★ sampai finish · ★★ + kumpulkan ≥70% mutiara · ★★★ + tanpa kalah, yaitu tidak memakai "Lanjutkan" (perisai yang pecah tidak mengurangi bintang).
-- Hadiah mutiara untuk setiap bintang baru (10 + 2×nomor level). Level berikutnya terbuka setelah level sebelumnya selesai.
-- **Bos di setiap level Ujian** (`src/bosses.js`): tidak bisa dilawan, tujuannya **bertahan sampai 🏁**. Setiap serangan menyasar **lajur atas atau bawah**; lajur itu **berkedip merah** dulu (~1 detik) → pindah ke sisi lain!
+## 🗺️ Adventure mode (levels)
+Besides **♾️ Free Dive** (endless) there are **20 levels** (5 per zone) with a **FINISH** line and a progress bar.
+- Every level has a **fixed layout** (seeded), so it can be memorised and replayed for more stars.
+- The 5th level of each zone is an **Exam** (longer and harder, purple button).
+- ★ reach the finish · ★★ + collect ≥70% of the pearls · ★★★ + no defeat, i.e. don't use "Continue" (a popped shield doesn't cost a star).
+- Pearl reward for every new star (10 + 2×level number). The next level unlocks once the previous one is complete.
+- **A boss on every Exam level** (`src/bosses.js`): it can't be fought, the goal is to **survive until the 🏁**. Each attack targets the **top or bottom lane**; that lane **flashes red** first (~1 s) → switch to the other side!
 
-  | Level | Bos | Serangan |
+  | Level | Boss | Attack |
   |---|---|---|
-  | 5 | 🦀 Kepiting Raksasa | Capit raksasa menyapu dari kanan |
-  | 10 | 🦈 Hiu Martil | Menyeruduk dari belakang |
-  | 15 | 🐙 Gurita Raksasa | Tentakel muncul dari atas/bawah tepat di depan (ditandai gelembung) |
-  | 20 | 🎣 Anglerfish Raksasa | Menerkam dari belakang dengan rahang terbuka |
+  | 5 | 🦀 Giant Crab | A giant claw sweeps in from the right |
+  | 10 | 🦈 Hammerhead Shark | Charges from behind |
+  | 15 | 🐙 Giant Octopus | Tentacles burst from the top/bottom just ahead (marked by bubbles) |
+  | 20 | 🎣 Giant Anglerfish | Lunges from behind with its jaws wide open |
 
-  Serangan makin sering mendekati finish. Rintangan biasa di level Ujian dikurangi supaya bos jadi tantangan utamanya.
+  Attacks get more frequent near the finish. Regular obstacles are reduced on Exam levels so the boss is the main challenge.
 
 ![bosses](docs/bosses.png)
 
-- **Pola mutiara mengikuti posisi level di dalam zona** (tier 0–4): level pertama tiap zona (1, 6, 11, 16) hanya garis lurus/deretan dasar-atas, lalu bukit & lembah, diagonal, gelombang, sampai zig-zag rapat di level Ujian. Setiap zona dimulai mudah lagi. Di Mode Bebas tier mengikuti seberapa jauh kamu masuk ke zona.
-- Data level ada di `src/levels.js`. Uji cepat layar selesai: `?finish=25` (semua level jadi 25 m).
+- **Pearl patterns follow the level's position within its zone** (tier 0–4): the first level of each zone (1, 6, 11, 16) only has straight lines / simple low-high rows, then hills & valleys, diagonals, waves, up to tight zig-zags on the Exam level. Every zone starts easy again. In Free Dive the tier follows how far you are into the zone.
+- Level data lives in `src/levels.js`. Quick test of the results screen: `?finish=25` (every level becomes 25 m).
 
 ![adventure](docs/adventure.png)
 
-## Latar laut yang hidup
-Prinsip: **latar mendukung, bukan bersaing.** Hiasan dibuat lebih jarang dan sedikit transparan, awal permainan sengaja tenang, sehingga bahaya, mutiara, dan karakter selalu paling menonjol.
+## A living sea backdrop
+Principle: **the background supports, it doesn't compete.** Decorations are sparse and slightly transparent, the start of a run is deliberately calm, so hazards, pearls and the character always stand out.
 
-- **Ikan latar** (`src/ambient.js`) per zona di beberapa lapisan parallax: ikan tang, kepe-kepe, angelfish, wrasse, kawanan sarden, penyu, pari, barakuda, ikan kapak perak, ikan lentera bercahaya, cumi, sifonofor bercahaya, dan siluet anglerfish raksasa. Ekor mengibas; sengaja dibuat sedikit, kecil, dan samar agar tidak mengalihkan fokus dari bahaya & mutiara.
-- **Dasar laut** (`src/decor.js`): kelp bergoyang, lamun, karang bercabang dengan polip berdenyut, karang otak, kipas laut, anemon (dengan ikan badut yang **bersembunyi** saat Puffy lewat), bintang laut, kima yang **menutup** saat didekati, spons, **cacing tabung yang masuk ke tabungnya**, lili laut, jamur bercahaya, dan cerobong hidrotermal berasap.
-- **Langit-langit**: es runcing & tetesan air (dangkal), teritip yang menjulurkan kaki, stalaktit, dan benang cacing bercahaya (dalam).
-- **Pemandangan jauh**: punggung terumbu, siluet kapal karam, dan pantulan cahaya (*caustics*) di pasir perairan dangkal.
+- **Background fish** (`src/ambient.js`) per zone on several parallax layers: tangs, butterflyfish, angelfish, wrasse, sardine schools, turtles, rays, barracuda, silver hatchetfish, glowing lanternfish, squid, glowing siphonophores and giant anglerfish silhouettes. Tails flap; they are intentionally few, small and faint so they don't distract from hazards & pearls.
+- **Seabed** (`src/decor.js`): swaying kelp, seagrass, branching coral with pulsing polyps, brain coral, sea fans, anemones (with clownfish that **hide** when Puffy passes), starfish, giant clams that **close** when approached, sponges, **tube worms that retreat into their tubes**, sea lilies, glowing mushrooms and smoking hydrothermal vents.
+- **Ceiling**: icicles & water drops (shallow), barnacles that stretch out their legs, stalactites and glowing worm threads (deep).
+- **Far scenery**: reef ridges, shipwreck silhouettes and light caustics on the shallow sand.
 
 ![zones](docs/zones.png)
 
-## ✨ Momen langka
-Sesekali (sekitar tiap 40–75 detik) terjadi peristiwa besar di latar, sesuai zona. Saksikan sampai selesai untuk **+5 🦪** (ada juga misi "Saksikan 2 momen langka"). Kode: `src/moments.js`, uji dengan `?moment=humpback`.
+## ✨ Rare moments
+Every so often (about every 40–75 seconds) a big event happens in the background, depending on the zone. Watch it to the end for **+5 🦪** (there's also a "Witness 2 rare moments" mission). Code: `src/moments.js`, test with `?moment=humpback`.
 
-| Momen | Zona |
+| Moment | Zone |
 |---|---|
-| 🐬 Kawanan lumba-lumba melompat-lompat | Dangkal |
-| 🌀 Pusaran ribuan ikan kecil (*bait ball*) | Dangkal, Terbuka |
-| 🐋 Paus bungkuk melintas dengan sirip panjang & nyanyian paus | Dangkal, Terbuka |
-| 🐳 Paus sperma menyelam ke kedalaman | Terbuka, Senja |
-| 🦑 Cumi-cumi raksasa dengan tentakel panjang | Senja, Gelap |
-| 🪼 Ubur-ubur raksasa bercahaya naik dari jurang | Gelap |
-| ✨ Gelombang cahaya bioluminesensi | Senja, Gelap |
+| 🐬 A pod of dolphins leaping | Shallow |
+| 🌀 A swirl of thousands of small fish (*bait ball*) | Shallow, Open |
+| 🐋 A humpback whale passes with long fins & whale song | Shallow, Open |
+| 🐳 A sperm whale dives into the depths | Open, Twilight |
+| 🦑 A giant squid with long tentacles | Twilight, Midnight |
+| 🪼 A giant glowing jellyfish rises from the abyss | Midnight |
+| ✨ A wave of bioluminescent light | Twilight, Midnight |
 
 ![moments](docs/moments.png)
 
-## Animasi kekalahan
-Setiap bahaya punya animasi & suara sendiri sebelum layar Game Over, plus keterangan penyebabnya (`src/deaths.js`):
+## Defeat animations
+Every hazard has its own animation & sound before the Game Over screen, plus a line naming the cause (`src/deaths.js`):
 
-| Bahaya | Animasi |
+| Hazard | Animation |
 |---|---|
-| 🦔 Bulu babi / 🪸 karang / ❄️ es runcing | Tertusuk: berkedip merah, bocor udara & meluncur zig-zag seperti balon kempis |
-| 🪼 Ubur-ubur listrik | Tersetrum: bergetar, berkedip putih-kuning dengan petir, lalu gosong & berasap |
-| 🎣 Kail pancing | Tersangkut di mulut lalu ditarik naik keluar layar |
-| 🕸️ Jaring | Jaring membungkus, karakter meronta, lalu diangkut ke atas |
-| 🗡️ Ikan pedang | Benturan bintang, terpental berputar ke belakang dengan bintang pusing |
-| 🛍️ Sampah plastik | Terbungkus kantong plastik dan melayang tak berdaya |
-| 🧱 Dinding | "Gedebuk": gepeng menempel, bintang pusing, lalu merosot |
-| 🕳️ Palung bawah | Berputar mengecil ke kegelapan, rahang bermata kuning menutup |
-| ☀️ Palung atas | Terlempar keluar dari air dengan cipratan |
+| 🦔 Sea urchin / 🪸 coral / ❄️ icicle | Pricked: flashes red, leaks air & zig-zags away like a deflating balloon |
+| 🪼 Electric jellyfish | Zapped: shakes, flashes white-yellow with lightning, then gets scorched and smoky |
+| 🎣 Fishing hook | Caught by the mouth and reeled off the top of the screen |
+| 🕸️ Net | The net wraps around, the character struggles, then is hauled up |
+| 🗡️ Swordfish | Impact stars, knocked back spinning with dizzy stars |
+| 🛍️ Plastic trash | Wrapped in a plastic bag and drifts away helpless |
+| 🧱 Wall | "Thud": squashed flat, dizzy stars, then slides down |
+| 🕳️ Bottom trench | Spirals smaller into the dark, yellow-eyed jaws snap shut |
+| ☀️ Top trench | Flung out of the water with a splash |
 
 ![deaths](docs/deaths.png)
 
-## 🎯 Misi harian
-Setiap hari 3 misi baru (2 lucu + 1 biasa, sama untuk satu hari penuh), hadiah mutiara. Klaim biasa atau **x2 lewat rewarded ad**. Tombol 🎯 Misi menampilkan badge jumlah hadiah yang siap diambil.
+## 🎯 Daily missions
+Every day brings 3 new missions (2 silly + 1 regular, the same for the whole day) with pearl rewards. Claim normally or **×2 with a rewarded ad**. The 🎯 Missions button shows a badge with the number of rewards ready to collect.
 
-- 😜 Lucu: kesetrum ubur-ubur 3×, tertangkap kail, terbungkus plastik, terjerat jaring, diseruduk ikan pedang, jadi camilan penghuni palung, terlempar keluar air, gedebuk ke dinding, kempis tertusuk duri, kalah sebelum 50 m, mengembang-mengempis 100× dalam satu selaman.
-- Biasa: kumpulkan 50 mutiara, capai 500 m, pakai kemampuan 5×, sapa 3 makhluk langka, pecahkan 2 perisai, main dengan 2 karakter berbeda.
+- 😜 Silly: get zapped by jellyfish 3×, get caught on a hook, wrapped in plastic, tangled in a net, rammed by a swordfish, become a trench monster's snack, get launched out of the water, thud into a wall, get popped by spikes, get knocked out before 50 m, puff up/deflate 100× in one dive.
+- Regular: collect 50 pearls, reach 500 m, use abilities 5×, meet 3 rare creatures, pop 2 shields, dive with 2 different characters.
 
-Daftar misi ada di `src/missions.js` (tinggal tambah objek baru ke `POOL`).
+The mission list is in `src/missions.js` (just add a new object to `POOL`).
 
-### 🔥 Streak harian
-Selesaikan **ketiga** misi hari ini → streak +1 (kalau kemarin juga selesai) dan dapat **bonus streak**. Bolos sehari → streak kembali ke 0.
+### 🔥 Daily streak
+Complete **all three** of today's missions → streak +1 (if yesterday was also completed) and earn a **streak bonus**. Miss a day → the streak resets to 0.
 
-| Hari | 1 | 2 | 3 | 4 | 5 | 6 | 7 🎁 |
+| Day | 1 | 2 | 3 | 4 | 5 | 6 | 7 🎁 |
 |---|---|---|---|---|---|---|---|
 | Bonus 🦪 | 20 | 30 | 40 | 50 | 60 | 80 | 150 |
 
-Siklus 7 hari berulang. Bonus bisa diambil biasa atau x2 lewat rewarded ad.
+The 7-day cycle repeats. The bonus can be claimed normally or ×2 with a rewarded ad.
 
 ![streak](docs/streak.png)
 
 ![missions](docs/missions.png)
 
-## Koleksi
-- 🦪 **Mutiara**: mata uang untuk membuka **karakter laut baru** (lihat di bawah).
-- 📖 Makhluk langka Ensiklopedia hanya muncul di **♾️ Mode Bebas**.
-- 🫧 **Gelembung perisai**: kebal satu kali tabrakan/jatuh. Muncul jarang, atau dari rewarded ad "Mulai dengan perisai".
-- 📖 **Ensiklopedia Laut**: 8 makhluk langka (2 per zona). Sentuh untuk menemukan dan membaca faktanya.
+## Collectibles
+- 🦪 **Pearls**: the currency for unlocking **new sea characters** (see below).
+- 📖 Rare Encyclopedia creatures only appear in **♾️ Free Dive**.
+- 🫧 **Shield bubble**: immune to one collision/fall. Appears rarely, or from the "Start with a shield" rewarded ad.
+- 📖 **Sea Encyclopedia**: 8 rare creatures (2 per zone). Touch one to discover it and read its facts.
 
 ![dex](docs/dex.png)
 
-## Karakter Laut
-Setiap karakter punya cara mengapung & tenggelam sendiri. Makin mahal, makin unik mekaniknya dan makin kompleks animasinya.
+## Sea characters
+Each character floats & sinks in its own way. The pricier, the more unique its mechanics and the more complex its animation.
 
-| Karakter | Harga | Cara bergerak | Animasi |
+| Character | Price | Movement | Animation |
 |---|---|---|---|
-| 🐡 Puffy (Ikan Buntal) | Gratis | Ketuk: mengembang (naik) ↔ mengempis (turun) | Duri muncul saat mengembang, sirip mengepak |
-| 🐴 Kudi (Kuda Laut) | 🦪 150 | Seperti Puffy tapi lebih pelan & ramping | Ekor menggulung saat turun, sirip punggung bergetar |
-| 🪼 Jeli (Ubur-ubur) | 🦪 400 | Ketuk = denyut dorong ke atas, otomatis tenggelam | Lonceng berkontraksi, tentakel tertinggal mengikuti gerak |
-| 🐙 Okto (Gurita) | 🦪 900 | Semburan tinta: pindah sisi super cepat + kebal sesaat | Tentakel mengalir saat melesat, kulit berubah warna, awan tinta |
-| 🦈 Mantra (Pari Manta) | 🦪 1600 | Meluncur zig-zag kecepatan tetap, bisa belok di tengah | Sayap mengepak, ekor mencambuk, tubuh miring |
-| 🎣 Lumi (Ikan Sungut Ganda) | 🦪 2500 | Seperti Puffy + lentera menerangi laut gelap & menarik mutiara | Umpan berpegas, mulut terbuka saat mutiara dekat, bintik berpendar |
+| 🐡 Puffy (Pufferfish) | Free | Tap: puff up (rise) ↔ deflate (sink) | Spikes appear when puffed up, fins flap |
+| 🐴 Kudi (Seahorse) | 🦪 150 | Like Puffy but slower & slimmer | Tail curls when sinking, dorsal fin flutters |
+| 🪼 Jeli (Jellyfish) | 🦪 400 | Tap = an upward pulse, otherwise it sinks | Bell contracts, tentacles trail behind the motion |
+| 🐙 Okto (Octopus) | 🦪 900 | Ink jet: switches sides super fast + briefly invulnerable | Tentacles stream while jetting, skin changes colour, ink cloud |
+| 🦈 Mantra (Manta Ray) | 🦪 1600 | Glides in zig-zags at a steady speed, can turn mid-water | Wings flap, tail whips, body tilts |
+| 🎣 Lumi (Anglerfish) | 🦪 2500 | Like Puffy + a lantern that lights the dark sea & attracts pearls | Springy lure, mouth opens when a pearl is near, glowing spots |
 
-### 🗡️ Skill aktif (Mode Bebas)
-Tombol bulat **⚡ kanan bawah** (atau tombol **X**). Setelah dipakai, tombol mengisi ulang (cooldown) sambil menampilkan hitung mundur. Tidak tersedia di Petualangan — di sana bos tetap ditaklukkan dengan bertahan sampai 🏁.
+### 🗡️ Active skills (Free Dive)
+The round **⚡ button at the bottom right** (or the **X** key). After use the button recharges (cooldown) and shows a countdown. Not available in Adventure — there the bosses are still beaten by surviving until the 🏁.
 
-| Karakter | Skill | Efek | Cooldown |
+| Character | Skill | Effect | Cooldown |
 |---|---|---|---|
-| 🐡 Puffy | 🦔 Ledakan Duri | Duri menyembur ke segala arah, memecahkan bahaya di sekitar | 12 dtk |
-| 🐴 Kudi | 🌀 Pusaran Ekor | Menyedot semua mutiara di layar, menghalau ubur-ubur & plastik di dekatnya | 12 dtk |
-| 🪼 Jeli | ⚡ Setrum Balik | Gelombang listrik ke depan menghancurkan bahaya di jalurnya | 14 dtk |
-| 🐙 Okto | 🐙 Lengan Gurita | Tentakel meraih & melempar hingga 3 bahaya terdekat di depan | 12 dtk |
-| 🦈 Mantra | 💨 Sayap Penerjang | Menerjang 2 detik: kebal & menembus bahaya yang ditabrak | 15 dtk |
-| 🎣 Lumi | 🔦 Sorot Lentera | Membekukan semua bahaya di layar selama 3 detik | 18 dtk |
-| 🐋 Bubu | 🌊 Semburan Paus | Menyapu bersih semua bahaya di layar | 20 dtk |
+| 🐡 Puffy | 🦔 Spike Burst | Spikes fly in every direction, popping nearby hazards | 12 s |
+| 🐴 Kudi | 🌀 Tail Whirl | Pulls in every pearl on screen, blows away nearby jellyfish & plastic | 12 s |
+| 🪼 Jeli | ⚡ Shock Wave | An electric wave forward destroys hazards in its path | 14 s |
+| 🐙 Okto | 🐙 Octo Arms | Tentacles grab and fling up to 3 nearest hazards ahead | 12 s |
+| 🦈 Mantra | 💨 Wing Charge | Charges for 2 s: invulnerable and smashing through every hazard hit | 15 s |
+| 🎣 Lumi | 🔦 Lantern Flash | Freezes every hazard on screen for 3 s | 18 s |
+| 🐋 Bubu | 🌊 Whale Spout | Washes every hazard off the screen | 20 s |
 
 ![skills](docs/skills.png)
 
-### 🔄 Ganti karakter di tengah penyelaman (Mode Bebas)
-Tombol **🐠 Ganti** (kiri atas, atau tombol **C**) menjeda permainan dan menampilkan karakter yang dimiliki beserta kemampuannya. Setelah berganti: kebal 1 detik, lalu jeda 8 detik sebelum bisa ganti lagi. Tidak tersedia di Petualangan.
+### 🔄 Swap characters mid-dive (Free Dive)
+The **🐠 Swap** button (top left, or the **C** key) pauses the game and shows the characters you own with their abilities. After swapping: 1 s of invulnerability, then an 8 s wait before you can swap again. Not available in Adventure.
 
-### ⚡ Kemampuan khusus (terkait bahaya)
-| Karakter | Kemampuan |
+### ⚡ Special abilities (hazard-related)
+| Character | Ability |
 |---|---|
-| 🐡 Puffy | Saat mengembang, **ikan pedang memantul** dari durinya |
-| 🐴 Kudi | Tubuh ramping: **lolos dari jaring** |
-| 🪼 Jeli | **Kebal ubur-ubur listrik** (sesama ubur-ubur) |
-| 🐙 Okto | Tinta **membutakan ikan pedang** & **membekukan ubur-ubur** di dekatnya |
-| 🦈 Mantra | Kulit licin & pipih: **kail pancing meleset** |
-| 🎣 Lumi | Menangkap **sampah plastik** untuk dibuang: laut bersih +2 🦪 |
+| 🐡 Puffy | When puffed up, **swordfish bounce off** its spikes |
+| 🐴 Kudi | Slim body: **slips through nets** |
+| 🪼 Jeli | **Immune to electric jellyfish** (they're family) |
+| 🐙 Okto | Ink **blinds swordfish** & **freezes nearby jellyfish** |
+| 🦈 Mantra | Slippery and flat: **fishing hooks miss** |
+| 🎣 Lumi | Catches **plastic trash** to bin it: clean sea +2 🦪 |
 
 ![abilities](docs/abilities.png)
 
-### 🐋 Karakter rahasia: Bubu si Paus Biru Mini
-Terbuka **gratis** setelah semua 8 makhluk di 📖 Ensiklopedia Laut ditemukan. Sebelum itu tampil sebagai siluet "???" dengan progres (mis. 7/8).
-- Gerak: naik-turun sedang, badan besar; menyembur dari lubang napas saat naik.
-- ⚡ **Nyanyian paus** tiap 6 detik: gelombang sonar yang mengusir ikan pedang & kail dan membekukan ubur-ubur di sekitarnya.
+### 🐋 Secret character: Bubu the Mini Blue Whale
+Unlocked **for free** once all 8 creatures in the 📖 Sea Encyclopedia are discovered. Until then it appears as a "???" silhouette with progress (e.g. 7/8).
+- Movement: medium rise/sink, big body; spouts from its blowhole when rising.
+- ⚡ **Whale song** every 6 s: a sonar wave that scares off swordfish & hooks and freezes nearby jellyfish.
 
-| Terkunci | Bermain |
+| Locked | Playing |
 |---|---|
 | ![locked](docs/secret-locked.png) | ![bubu](docs/secret-play.png) |
 
-Data karakter (fisika, hitbox, kemampuan, gambar) ada di `src/characters.js`.
+Character data (physics, hitbox, abilities, drawing) lives in `src/characters.js`.
 
 ![characters](docs/characters.png)
 
-## Monetisasi
-- Rewarded: lanjutkan setelah kalah, mulai dengan perisai, +40 mutiara di menu karakter (maks. 5×/hari), hadiah misi x2.
-- Interstitial: tiap 3 kali main ulang, jarak minimal 60 detik.
-- Suara & musik otomatis dibisukan selama iklan.
+## Monetisation
+- Rewarded: continue after a defeat, start with a shield, +40 pearls in the characters menu (max 5×/day), ×2 mission rewards.
+- Interstitial: every 3 runs, at least 60 seconds apart.
+- Sound & music are muted automatically during ads.
+- An ad that errors or never answers is treated as "no reward" after 45 s so the game never freezes (`withAd` in `src/game.js`).
 
-## Menjalankan
+## Running
 ```bash
 python3 -m http.server 8000 --bind 127.0.0.1
-# buka http://localhost:8000/?platform=local
-# uji zona dalam: http://localhost:8000/?start=1000
-# uji kemampuan: http://localhost:8000/?start=1000&hazard=jelly  (urchin, coral, icicle, jelly, hook, sword, net, bag)
+# open http://localhost:8000/?platform=local
+# test the deep zones: http://localhost:8000/?start=1000
+# test abilities: http://localhost:8000/?start=1000&hazard=jelly  (urchin, coral, icicle, jelly, hook, sword, net, bag)
 ```
-`?platform=` bisa `poki`, `crazygames`, `youtube`, `facebook`, atau `local` (iklan simulasi).
+`?platform=` can be `poki`, `crazygames`, `youtube`, `facebook` or `local` (simulated ads).
 
-## ⚙️ Pengaturan
-Tombol **⚙️ Pengaturan** di menu utama dan di panel jeda (`src/settings.js`, tersimpan terpisah dari progres):
-- 🎵 Musik, 🔊 Efek suara, 📳 Getar — nyala/mati masing-masing.
-- ✨ Grafis: **Otomatis** (beralih ke ringan kalau FPS < 45 di detik-detik awal), **Tinggi**, atau **Ringan** (resolusi 75%, tanpa efek cahaya/glow, tanpa lapisan latar dekoratif & ikan latar).
-- 🌐 Bahasa (ID/EN).
-- 🗑️ Hapus semua progres (harus ditekan 2×; pengaturan tetap disimpan).
+Automated ad-flow tests (Playwright + Chromium) are in `tools/tests/`.
+
+## ⚙️ Settings
+The **⚙️ Settings** button in the main menu and the pause panel (`src/settings.js`, stored separately from progress):
+- 🎵 Music, 🔊 Sound effects, 📳 Vibration — each on/off.
+- ✨ Graphics: **Auto** (switches to light if FPS < 45 in the first seconds), **High**, or **Light** (75% resolution, no glow effects, no decorative background layers & background fish).
+- 🗑️ Reset all progress (must be pressed twice; settings are kept).
 
 ![settings](docs/settings.png)
 
-## 🌐 Bahasa
-Indonesia & Inggris (`src/i18n.js`). Otomatis mengikuti bahasa browser (Indonesia → ID, lainnya → EN) dan bisa diganti lewat ⚙️ Pengaturan (tersimpan). Teks sumber tetap bahasa Indonesia di file data; terjemahan Inggris ada di `i18n.js`.
+## 🌐 Language
+English only. All UI text lives in `src/i18n.js` (`t(key, vars)` for templated UI text, `data-i18n="key"` in the HTML); names, facts and labels are written directly in the data files.
 
-## 🎓 Pemain baru
-- **Tutorial interaktif** di Mode Bebas pertama: (1) game menunggu sampai pemain mencoba tap naik/turun, (2) deretan mutiara latihan, (3) satu bulu babi latihan yang tidak membuat kalah. Selesai → "🎉 Kamu siap menyelam!", tidak muncul lagi.
-- **Tips bertahap** (masing-masing sekali): skill ⚡, ganti karakter 🐠, misi harian, karakter yang sudah terbeli, dan ajakan mencoba Petualangan — muncul saat fiturnya mulai relevan.
+## 🎓 New players
+- **Interactive tutorial** in the first Free Dive: (1) the game waits until the player tries tapping up/down, (2) a row of practice pearls, (3) one practice urchin that can't defeat you. Done → "🎉 Great! You're ready to dive!", never shown again.
+- **Staged tips** (each shown once): the ⚡ skill, swapping characters 🐠, daily missions, characters you can afford, and an invitation to try Adventure — shown when the feature becomes relevant.
 
 ![onboarding](docs/onboarding.png)
 
-## 📱 HP
-Di HP yang dipegang tegak muncul layar "Putar HP-mu" (permainan otomatis dijeda). Di layar pendek (HP mendatar) semua panel memakai tata letak ringkas: kartu karakter bisa digeser ke samping, panel bisa digulir.
+## 📱 Phones
+On a phone held upright a "Turn your phone sideways" screen appears (the game pauses automatically). On short screens (landscape phones) every panel uses a compact layout: character cards scroll sideways, panels can be scrolled.
 
 ![compact](docs/compact.png)
 
-![english](docs/english.png)
+## Developer parameters
+`?start=`, `?hazard=`, `?finish=`, `?moment=`, `?debug` **only work on localhost** (`src/dev.js`). On a portal these parameters are ignored so they can't be used to cheat. `?platform=` stays active.
 
-## Parameter pengembang
-`?start=`, `?hazard=`, `?finish=`, `?moment=`, `?debug` **hanya aktif di localhost** (`src/dev.js`). Di portal, parameter ini diabaikan supaya tidak bisa dipakai curang. `?platform=` tetap aktif.
+## Controls
+Tap/click/Space: rise/sink · **X**: skill (Free Dive) · **C**: swap character (Free Dive) · **P / Esc / ⏸**: pause. Switching tabs pauses the game automatically.
 
-## Kontrol
-Tap/klik/Spasi: naik-turun · **X**: skill (Mode Bebas) · **C**: ganti karakter (Mode Bebas) · **P / Esc / ⏸**: jeda. Pindah tab otomatis menjeda permainan.
+## Structure
+- `src/game.js`: game flow, Puffy physics, shields, discoveries, UI
+- `src/world.js`: terrain, trenches, zones, hazards, pickups, all world rendering
+- `src/characters.js`: 6 sea characters + the secret one (movement mode, abilities, animation)
+- `src/creatures.js`: Sea Encyclopedia creatures and their facts
+- `src/missions.js`: daily missions & rewards
+- `src/deaths.js`: per-hazard defeat animations
+- `src/particles.js`: bubbles, sparkles, bursts
+- `src/audio.js`: synthesised sound effects & music (Web Audio API)
+- `src/sdk/adapter.js`: one interface for all platforms
 
-## Struktur
-- `src/game.js`: alur game, fisika Puffy, perisai, penemuan, UI
-- `src/world.js`: terrain, palung, zona, bahaya, pickup, semua rendering dunia
-- `src/characters.js`: 6 karakter laut (mode gerak, kemampuan, animasi)
-- `src/creatures.js`: makhluk Ensiklopedia Laut + faktanya
-- `src/missions.js`: misi harian & hadiahnya
-- `src/deaths.js`: animasi kekalahan per bahaya
-- `src/particles.js`: gelembung, kilau, ledakan
-- `src/audio.js`: efek suara & musik sintetis (Web Audio API)
-- `src/sdk/adapter.js`: satu antarmuka untuk semua platform
-
-## 📦 Rilis
-- `python3 tools/build.py [platform]` → `release/puffy-<platform>.zip` siap unggah (platform sudah tertanam, tanpa parameter URL).
-- Cover & ikon: `release/covers/` (dibuat oleh `tools/covers.html` dari aset game).
-- Teks halaman toko EN/ID: `release/STORE_LISTING.md`. Daftar periksa CrazyGames: `release/CHECKLIST.md`.
+## 📦 Release
+- `python3 tools/build.py [platform]` → `release/puffy-<platform>.zip`, ready to upload (the platform is baked in, no URL parameter needed).
+- Covers & icon: `release/covers/` (generated by `tools/covers.html` from the game's own art).
+- Store page text: `release/STORE_LISTING.md`. CrazyGames checklist: `release/CHECKLIST.md`.
 
 ![cover](release/covers/cover-1920x1080.png)
 
-## Sebelum submit
-- Facebook: isi `FB_INTERSTITIAL_ID` / `FB_REWARDED_ID` di `src/sdk/adapter.js` dan tambahkan `fbapp-config.json`.
-- YouTube Playables: hanya iklan dari SDK YouTube, tanpa pembelian dalam game.
+## Before submitting
+- Facebook: fill in `FB_INTERSTITIAL_ID` / `FB_REWARDED_ID` in `src/sdk/adapter.js` and add `fbapp-config.json`.
+- YouTube Playables: only ads from the YouTube SDK, no in-game purchases.

@@ -1,10 +1,10 @@
-// Rare sea creatures for the "Ensiklopedia Laut". Touching one in-game discovers it.
+// Rare sea creatures for the "Sea Encyclopedia". Touching one in-game discovers it.
 // Each draw() renders the creature centred at (0,0), roughly `s` px wide.
 
 export const CREATURES = [
   {
-    id: "clownfish", zone: 0, name: "Ikan Badut",
-    fact: "Hidup bersimbiosis dengan anemon laut: ia kebal terhadap sengatan anemon dan mendapat tempat berlindung.",
+    id: "clownfish", zone: 0, name: "Clownfish",
+    fact: "Lives in symbiosis with sea anemones: it's immune to their sting and gets a safe home.",
     draw(ctx, s) {
       ctx.fillStyle = "#ff7a1a";
       ctx.beginPath(); ctx.ellipse(0, 0, s * 0.4, s * 0.25, 0, 0, Math.PI * 2); ctx.fill();
@@ -16,8 +16,8 @@ export const CREATURES = [
     },
   },
   {
-    id: "seahorse", zone: 0, name: "Kuda Laut",
-    fact: "Pada kuda laut, justru sang jantan yang mengandung telur di kantung perutnya hingga menetas.",
+    id: "seahorse", zone: 0, name: "Seahorse",
+    fact: "In seahorses it's the father who carries the eggs in his pouch until they hatch.",
     draw(ctx, s) {
       ctx.strokeStyle = "#ffcf4a";
       ctx.lineCap = "round";
@@ -34,8 +34,8 @@ export const CREATURES = [
     },
   },
   {
-    id: "turtle", zone: 1, name: "Penyu",
-    fact: "Penyu betina bisa bermigrasi ribuan kilometer lalu kembali bertelur di pantai tempat ia dulu menetas.",
+    id: "turtle", zone: 1, name: "Sea Turtle",
+    fact: "Female sea turtles migrate thousands of kilometres and return to lay eggs on the beach where they hatched.",
     draw(ctx, s) {
       ctx.fillStyle = "#6fcf6a";
       ctx.beginPath(); ctx.ellipse(s * 0.38, 0, s * 0.12, s * 0.09, 0, 0, Math.PI * 2); ctx.fill();
@@ -49,8 +49,8 @@ export const CREATURES = [
     },
   },
   {
-    id: "manta", zone: 1, name: "Pari Manta",
-    fact: "Pari manta memiliki otak terbesar di antara ikan dan diduga mampu mengenali dirinya di cermin.",
+    id: "manta", zone: 1, name: "Manta Ray",
+    fact: "Manta rays have the largest brain of any fish and may recognise themselves in a mirror.",
     draw(ctx, s) {
       ctx.fillStyle = "#3b4f7a";
       ctx.beginPath();
@@ -63,8 +63,8 @@ export const CREATURES = [
     },
   },
   {
-    id: "octopus", zone: 2, name: "Gurita",
-    fact: "Gurita punya tiga jantung, darah berwarna biru, dan bisa mengubah warna kulit dalam sekejap.",
+    id: "octopus", zone: 2, name: "Octopus",
+    fact: "Octopuses have three hearts, blue blood, and can change skin colour in an instant.",
     draw(ctx, s) {
       ctx.fillStyle = "#c2569a";
       ctx.beginPath(); ctx.ellipse(0, -s * 0.12, s * 0.26, s * 0.24, 0, 0, Math.PI * 2); ctx.fill();
@@ -79,8 +79,8 @@ export const CREATURES = [
     },
   },
   {
-    id: "lanternfish", zone: 2, name: "Ikan Lentera",
-    fact: "Ikan lentera menghasilkan cahaya sendiri dan setiap malam bermigrasi naik ratusan meter untuk mencari makan.",
+    id: "lanternfish", zone: 2, name: "Lanternfish",
+    fact: "Lanternfish make their own light and swim hundreds of metres up every night to feed.",
     draw(ctx, s) {
       ctx.fillStyle = "#5c6b8a";
       ctx.beginPath(); ctx.ellipse(0, 0, s * 0.38, s * 0.16, 0, 0, Math.PI * 2); ctx.fill();
@@ -92,8 +92,8 @@ export const CREATURES = [
     },
   },
   {
-    id: "angler", zone: 3, name: "Ikan Sungut Ganda",
-    fact: "Umpan bercahaya di kepalanya berisi bakteri yang berpendar, dipakai untuk memancing mangsa dalam gelap.",
+    id: "angler", zone: 3, name: "Anglerfish",
+    fact: "The glowing lure on its head is full of luminous bacteria, used to attract prey in the dark.",
     draw(ctx, s) {
       ctx.strokeStyle = "#7a6a8f"; ctx.lineWidth = 2;
       ctx.beginPath(); ctx.moveTo(s * 0.1, -s * 0.22); ctx.quadraticCurveTo(s * 0.3, -s * 0.5, s * 0.42, -s * 0.3); ctx.stroke();
@@ -112,8 +112,8 @@ export const CREATURES = [
     },
   },
   {
-    id: "vampsquid", zone: 3, name: "Cumi Vampir",
-    fact: "Cumi vampir mampu hidup di lapisan laut yang sangat miskin oksigen, tempat sebagian besar hewan lain tidak bertahan.",
+    id: "vampsquid", zone: 3, name: "Vampire Squid",
+    fact: "Vampire squid live in ocean layers so low in oxygen that most other animals can't survive.",
     draw(ctx, s) {
       ctx.fillStyle = "#a3243b";
       ctx.beginPath(); ctx.ellipse(0, -s * 0.15, s * 0.18, s * 0.26, 0, 0, Math.PI * 2); ctx.fill();

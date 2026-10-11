@@ -13,10 +13,10 @@ const STEP = 44;       // max height change between neighbours (auto-climbable)
 export const PX_PER_M = 50;
 
 export const ZONES = [
-  { from: 0, name: "Perairan Dangkal", icon: "🌤️" },
-  { from: 300, name: "Laut Terbuka", icon: "🌊" },
-  { from: 800, name: "Zona Senja", icon: "🌑" },
-  { from: 1500, name: "Zona Gelap", icon: "✨" },
+  { from: 0, name: "Shallow Waters", icon: "🌤️" },
+  { from: 300, name: "Open Sea", icon: "🌊" },
+  { from: 800, name: "Twilight Zone", icon: "🌑" },
+  { from: 1500, name: "Midnight Zone", icon: "✨" },
 ];
 
 export function zoneIndex(depth) {

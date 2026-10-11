@@ -131,7 +131,7 @@ export const DEATHS = {
     },
   },
 
-  // Ikan pedang: rammed — impact stars, knocked back spinning off the left side.
+  // Swordfish: rammed — impact stars, knocked back spinning off the left side.
   sword: {
     dur: 1.2, sound: "thud",
     start(d, fx) { fx.sparkle(d.wx + 20, d.y, "#ffe14f"); fx.sparkle(d.wx + 20, d.y, "#ffffff"); },
@@ -232,24 +232,24 @@ export const DEATHS = {
 
 // Hazard / cause → animation key and the line shown on the Game Over panel.
 export function deathFor(cause, h, playerY) {
-  if (cause === "wall") return { key: "wall", label: "Gedebuk! Menabrak dinding karang." };
+  if (cause === "wall") return { key: "wall", label: "Thud! Smacked into the reef wall." };
   if (cause === "pit") return playerY < H / 2
-    ? { key: "surface", label: "Terlempar keluar dari air!" }
-    : { key: "abyss", label: "Tersedot ke dalam palung… ada yang menunggu di sana!" };
+    ? { key: "surface", label: "Launched right out of the water!" }
+    : { key: "abyss", label: "Sucked into the trench… something was waiting down there!" };
   switch (h && h.type) {
-    case "boss_crab": return { key: "sword", label: "Dijepit capit Kepiting Raksasa!" };
-    case "boss_shark": return { key: "sword", label: "Diseruduk Hiu Martil!" };
-    case "boss_kraken": return { key: "hook", label: "Ditarik tentakel Gurita Raksasa!" };
-    case "boss_angler": return { key: "abyss", label: "Dilahap Anglerfish Raksasa!" };
-    case "urchin": return { key: "spike", label: "Tertusuk bulu babi! Psssh…" };
-    case "coral": return { key: "spike", label: "Tergores karang tajam!" };
-    case "icicle": return { key: "spike", label: "Tertusuk es runcing!" };
-    case "jelly": return { key: "zap", label: "Bzzzt! Tersetrum ubur-ubur listrik." };
-    case "hook": return { key: "hook", label: "Tersangkut kail pancing!" };
-    case "net": return { key: "net", label: "Terjerat jaring nelayan!" };
-    case "sword": return { key: "sword", label: "Diseruduk ikan pedang!" };
-    case "bag": return { key: "bag", label: "Terbungkus sampah plastik!" };
+    case "boss_crab": return { key: "sword", label: "Pinched by the Giant Crab!" };
+    case "boss_shark": return { key: "sword", label: "Rammed by the Hammerhead!" };
+    case "boss_kraken": return { key: "hook", label: "Dragged off by the Giant Octopus!" };
+    case "boss_angler": return { key: "abyss", label: "Gobbled by the Giant Anglerfish!" };
+    case "urchin": return { key: "spike", label: "Poked by a sea urchin! Psssh…" };
+    case "coral": return { key: "spike", label: "Scraped by sharp coral!" };
+    case "icicle": return { key: "spike", label: "Stabbed by an icicle!" };
+    case "jelly": return { key: "zap", label: "Bzzzt! Zapped by an electric jellyfish." };
+    case "hook": return { key: "hook", label: "Caught on a fishing hook!" };
+    case "net": return { key: "net", label: "Tangled in a fishing net!" };
+    case "sword": return { key: "sword", label: "Rammed by a swordfish!" };
+    case "bag": return { key: "bag", label: "Wrapped up in plastic trash!" };
   }
-  return { key: "spike", label: "Aduh!" };
+  return { key: "spike", label: "Ouch!" };
 }
 

@@ -10,13 +10,13 @@ const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 const ease = (k) => k * k * (3 - 2 * k);
 
 export const MOMENTS = {
-  dolphins: { name: "Kawanan lumba-lumba bermain!", icon: "🐬", zones: [0], dur: 7, sound: "dolphin", draw: drawDolphins },
-  baitball: { name: "Pusaran ribuan ikan kecil!", icon: "🌀", zones: [0, 1], dur: 10, sound: "zone", draw: drawBaitBall },
-  humpback: { name: "Paus bungkuk melintas…", icon: "🐋", zones: [0, 1], dur: 15, sound: "whale", draw: drawHumpback },
-  sperm: { name: "Paus sperma menyelam ke kedalaman…", icon: "🐳", zones: [1, 2], dur: 13, sound: "whale", draw: drawSperm },
-  squid: { name: "Cumi-cumi raksasa muncul dari kegelapan!", icon: "🦑", zones: [2, 3], dur: 12, sound: "abyss", draw: drawGiantSquid },
-  bigjelly: { name: "Ubur-ubur raksasa bercahaya naik perlahan…", icon: "🪼", zones: [3], dur: 14, sound: "zone", draw: drawGiantJelly },
-  glowwave: { name: "Gelombang cahaya bioluminesensi!", icon: "✨", zones: [2, 3], dur: 7, sound: "discover", draw: drawGlowWave },
+  dolphins: { name: "A pod of dolphins at play!", icon: "🐬", zones: [0], dur: 7, sound: "dolphin", draw: drawDolphins },
+  baitball: { name: "A swirling ball of a thousand tiny fish!", icon: "🌀", zones: [0, 1], dur: 10, sound: "zone", draw: drawBaitBall },
+  humpback: { name: "A humpback whale glides by…", icon: "🐋", zones: [0, 1], dur: 15, sound: "whale", draw: drawHumpback },
+  sperm: { name: "A sperm whale dives into the deep…", icon: "🐳", zones: [1, 2], dur: 13, sound: "whale", draw: drawSperm },
+  squid: { name: "A giant squid emerges from the dark!", icon: "🦑", zones: [2, 3], dur: 12, sound: "abyss", draw: drawGiantSquid },
+  bigjelly: { name: "A giant glowing jellyfish slowly rises…", icon: "🪼", zones: [3], dur: 14, sound: "zone", draw: drawGiantJelly },
+  glowwave: { name: "A wave of bioluminescence!", icon: "✨", zones: [2, 3], dur: 7, sound: "discover", draw: drawGlowWave },
 };
 
 // Dev helper: ?moment=humpback starts that moment a few seconds into a dive.

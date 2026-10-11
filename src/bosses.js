@@ -13,10 +13,10 @@
 const TAU = Math.PI * 2;
 
 export const BOSSES = {
-  5: { key: "crab", name: "Kepiting Raksasa", icon: "🦀", every: 3.0, warn: 1.1, attack: "sweepLeft", speed: 1000 },
-  10: { key: "shark", name: "Hiu Martil", icon: "🦈", every: 2.8, warn: 1.0, attack: "sweepRight", speed: 1150 },
-  15: { key: "kraken", name: "Gurita Raksasa", icon: "🐙", every: 2.4, warn: 1.0, attack: "tentacle", speed: 0 },
-  20: { key: "angler", name: "Anglerfish Raksasa", icon: "🎣", every: 2.3, warn: 0.95, attack: "sweepRight", speed: 1250 },
+  5: { key: "crab", name: "Giant Crab", icon: "🦀", every: 3.0, warn: 1.1, attack: "sweepLeft", speed: 1000 },
+  10: { key: "shark", name: "Hammerhead Shark", icon: "🦈", every: 2.8, warn: 1.0, attack: "sweepRight", speed: 1150 },
+  15: { key: "kraken", name: "Giant Octopus", icon: "🐙", every: 2.4, warn: 1.0, attack: "tentacle", speed: 0 },
+  20: { key: "angler", name: "Giant Anglerfish", icon: "🎣", every: 2.3, warn: 0.95, attack: "sweepRight", speed: 1250 },
 };
 
 export function createBoss(levelNumber) {

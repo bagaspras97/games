@@ -6,25 +6,25 @@
 
 export const POOL = [
   // ---- funny (knock-outs & silly stuff) ----
-  { id: "ko_zap", funny: true, event: "ko_zap", target: 3, reward: 30, text: "Kesetrum ubur-ubur 3 kali ⚡ (rambut jadi kribo?)" },
-  { id: "ko_hook", funny: true, event: "ko_hook", target: 1, reward: 20, text: "Tertangkap kail pancing 1 kali 🎣 (salam untuk pak nelayan)" },
-  { id: "ko_bag", funny: true, event: "ko_bag", target: 2, reward: 25, text: "Terbungkus kantong plastik 2 kali 🛍️" },
-  { id: "ko_net", funny: true, event: "ko_net", target: 2, reward: 25, text: "Terjerat jaring 2 kali 🕸️ (kok betah?)" },
-  { id: "ko_sword", funny: true, event: "ko_sword", target: 2, reward: 25, text: "Diseruduk ikan pedang 2 kali 🗡️" },
-  { id: "ko_abyss", funny: true, event: "ko_abyss", target: 1, reward: 25, text: "Jadi camilan penghuni palung 1 kali 👀" },
-  { id: "ko_surface", funny: true, event: "ko_surface", target: 1, reward: 20, text: "Terlempar keluar dari air 1 kali ☀️ (mau jemur badan?)" },
-  { id: "ko_wall", funny: true, event: "ko_wall", target: 3, reward: 25, text: "Gedebuk ke dinding 3 kali 🧱" },
-  { id: "ko_spike", funny: true, event: "ko_spike", target: 3, reward: 25, text: "Kempis tertusuk duri 3 kali 🦔 (psssh…)" },
-  { id: "ko_early", funny: true, event: "ko_early", target: 1, reward: 15, text: "Kalah sebelum 50 m 😅 (sengaja juga boleh)" },
-  { id: "flip_spam", funny: true, event: "flips", target: 100, mode: "max", reward: 30, text: "Mengembang-mengempis 100 kali dalam satu selaman 🎈" },
+  { id: "ko_zap", funny: true, event: "ko_zap", target: 3, reward: 30, text: "Get zapped by jellyfish 3 times ⚡ (frizzy hair?)" },
+  { id: "ko_hook", funny: true, event: "ko_hook", target: 1, reward: 20, text: "Get caught on a hook once 🎣 (say hi to the fisherman)" },
+  { id: "ko_bag", funny: true, event: "ko_bag", target: 2, reward: 25, text: "Get wrapped in a plastic bag 2 times 🛍️" },
+  { id: "ko_net", funny: true, event: "ko_net", target: 2, reward: 25, text: "Get tangled in a net 2 times 🕸️ (comfy in there?)" },
+  { id: "ko_sword", funny: true, event: "ko_sword", target: 2, reward: 25, text: "Get rammed by a swordfish 2 times 🗡️" },
+  { id: "ko_abyss", funny: true, event: "ko_abyss", target: 1, reward: 25, text: "Become a trench monster's snack once 👀" },
+  { id: "ko_surface", funny: true, event: "ko_surface", target: 1, reward: 20, text: "Get launched out of the water once ☀️ (sunbathing?)" },
+  { id: "ko_wall", funny: true, event: "ko_wall", target: 3, reward: 25, text: "Thud into a wall 3 times 🧱" },
+  { id: "ko_spike", funny: true, event: "ko_spike", target: 3, reward: 25, text: "Get popped by spikes 3 times 🦔 (psssh…)" },
+  { id: "ko_early", funny: true, event: "ko_early", target: 1, reward: 15, text: "Get knocked out before 50 m 😅 (on purpose counts)" },
+  { id: "flip_spam", funny: true, event: "flips", target: 100, mode: "max", reward: 30, text: "Puff up/deflate 100 times in one dive 🎈" },
   // ---- regular ----
-  { id: "pearls", event: "pearls", target: 50, reward: 30, text: "Kumpulkan 50 mutiara 🦪" },
-  { id: "depth", event: "depth", target: 500, mode: "max", reward: 40, text: "Capai kedalaman 500 m 🌊" },
-  { id: "ability", event: "ability", target: 5, reward: 30, text: "Pakai kemampuan khusus karakter 5 kali ⚡" },
-  { id: "creature", event: "creature", target: 3, reward: 30, text: "Sapa 3 makhluk langka 📖" },
-  { id: "shield", event: "shield_pop", target: 2, reward: 25, text: "Pecahkan 2 gelembung perisai 🫧" },
-  { id: "moment", event: "moment", target: 2, reward: 30, text: "Saksikan 2 momen langka ✨ (paus, lumba-lumba…)" },
-  { id: "chars", event: "chars", target: 2, mode: "max", reward: 20, text: "Menyelam dengan 2 karakter berbeda 🐠" },
+  { id: "pearls", event: "pearls", target: 50, reward: 30, text: "Collect 50 pearls 🦪" },
+  { id: "depth", event: "depth", target: 500, mode: "max", reward: 40, text: "Reach a depth of 500 m 🌊" },
+  { id: "ability", event: "ability", target: 5, reward: 30, text: "Use character abilities 5 times ⚡" },
+  { id: "creature", event: "creature", target: 3, reward: 30, text: "Meet 3 rare creatures 📖" },
+  { id: "shield", event: "shield_pop", target: 2, reward: 25, text: "Pop 2 shield bubbles 🫧" },
+  { id: "moment", event: "moment", target: 2, reward: 30, text: "Witness 2 rare moments ✨ (whales, dolphins…)" },
+  { id: "chars", event: "chars", target: 2, mode: "max", reward: 20, text: "Dive with 2 different characters 🐠" },
 ];
 
 const byId = (id) => POOL.find((m) => m.id === id);
