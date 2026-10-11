@@ -215,6 +215,7 @@ When **all 20 levels are cleared, all 7 characters are owned (Bubu included) and
 - It appears **once**, at a calm moment: right after buying the last character, when leaving the level-complete screen, or at the Game Over screen of the dive in which the last creature was found. It never interrupts a run.
 - Afterwards a **🏆 Finale** button in the main menu shows it again. A save that was already complete before this feature only gets the button, no surprise screen.
 - "Keep diving" returns to the menu; Free Dive, missions and streaks continue as usual.
+- Confetti: two cannons at the bottom corners plus a light shower from the top (`startConfetti` in `src/game.js`, own overlay canvas, runs only while the finale is open). Skipped when the system asks for reduced motion, thinner in Light graphics.
 - Tests: `tools/tests/finale.mjs`.
 
 ## 🎓 New players

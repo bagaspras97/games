@@ -1088,6 +1088,7 @@ function showFinale() {
   show($("level-done"), false); show(ui.shop, false); show(ui.over, false);
   openPanel($("finale"), ui.menu, renderFinale);
   sfx.discover();
+  startConfetti();
 }
 
 function renderFinale() {
@@ -1108,6 +1109,75 @@ function renderFinale() {
     finaleCanvases.push({ c, ch, hidden: false });
     row.append(c);
   }
+}
+
+// Confetti: two cannons at the bottom corners, then a light shower from the top.
+// Its own overlay canvas and rAF loop that only runs while the finale is open;
+// skipped for prefers-reduced-motion, thinner in light graphics mode.
+const CONFETTI_COLORS = ["#ffe27a", "#7ff0ff", "#ff9ab5", "#ffffff", "#9fe870", "#b9a2ff", "#ffb340"];
+const confetti = { raf: 0, parts: [], last: 0, age: 0 };
+
+function startConfetti() {
+  stopConfetti();
+  if (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const cv = $("confetti");
+  cv.width = window.innerWidth; cv.height = window.innerHeight;
+  show(cv, true);
+  confetti.parts = []; confetti.age = 0; confetti.last = performance.now();
+  const n = lowGfx ? 45 : 90;
+  for (let side = 0; side < 2; side++) {
+    for (let i = 0; i < n; i++) {
+      const dir = side === 0 ? 1 : -1;
+      const ang = (Math.PI / 180) * (58 + Math.random() * 24);          // 58–82° from the floor
+      const sp = Math.sqrt(2 * 900 * cv.height * (0.6 + Math.random() * 0.45)); // peaks at 60–105% of the screen height
+      spawnConfetti(side === 0 ? 0 : cv.width, cv.height + 10, Math.cos(ang) * sp * dir, -Math.sin(ang) * sp);
+    }
+  }
+  confetti.raf = requestAnimationFrame(stepConfetti);
+}
+
+function spawnConfetti(x, y, vx, vy) {
+  confetti.parts.push({
+    x, y, vx, vy, w: 6 + Math.random() * 6, h: 9 + Math.random() * 8,
+    rot: Math.random() * 6.28, vr: (Math.random() - 0.5) * 10, flip: Math.random() * 6.28,
+    color: CONFETTI_COLORS[(Math.random() * CONFETTI_COLORS.length) | 0],
+  });
+}
+
+function stepConfetti(now) {
+  const cv = $("confetti"), g = cv.getContext("2d");
+  const dt = Math.max(0, Math.min(0.05, (now - confetti.last) / 1000));   // rAF time can precede performance.now()
+  confetti.last = now; confetti.age += dt;
+  if (confetti.age > 0.6 && confetti.age < 4.5 && Math.random() < dt * (lowGfx ? 12 : 26)) { // top shower
+    spawnConfetti(Math.random() * cv.width, -12, (Math.random() - 0.5) * 80, 40 + Math.random() * 60);
+  }
+  g.clearRect(0, 0, cv.width, cv.height);
+  const next = [];
+  for (const p of confetti.parts) {
+    p.vy += 900 * dt;
+    if (p.vy > 230) p.vy -= (p.vy - 230) * Math.min(1, 5 * dt);          // flutter down slowly
+    p.vx *= Math.pow(0.35, dt);
+    p.x += (p.vx + Math.sin(p.flip * 0.7) * 30) * dt; p.y += p.vy * dt;
+    p.rot += p.vr * dt; p.flip += 7 * dt;
+    if (p.y > cv.height + 24) continue;
+    next.push(p);
+    g.save();
+    g.translate(p.x, p.y); g.rotate(p.rot); g.scale(1, Math.cos(p.flip));
+    g.fillStyle = p.color;
+    g.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+    g.restore();
+  }
+  confetti.parts = next;
+  if (next.length || confetti.age < 4.5) confetti.raf = requestAnimationFrame(stepConfetti);
+  else stopConfetti();
+}
+
+function stopConfetti() {
+  cancelAnimationFrame(confetti.raf);
+  confetti.raf = 0; confetti.parts = [];
+  const cv = $("confetti");
+  cv.getContext("2d").clearRect(0, 0, cv.width, cv.height);
+  show(cv, false);
 }
 
 // Bubu's whale song: scares off swordfish & hooks and freezes jellyfish nearby.
@@ -1498,7 +1568,7 @@ async function boot() {
   document.querySelectorAll(".open-missions").forEach((b) => { b.onclick = () => openPanel($("missions"), b.closest(".panel"), renderMissions); });
   $("missions-close").onclick = () => closePanel($("missions"));
   $("menu-finale").onclick = () => { sfx.click(); showFinale(); };
-  $("finale-close").onclick = () => { sfx.click(); closePanel($("finale")); };
+  $("finale-close").onclick = () => { sfx.click(); stopConfetti(); closePanel($("finale")); };
   missions.ensureDaily(save);
   updateMissionBadges();
   ui.shopClose.onclick = () => closePanel(ui.shop);

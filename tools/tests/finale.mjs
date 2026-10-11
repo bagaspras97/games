@@ -55,5 +55,21 @@ const vis = (p,sel)=>p.isVisible(sel);
   ok('D: finale shown at game over', await vis(p,'#finale') && !(await vis(p,'#over')));
   await p.click('#finale-close'); await p.waitForTimeout(200);
   ok('D: menu + button after', await vis(p,'#menu') && await vis(p,'#menu-finale')); ok('D: no errors',!p.errs.length); }
+// E: confetti plays on the finale, stops on close, and respects reduced motion
+{ const px = (p)=>p.evaluate(()=>{const c=document.getElementById('confetti'); if(c.classList.contains('hidden')) return -1; const d=c.getContext('2d').getImageData(0,0,c.width,c.height).data; let n=0; for(let i=3;i<d.length;i+=4*7) if(d[i]>0) n++; return n;});
+  const p=await page({levels:ALL_LEVELS,owned:ALL_CHARS,dex:DEX});
+  await p.click('#menu-finale'); await p.waitForTimeout(700);
+  ok('E: confetti drawn while finale open', (await px(p))>50);
+  { const p2=await page({levels:ALL_LEVELS,owned:ALL_CHARS,dex:DEX}); await p2.click('#menu-finale'); await p2.waitForTimeout(350);
+    ok('E: cannon burst already visible at 0.35 s', (await px(p2))>150); }
+  await p.waitForTimeout(8000);
+  ok('E: confetti ends by itself', (await px(p))<=0);
+  await p.click('#finale-close'); await p.waitForTimeout(200);
+  await p.click('#menu-finale'); await p.waitForTimeout(500); await p.click('#finale-close'); await p.waitForTimeout(200);
+  ok('E: hidden after close', (await px(p))===-1); ok('E: no errors',!p.errs.length);
+  const ctx=await b.newContext({viewport:{width:1280,height:720},reducedMotion:'reduce'}); const q=await ctx.newPage();
+  await q.addInitScript(([s])=>localStorage.setItem('hop_save',s),[JSON.stringify({levels:ALL_LEVELS,owned:ALL_CHARS,dex:DEX})]);
+  await q.goto('http://127.0.0.1:8123/'); await q.waitForTimeout(600); await q.click('#menu-finale'); await q.waitForTimeout(600);
+  ok('E: no confetti with reduced motion', (await px(q))===-1 && await q.isVisible('#finale')); }
 await b.close();
 console.log(`\n${results.filter(Boolean).length}/${results.length} passed`);
