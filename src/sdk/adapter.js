@@ -1,3 +1,4 @@
+import { t } from "../i18n.js";
 // Platform SDK adapter.
 // The game only talks to this interface; each platform gets its own implementation:
 //   init(onProgress)       -> Promise, load + initialise the SDK
@@ -36,11 +37,11 @@ function fakeAd(label, seconds) {
   return new Promise((resolve) => {
     const el = document.createElement("div");
     el.className = "fake-ad";
-    el.innerHTML = `<div><b>${label}</b><br>Iklan simulasi… <span>${seconds}</span>s<br><button>Lewati</button></div>`;
+    el.innerHTML = `<div><b>${label}</b><br>${t("fakeAd")} <span>${seconds}</span>s<br><button>${t("skip")}</button></div>`;
     document.body.appendChild(el);
     let left = seconds;
-    const finish = (completed) => { clearInterval(t); el.remove(); resolve(completed); };
-    const t = setInterval(() => {
+    const finish = (completed) => { clearInterval(timer); el.remove(); resolve(completed); };
+    const timer = setInterval(() => {
       left--;
       el.querySelector("span").textContent = left;
       if (left <= 0) finish(true);
@@ -84,6 +85,13 @@ const crazygames = {
     window.CrazyGames.SDK.game.loadingStart();
   },
   loadingFinished() { window.CrazyGames.SDK.game.loadingStop(); },
+  // CrazyGames "muteAudio" setting (required for Full Launch): report the current
+  // value and every change to the game.
+  onMuteChange(cb) {
+    const game = window.CrazyGames.SDK.game;
+    cb(!!(game.settings && game.settings.muteAudio));
+    if (game.addSettingsChangeListener) game.addSettingsChangeListener((s) => cb(!!s.muteAudio));
+  },
   gameplayStart() { window.CrazyGames.SDK.game.gameplayStart(); },
   gameplayStop() { window.CrazyGames.SDK.game.gameplayStop(); },
   _ad(type) {
@@ -169,7 +177,8 @@ const facebook = {
 const adapters = { local, poki, crazygames, youtube, facebook };
 
 export async function createPlatform() {
-  const requested = new URLSearchParams(location.search).get("platform") || "local";
+  // ?platform= wins (testing); release builds set window.PUFFY_PLATFORM in index.html.
+  const requested = new URLSearchParams(location.search).get("platform") || window.PUFFY_PLATFORM || "local";
   const adapter = adapters[requested] || local;
   try {
     await adapter.init();

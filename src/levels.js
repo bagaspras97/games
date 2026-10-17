@@ -1,0 +1,58 @@
+import { devParam } from "./dev.js";
+// Adventure mode: 20 hand-tuned levels, 5 per depth zone. Each level has a fixed
+// seed so its layout is the same on every attempt, a length to the finish line
+// and a difficulty (hazard & trench density). The 5th level of a zone is a
+// longer, harder "Ujian" (exam) that closes the zone.
+//
+// Stars: ⭐ reach the finish, ⭐⭐ also collect ≥ 70% of the pearls,
+//        ⭐⭐⭐ also finish without a knock-out (no "Lanjutkan"; a popped shield is fine).
+
+import { ZONES, PX_PER_M } from "./world.js";
+
+const NAMES = [
+  ["Reef Pool", "Anemone Garden", "Coral Alley", "Ice Crack", "Shallows Trial"],
+  ["Seagrass Meadow", "Blue Current", "Turtle Route", "Fisher's Hooks", "Open Sea Trial"],
+  ["Twilight Valley", "Ghost Nets", "Swordfish Run", "Plastic Cave", "Twilight Trial"],
+  ["Dark Gate", "Glowing Forest", "Silent Trench", "Jellyfish Nest", "Deepest Trench Trial"],
+];
+
+export const LEVELS = [];
+for (let z = 0; z < 4; z++) {
+  for (let i = 0; i < 5; i++) {
+    const n = z * 5 + i + 1;
+    const exam = i === 4;
+    LEVELS.push({
+      n, zone: z, exam,
+      name: NAMES[z][i],
+      seed: n * 7919 + 13,
+      meters: 160 + i * 30 + z * 40 + (exam ? 60 : 0),
+      // exams are a bit lighter on regular hazards — the boss is the challenge
+      difficulty: Math.min(1, z * 0.22 + (exam ? 0.05 : i * 0.05)),
+    });
+  }
+}
+
+// Dev helper: ?finish=20 shortens every level to 20 m to test the finish screen.
+const SHORT = Number(devParam("finish")) || 0;
+if (SHORT) for (const L of LEVELS) L.meters = SHORT;
+
+export const STAR_PEARL_RATIO = 0.7;
+export const rewardPerStar = (lvl) => 10 + lvl.n * 2;
+
+// World-generation options for a level (start at the zone's depth so colours,
+// decoration and hazards match the zone).
+export function worldOptions(lvl) {
+  return {
+    startX: ZONES[lvl.zone].from * PX_PER_M,
+    // pearl pattern tier = position inside the zone, so Level 1, 6, 11, 16 are equally easy
+    opts: { zone: lvl.zone, difficulty: lvl.difficulty, length: lvl.meters * PX_PER_M, pearlTier: (lvl.n - 1) % 5 },
+  };
+}
+
+export function isUnlocked(save, n) {
+  return n === 1 || (save.levels && save.levels[n - 1] > 0);
+}
+
+export function totalStars(save) {
+  return Object.values(save.levels || {}).reduce((a, b) => a + b, 0);
+}

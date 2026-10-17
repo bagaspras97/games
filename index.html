@@ -1,46 +1,326 @@
 <!doctype html>
-<html lang="id">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  <title>Gravity Hop</title>
+  <title>Puffy: Deep Sea Adventure</title>
   <style>
-    html, body { margin: 0; height: 100%; background: #0d0a24; overflow: hidden;
+    html, body { margin: 0; height: 100%; background: #04122a; overflow: hidden;
       font-family: system-ui, sans-serif; color: #fff; touch-action: none; user-select: none; }
     body { display: flex; align-items: center; justify-content: center; }
     canvas { display: block; }
-    #score { position: fixed; top: 12px; left: 0; right: 0; text-align: center;
-      font-size: 28px; font-weight: 800; pointer-events: none; }
+    #score { position: fixed; top: 12px; left: 0; right: 0; text-align: center; font-size: 28px;
+      font-weight: 800; pointer-events: none; text-shadow: 0 2px 6px rgba(0,0,0,.5); }
     #platform { position: fixed; bottom: 6px; right: 10px; font-size: 11px; opacity: .4; }
-    .panel { position: fixed; inset: 0; display: flex; flex-direction: column; gap: 14px;
-      align-items: center; justify-content: center; background: rgba(13,10,36,.7); text-align: center; }
-    .panel h1 { font-size: 56px; margin: 0; }
-    .panel p { margin: 0; opacity: .8; }
-    button { font: inherit; font-size: 22px; font-weight: 700; padding: 14px 36px; border: 0;
-      border-radius: 999px; background: #ff4fa3; color: #fff; cursor: pointer; }
-    button.alt { background: #4fffd2; color: #1b1446; }
+    #mute { position: fixed; top: 10px; right: 10px; z-index: 5; font-size: 22px; padding: 8px 12px;
+      background: rgba(255,255,255,.15); }
+    #skill { position: fixed; right: 18px; bottom: 18px; z-index: 5; width: 104px; height: 104px; border-radius: 50%;
+      padding: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+      background: conic-gradient(#ffe27a calc(var(--p, 1) * 360deg), rgba(255,255,255,.15) 0);
+      border: 4px solid rgba(255,255,255,.85); color: #1b1446; box-shadow: 0 0 18px rgba(255,226,122,.6); touch-action: none; }
+    #skill:disabled { box-shadow: none; color: #fff; cursor: default; }
+    #skill .sk-icon { font-size: 34px; line-height: 1; }
+    #skill .sk-name { font-size: 11px; font-weight: 800; line-height: 1.1; max-width: 88px; }
+    #skill .sk-cd { font-size: 22px; font-weight: 900; }
+    .char-card .skill { font-size: 12px; line-height: 1.35; margin: 0; color: #9ff0ff; }
+    #pause { position: fixed; top: 10px; right: 76px; z-index: 5; font-size: 20px; padding: 8px 14px;
+      background: rgba(255,255,255,.15); }
+    #swap { position: fixed; top: 10px; left: 10px; z-index: 5; font-size: 18px; padding: 8px 14px;
+      background: rgba(255,255,255,.18); }
+    #swap:disabled { opacity: .55; cursor: default; }
+    #swap-panel .grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+    #rotate { position: fixed; inset: 0; z-index: 20; background: #04122a; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 10px; text-align: center; padding: 24px; font-size: 20px; font-weight: 700; }
+    #rotate div { font-size: 64px; animation: tilt 1.6s ease-in-out infinite; }
+    @keyframes tilt { 0%, 30% { transform: rotate(0); } 60%, 100% { transform: rotate(-90deg); } }
+    #hint { position: fixed; top: 64px; left: 50%; transform: translateX(-50%); width: min(620px, 86vw);
+      background: rgba(4,18,42,.85); border: 2px solid #7ff0ff; border-radius: 16px; padding: 10px 16px;
+      font-size: 20px; text-align: center; pointer-events: none; z-index: 4; box-sizing: border-box;
+      animation: hintbob 1.4s ease-in-out infinite; }
+    @keyframes hintbob { 50% { transform: translate(-50%, 6px); } }
+    .settings-list { display: flex; flex-direction: column; gap: 8px; width: min(420px, 90vw); }
+    .settings-list button { width: 100%; }
+    .settings-list button.off { background: rgba(255,255,255,.18); color: #fff; }
+    button.danger { border-color: #ff6b81; color: #ffb3bf; }
+    #banner { position: fixed; top: 22%; left: 0; right: 0; text-align: center; font-size: 40px;
+      font-weight: 900; pointer-events: none; text-shadow: 0 3px 12px rgba(0,0,0,.6); }
+    #banner.pop { animation: pop 2.4s ease forwards; }
+    @keyframes pop { 0% { opacity: 0; transform: scale(.7); } 12% { opacity: 1; transform: scale(1.05); }
+      20% { transform: scale(1); } 80% { opacity: 1; } 100% { opacity: 0; } }
+    #toast { position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); width: min(560px, 90vw);
+      background: rgba(4,18,42,.85); border: 2px solid #fff6a8; border-radius: 16px; padding: 12px 16px;
+      font-size: 16px; line-height: 1.4; text-align: center; pointer-events: none; box-sizing: border-box; }
+    .panel { position: fixed; inset: 0; display: flex; flex-direction: column; gap: 12px;
+      align-items: center; justify-content: center; background: rgba(4,18,42,.6); text-align: center;
+      padding: 16px; box-sizing: border-box; }
+    .panel h1 { font-size: 52px; margin: 0; line-height: 1.05; }
+    .panel h1 small { display: block; font-size: 22px; font-weight: 600; opacity: .85; }
+    .panel h2 { font-size: 36px; margin: 0; }
+    .panel p { margin: 0; opacity: .9; }
+    .row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+    button { font: inherit; font-size: 20px; font-weight: 700; padding: 12px 30px; border: 0;
+      border-radius: 999px; background: #ff7a9c; color: #fff; cursor: pointer; }
+    button.alt { background: #7ff0ff; color: #04122a; }
+    button.ghost { background: transparent; border: 2px solid #fff; font-size: 17px; padding: 10px 22px; }
     .hidden { display: none !important; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px;
+      width: min(760px, 92vw); max-height: 58vh; overflow-y: auto; padding: 4px; }
+    .card { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px;
+      border-radius: 16px; background: rgba(20,60,110,.85); font-size: 15px; border: 3px solid transparent; }
+    .card canvas { width: 72px; height: 72px; }
+    .card span { font-size: 13px; opacity: .85; font-weight: 500; }
+    .card.equipped { border-color: #7ff0ff; }
+    .card.locked { opacity: .45; cursor: not-allowed; }
+    #shop .grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+    .char-card canvas { width: 96px; height: 96px; }
+    .char-card b small { display: block; font-size: 12px; font-weight: 500; opacity: .75; }
+    .char-card .desc { font-size: 12px; font-weight: 500; line-height: 1.35; margin: 0; min-height: 3em; opacity: .9; }
+    .char-card .ability { font-size: 12px; font-weight: 600; line-height: 1.35; margin: 0; color: #ffe27a; }
+    .char-card.secret { background: linear-gradient(160deg, rgba(30,80,150,.9), rgba(60,30,110,.9)); border-color: #ffe27a; }
+    .cause { font-size: 18px; font-style: italic; color: #ffd1dc; }
+    #streak { width: min(620px, 92vw); background: linear-gradient(135deg, rgba(255,122,60,.35), rgba(255,60,120,.3));
+      border: 2px solid #ffb35c; border-radius: 16px; padding: 10px 14px; box-sizing: border-box; }
+    .s-head { font-size: 20px; font-weight: 800; }
+    .s-row { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin: 8px 0; }
+    .s-day { background: rgba(0,0,0,.3); border-radius: 10px; padding: 6px 2px; font-size: 11px; display: flex;
+      flex-direction: column; align-items: center; gap: 2px; border: 2px solid transparent; }
+    .s-day b { font-size: 12px; }
+    .s-day.done { background: #ff8a3c; }
+    .s-day.today { border-color: #ffe27a; animation: glow 1.2s ease-in-out infinite alternate; }
+    @keyframes glow { to { box-shadow: 0 0 14px rgba(255,226,122,.8); } }
+    .s-status { font-size: 13px; opacity: .9; }
+    .s-actions { display: flex; gap: 8px; justify-content: center; margin-top: 6px; flex-wrap: wrap; }
+    #missions-list { max-height: 34vh; overflow-y: auto; }
+    #missions { gap: 10px; }
+    #missions-list { display: flex; flex-direction: column; gap: 12px; width: min(620px, 92vw); }
+    .mission { background: rgba(20,60,110,.85); border-radius: 16px; padding: 12px 16px; text-align: left;
+      border: 2px solid transparent; }
+    .mission.ready { border-color: #ffe27a; box-shadow: 0 0 18px rgba(255,226,122,.35); }
+    .mission.claimed { opacity: .6; }
+    .m-text { font-size: 16px; font-weight: 700; }
+    .m-bar { position: relative; height: 18px; background: rgba(0,0,0,.35); border-radius: 9px; margin: 8px 0; overflow: hidden; }
+    .m-bar i { position: absolute; inset: 0 auto 0 0; background: linear-gradient(90deg, #7ff0ff, #ff7a9c); border-radius: 9px; }
+    .m-bar span { position: relative; display: block; text-align: center; font-size: 12px; font-weight: 700; line-height: 18px; }
+    .m-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: 14px; }
+    button.small { font-size: 15px; padding: 8px 16px; }
+    .m-reward { opacity: .85; }
+    .open-missions { position: relative; }
+    .open-missions.has-badge::after { content: attr(data-badge); position: absolute; top: -6px; right: -6px;
+      background: #ff3b5c; color: #fff; font-size: 12px; min-width: 20px; height: 20px; line-height: 20px;
+      border-radius: 10px; padding: 0 4px; box-sizing: border-box; }
+    #progress { position: fixed; top: 52px; left: 50%; transform: translateX(-50%); width: min(420px, 60vw); height: 10px;
+      background: rgba(0,0,0,.35); border-radius: 5px; pointer-events: none; }
+    #progress i { position: absolute; inset: 0 auto 0 0; width: 0; background: linear-gradient(90deg, #7ff0ff, #ffe27a); border-radius: 5px; }
+    #progress span { position: absolute; right: -24px; top: -7px; font-size: 16px; }
+    #levels-grid { display: flex; flex-direction: column; gap: 10px; width: min(640px, 92vw); max-height: 56vh; overflow-y: auto; }
+    .lv-zone { background: rgba(20,60,110,.75); border-radius: 14px; padding: 8px 12px; }
+    .lv-zone-name { font-weight: 800; text-align: left; margin-bottom: 6px; }
+    .lv-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+    .lv { padding: 8px 0; border-radius: 12px; display: flex; flex-direction: column; align-items: center; font-size: 20px;
+      background: #2a7fc2; }
+    .lv span { font-size: 13px; color: #ffe27a; letter-spacing: 1px; }
+    .lv.cleared { background: #1f9e7a; }
+    .lv.exam { background: #b8507a; }
+    .lv.exam.cleared { background: #8a3f9e; }
+    .lv.locked { background: rgba(255,255,255,.12); color: rgba(255,255,255,.6); cursor: not-allowed; }
+    #done-stars { font-size: 64px; letter-spacing: 8px; }
+    #done-stars .star { color: rgba(255,255,255,.2); display: inline-block; }
+    #done-stars .star.on { color: #ffe27a; text-shadow: 0 0 18px rgba(255,226,122,.8); animation: starpop .5s ease both; }
+    @keyframes starpop { 0% { transform: scale(0) rotate(-90deg); } 70% { transform: scale(1.3); } 100% { transform: scale(1); } }
+    #done-info { font-size: 16px; line-height: 1.6; }
+    .done-reward { font-weight: 800; color: #ffe27a; margin-top: 4px; }
+    .reward { font-size: 15px; color: #ffe27a; }
+    .char-card .price { font-size: 14px; font-weight: 700; opacity: 1; }
+    #dex .grid { grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); }
+    #confetti { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 15; }
+    #confetti.hidden { display: none; }
+    #finale > p { max-width: min(640px, 92vw); }
+    #finale-chars { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; }
+    #finale-chars canvas { width: 88px; height: 88px; }
+    #finale-stats { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+    #finale-stats .chip { background: rgba(255,255,255,.12); border-radius: 12px; padding: 6px 12px; min-width: 96px; text-align: center; }
+    #finale-stats .chip b { display: block; font-size: 22px; }
+    #finale-stats .chip span { font-size: 12px; opacity: .85; }
+    .finale-thanks { font-size: 15px; opacity: .9; }
+    .dex-card span { font-size: 12px; line-height: 1.35; }
+    .dex-card.unknown { opacity: .6; }
+    .dex-card .q { font-size: 44px; height: 72px; display: flex; align-items: center; }
     .fake-ad { position: fixed; inset: 0; background: #000; display: flex; align-items: center;
       justify-content: center; text-align: center; font-size: 22px; z-index: 10; }
     .fake-ad button { margin-top: 16px; font-size: 16px; padding: 8px 20px; }
+    /* Compact layout for short screens (phones held sideways) */
+    @media (max-height: 520px) {
+      .panel { gap: 6px; padding: 8px; justify-content: flex-start; overflow-y: auto; }
+      .panel > * { flex-shrink: 0; }   /* scroll the panel instead of squashing its content */
+      .panel h1 { font-size: 30px; }
+      .panel h1 small { font-size: 15px; }
+      .panel h2 { font-size: 22px; }
+      .panel p { font-size: 13px; }
+      button { font-size: 15px; padding: 8px 18px; }
+      button.ghost { font-size: 13px; padding: 6px 14px; }
+      button.small { font-size: 12px; padding: 5px 10px; }
+      .grid { max-height: none; gap: 8px; }
+      #shop .grid, #swap-panel .grid { display: flex; overflow-x: auto; overflow-y: hidden; width: 94vw; padding-bottom: 4px; }
+      #shop .grid, #swap-panel .grid { align-items: stretch; }
+      #shop .char-card, #swap-panel .char-card { flex: 0 0 172px; padding: 6px; height: auto; }
+      #shop .char-card .desc { display: none; }   /* keep ability + skill; the card stays readable */
+      .char-card canvas { width: 56px; height: 56px; }
+      .char-card .desc, .char-card .ability, .char-card .skill { font-size: 10px; line-height: 1.25; min-height: 0; }
+      #dex .grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+      #finale-chars canvas { width: 52px; height: 52px; }
+      #finale-stats .chip { padding: 3px 8px; min-width: 70px; }
+      #finale-stats .chip b { font-size: 16px; }
+      .finale-thanks { display: none; }
+      .dex-card canvas { width: 52px; height: 52px; }
+      #missions-list { max-height: none; }
+      #streak { padding: 6px 10px; }
+      .s-row { gap: 4px; margin: 4px 0; }
+      .lv { padding: 4px 0; font-size: 16px; }
+      #levels-grid { max-height: none; }
+      #done-stars { font-size: 44px; }
+      #score { font-size: 20px; top: 6px; }
+      #toast { font-size: 13px; bottom: 8px; padding: 8px 12px; }
+      #banner { font-size: 28px; }
+      #hint { top: 40px; font-size: 15px; padding: 6px 12px; }
+      #skill { width: 80px; height: 80px; right: 12px; bottom: 12px; }
+      #skill .sk-icon { font-size: 26px; }
+      #skill .sk-name { font-size: 9px; }
+      #mute, #pause, #swap { font-size: 15px; padding: 5px 10px; }
+      #pause { right: 60px; }
+    }
   </style>
 </head>
 <body>
   <canvas id="game" width="1280" height="720"></canvas>
+  <canvas id="confetti" class="hidden"></canvas>
   <div id="score"></div>
   <div id="platform"></div>
+  <div id="banner" class="hidden"></div>
+  <div id="hint" class="hidden"></div>
+  <div id="toast" class="hidden"></div>
+  <button id="mute" data-i18n-aria="sound"></button>
+  <div id="rotate" class="hidden"><div>📱↻</div><p data-i18n="rotate"></p></div>
+  <button id="pause" class="hidden" data-i18n-aria="pause">⏸</button>
+  <div id="pause-panel" class="panel hidden">
+    <h2 data-i18n="paused"></h2>
+    <p data-i18n="pausedSub"></p>
+    <button id="pause-resume" data-i18n="resume"></button>
+    <button class="open-settings ghost" data-i18n="settings"></button>
+    <button id="pause-quit" class="ghost" data-i18n="mainMenu"></button>
+  </div>
+  <button id="skill" class="hidden" aria-label="Skill"></button>
+  <button id="swap" class="hidden" data-i18n-aria="swapTitle"></button>
+
+  <div id="swap-panel" class="panel hidden">
+    <h2 data-i18n="swapTitle"></h2>
+    <p data-i18n="swapSub"></p>
+    <div id="swap-grid" class="grid"></div>
+    <button id="swap-close" class="ghost" data-i18n="swapClose"></button>
+  </div>
 
   <div id="menu" class="panel">
-    <h1>Gravity Hop</h1>
-    <p>Tap / klik / spasi untuk membalik gravitasi. Hindari duri!</p>
-    <button id="play">Main</button>
+    <h1>🐡 Puffy<small data-i18n="subtitle"></small></h1>
+    <p data-i18n="intro"></p>
+    <button class="open-levels" data-i18n="adventure"></button>
+    <div class="row">
+      <button id="play" class="alt" data-i18n="freeMode"></button>
+      <button class="shield-start ghost" data-i18n="freeShield"></button>
+    </div>
+    <div class="row">
+      <button class="open-shop ghost" data-i18n="characters"></button>
+      <button class="open-dex ghost" data-i18n="encyclopedia"></button>
+      <button class="open-missions ghost" data-i18n="missions"></button>
+    </div>
+    <div class="row">
+      <button id="menu-finale" class="open-finale alt small hidden" data-i18n="finaleBtn"></button>
+      <button class="open-settings ghost small" data-i18n="settings"></button>
+    </div>
   </div>
 
   <div id="over" class="panel hidden">
-    <h1>Game Over</h1>
-    <p>Skor: <b id="final">0</b> &nbsp; Terbaik: <b id="best">0</b> &nbsp; 🪙 <b id="coins">0</b></p>
-    <button id="revive" class="alt">▶ Lanjutkan (tonton iklan)</button>
-    <button id="retry">Main lagi</button>
+    <h1 id="over-title">Aduh!</h1>
+    <p id="over-cause" class="cause"></p>
+    <p id="over-stats"><span data-i18n="depthLbl"></span> <b id="final">0</b> m &nbsp; <span data-i18n="bestLbl"></span> <b id="best">0</b> m &nbsp; 🦪 <b id="pearls">0</b></p>
+    <p id="over-level" class="hidden"></p>
+    <button id="revive" class="alt" data-i18n="revive"></button>
+    <button id="retry" data-i18n="retry"></button>
+    <button class="shield-start ghost" data-i18n="retryShield"></button>
+    <button id="over-map" class="ghost hidden" data-i18n="levelMap"></button>
+    <div class="row">
+      <button class="open-shop ghost" data-i18n="characters"></button>
+      <button class="open-dex ghost" data-i18n="encyclopedia"></button>
+      <button class="open-missions ghost" data-i18n="missions"></button>
+    </div>
+  </div>
+
+  <div id="shop" class="panel hidden">
+    <h2 data-i18n="shopTitle"></h2>
+    <p data-i18n="shopSub"></p>
+    <p>🦪 <b id="shop-pearls">0</b></p>
+    <div id="shop-grid" class="grid"></div>
+    <button id="free-pearls" class="alt"></button>
+    <button id="shop-close" class="ghost" data-i18n="back"></button>
+  </div>
+
+  <div id="progress" class="hidden"><i id="progress-fill"></i><span>🏁</span></div>
+
+  <div id="levels" class="panel hidden">
+    <h2 data-i18n="levelsTitle"></h2>
+    <p><span data-i18n="starsLbl"></span> ★ <b id="levels-stars">0</b> &nbsp;·&nbsp; <span data-i18n="levelsRules"></span></p>
+    <p class="cause" data-i18n="levelsPearls"></p>
+    <div id="levels-grid"></div>
+    <button id="levels-close" class="ghost" data-i18n="back"></button>
+  </div>
+
+  <div id="finale" class="panel hidden">
+    <h1 data-i18n="finaleTitle"></h1>
+    <p data-i18n="finaleSub"></p>
+    <div id="finale-chars"></div>
+    <div id="finale-stats"></div>
+    <p id="finale-note" class="cause"></p>
+    <p class="finale-thanks" data-i18n="finaleThanks"></p>
+    <button id="finale-close" data-i18n="finaleKeep"></button>
+  </div>
+
+  <div id="level-done" class="panel hidden">
+    <h1 id="done-title" data-i18n="levelDoneTitle"></h1>
+    <p id="done-name" class="cause"></p>
+    <div id="done-stars"></div>
+    <div id="done-info"></div>
+    <button id="done-next" data-i18n="doneNext"></button>
+    <div class="row">
+      <button id="done-retry" class="ghost" data-i18n="doneRetry"></button>
+      <button id="done-map" class="ghost" data-i18n="doneMap"></button>
+    </div>
+  </div>
+
+  <div id="settings" class="panel hidden">
+    <h2 data-i18n="settings"></h2>
+    <div class="settings-list">
+      <button id="set-music" class="alt"></button>
+      <button id="set-sfx" class="alt"></button>
+      <button id="set-vibrate" class="alt"></button>
+      <button id="set-gfx" class="alt"></button>
+      <p class="cause" data-i18n="gfxHint"></p>
+      <button id="set-reset" class="ghost danger"></button>
+    </div>
+    <button id="settings-close" class="ghost" data-i18n="back"></button>
+  </div>
+
+  <div id="missions" class="panel hidden">
+    <h2 data-i18n="missionsTitle"></h2>
+    <p data-i18n="missionsSub"></p>
+    <div id="streak"></div>
+    <div id="missions-list"></div>
+    <button id="missions-close" class="ghost" data-i18n="back"></button>
+  </div>
+
+  <div id="dex" class="panel hidden">
+    <h2 data-i18n="dexTitle"></h2>
+    <p><span data-i18n="dexSub"></span> <b id="dex-count">0</b></p>
+    <div id="dex-grid" class="grid"></div>
+    <p id="dex-reward" class="reward"></p>
+    <button id="dex-close" class="ghost" data-i18n="back"></button>
   </div>
 
   <script type="module" src="src/game.js"></script>
