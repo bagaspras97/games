@@ -636,7 +636,7 @@ export function drawPickups(ctx, world, scroll, t, creatureById) {
       ctx.fillStyle = "#fff6a8";
       ctx.beginPath(); ctx.arc(x, y, 42, 0, Math.PI * 2); ctx.fill();
       ctx.globalAlpha = 1;
-      ctx.save(); ctx.translate(x, y); c.draw(ctx, 64); ctx.restore();
+      ctx.save(); ctx.translate(x, y); c.draw(ctx, 64, t); ctx.restore();
     }
   }
 }
