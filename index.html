@@ -5,6 +5,27 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <title>Puffy: Deep Sea Adventure</title>
   <style>
+    /* ===== Design system =====
+       One set of tokens for every screen. Short screens (landscape phones) only
+       change the token values, so all pages scale down together. */
+    :root {
+      --font: ui-rounded, "SF Pro Rounded", "Nunito", "Segoe UI", system-ui, sans-serif;
+      --ink: #04122a; --navy: #0b3a6e; --white: #ffffff; --text-dim: rgba(255,255,255,.8);
+      --cyan: #7ff0ff; --gold: #ffe27a; --pink: #ff7a9c; --rose: #ffd1dc;
+      --surface: rgba(4,18,42,.6); --surface-strong: rgba(4,18,42,.82); --line: rgba(255,255,255,.18);
+      --r-lg: 22px; --r-md: 16px; --r-sm: 12px;
+      --fs-display: 84px;  /* logo only */
+      --fs-h1: 56px;       /* result screens: game over, level complete, finale */
+      --fs-h2: 40px;       /* screen titles: missions, levels, characters, ... */
+      --fs-card: 22px;     /* big card labels (mode cards) */
+      --fs-h3: 18px;       /* section / card titles */
+      --fs-body: 16px;     /* paragraphs, list items */
+      --fs-small: 13px;    /* secondary lines, notes */
+      --fs-xs: 12px;       /* dense card copy */
+      --fs-micro: 11px;    /* uppercase labels */
+      --fs-btn: 18px; --fs-btn-sm: 15px; --fs-btn-xs: 13px;
+      --title-shadow: 0 3px 0 var(--navy), 0 7px 0 rgba(4,18,42,.45);
+    }
     html, body { margin: 0; height: 100%; background: #04122a; overflow: hidden;
       font-family: system-ui, sans-serif; color: #fff; touch-action: none; user-select: none; }
     body { display: flex; align-items: center; justify-content: center; }
@@ -143,7 +164,7 @@
     /* ---------- Game over ---------- */
     #over { gap: 12px; }
     #over-hero { width: 120px; height: 100px; margin-bottom: -10px; }
-    .over-title { font-size: 66px !important; font-weight: 900; letter-spacing: -1px;
+    .over-title { font-size: 66px; font-weight: 900; letter-spacing: -1px;
       background: linear-gradient(180deg, #ffffff 15%, #ffd3df 55%, #ff7a9c 95%); -webkit-background-clip: text; background-clip: text;
       color: transparent; -webkit-text-stroke: 3px #0b3a6e; paint-order: stroke fill; filter: drop-shadow(0 5px 0 rgba(4,18,42,.55)); }
     .over-cause { background: rgba(4,18,42,.6); border: 1px solid rgba(255,209,220,.35); border-radius: 999px;
@@ -244,6 +265,12 @@
     .fake-ad button { margin-top: 16px; font-size: 16px; padding: 8px 20px; }
     /* Compact layout for short screens (phones held sideways) */
     @media (max-height: 520px) {
+      :root {
+        --fs-display: 46px; --fs-h1: 32px; --fs-h2: 24px; --fs-card: 17px; --fs-h3: 14px;
+        --fs-body: 13px; --fs-small: 11px; --fs-xs: 10px; --fs-micro: 9px;
+        --fs-btn: 15px; --fs-btn-sm: 13px; --fs-btn-xs: 11px;
+        --title-shadow: 0 2px 0 var(--navy), 0 4px 0 rgba(4,18,42,.45);
+      }
       .panel { gap: 6px; padding: 8px; justify-content: flex-start; overflow-y: auto; }
       .panel > * { flex-shrink: 0; }   /* scroll the panel instead of squashing its content */
       .panel h1 { font-size: 30px; }
@@ -282,7 +309,7 @@
       .tile-icon { font-size: 18px; }
       .menu-intro { display: none; }
       #over-hero { display: none; }
-      .over-title { font-size: 34px !important; -webkit-text-stroke-width: 2px; }
+
       .over-cause { font-size: 13px; padding: 2px 12px; }
       .ostat { min-width: 86px; padding: 2px 10px; border-radius: 12px; }
       .ostat .ol { font-size: 9px; }
@@ -314,6 +341,61 @@
       #mute, #pause, #swap { font-size: 15px; padding: 5px 10px; }
       #pause { right: 60px; }
     }
+    /* ===== Design system: shared typography & surfaces (keep last) ===== */
+    html, body, button { font-family: var(--font); }
+    /* Titles: white, heavy, navy depth shadow. The logo is the only exception (brand wordmark). */
+    .panel h1, .panel h2 { color: var(--white); font-weight: 900; letter-spacing: -.5px; line-height: 1.05;
+      text-shadow: var(--title-shadow); background: none; -webkit-text-stroke: 0; filter: none; margin: 0; }
+    .panel h1 { font-size: var(--fs-h1); }
+    .panel h2 { font-size: var(--fs-h2); }
+    .logo-title { font-size: var(--fs-display); }
+    #banner { text-shadow: var(--title-shadow); }
+    /* Body copy */
+    .panel p { font-size: var(--fs-body); font-weight: 500; color: var(--text-dim); opacity: 1; }
+    .panel p b { color: var(--white); }
+    .cause { font-size: var(--fs-small) !important; font-style: italic; font-weight: 600; color: var(--rose) !important; }
+    .reward, .done-reward { font-size: var(--fs-small); font-weight: 800; color: var(--gold) !important; }
+    .menu-intro, .s-status, .m-reward, .m-actions, .card span, .mode-sub { font-size: var(--fs-small); }
+    #toast, #hint, #done-info, .over-level, .finale-thanks { font-size: var(--fs-body); }
+    /* Section / card titles */
+    .s-head, .lv-zone-name, .dex-card b, .char-card > b, .m-text { font-size: var(--fs-h3); font-weight: 800; }
+    .m-text { font-size: var(--fs-body); }
+    .mode-name { font-size: var(--fs-card); font-weight: 900; }
+    /* Dense card copy */
+    .char-card .desc, .char-card .ability, .char-card .skill, .dex-card span.fact, .char-card b small { font-size: var(--fs-xs); }
+    /* Uppercase labels */
+    .ostat .ol, .dex-no, #finale-stats .chip span, .s-day { font-size: var(--fs-micro); font-weight: 800;
+      letter-spacing: .12em; text-transform: uppercase; }
+    .s-day b { font-size: var(--fs-micro); }
+    /* Numbers line up */
+    .ostat b, #finale-stats .chip b, .stat, .lv, .m-bar span, #score { font-variant-numeric: tabular-nums; }
+    .ostat b, #finale-stats .chip b { font-size: calc(var(--fs-h3) * 1.35); font-weight: 900; }
+    .ostat.main b { font-size: calc(var(--fs-h3) * 1.9); }
+    /* Buttons: one weight, three sizes */
+    button { font-size: var(--fs-btn); font-weight: 800; }
+    button.ghost { font-size: var(--fs-btn-sm); border-color: rgba(255,255,255,.85); }
+    button.small, .mode-col .shield-start { font-size: var(--fs-btn-xs); }
+    .tile { font-size: var(--fs-small); font-weight: 700; }
+    #mute, #pause, #swap { font-size: var(--fs-btn); }
+    /* Surfaces: dark translucent cards with a hairline border */
+    .card, .mission, .lv-zone, .over-level, .ostat, .stat, .tile, #finale-stats .chip {
+      background-color: var(--surface); border: 1px solid var(--line); }
+    .card, .mission, .lv-zone, .over-level, #finale-stats .chip { border-radius: var(--r-md); }
+    .card { background-image: none; }
+    .tile { border-width: 2px; border-radius: var(--r-md); }
+    .card.equipped { border: 2px solid var(--cyan); }
+    .char-card.secret { background: linear-gradient(160deg, rgba(30,80,150,.9), rgba(60,30,110,.9)); border: 2px solid var(--gold); }
+    .mission.ready { border: 2px solid var(--gold); }
+    #streak { border-radius: var(--r-md); }
+    .mode-card { border-radius: var(--r-lg); }
+    /* Level map buttons: same raised-gradient look as the menu cards */
+    .lv { font-size: var(--fs-h3); font-weight: 900; border-radius: var(--r-sm); border: 0;
+      background: linear-gradient(160deg, #6cc4ff, #2a7fc2); box-shadow: 0 4px 0 rgba(0,0,0,.28), inset 0 2px 0 rgba(255,255,255,.3); }
+    .lv.cleared { background: linear-gradient(160deg, #62e6bb, #1f9e7a); }
+    .lv.exam { background: linear-gradient(160deg, #ff9ab5, #c4507e); }
+    .lv.exam.cleared { background: linear-gradient(160deg, #c99bff, #7a3f9e); }
+    .lv.locked { background: var(--surface); box-shadow: none; border: 1px dashed var(--line); color: rgba(255,255,255,.55); }
+    .lv span { font-size: var(--fs-xs); color: var(--gold); }
   </style>
 </head>
 <body>

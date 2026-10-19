@@ -207,6 +207,24 @@ The **⚙️ Settings** button in the main menu and the pause panel (`src/settin
 
 ![settings](docs/settings.png)
 
+## 🎨 Design system
+All screens share one set of CSS tokens at the top of `index.html` (`:root`): colours (`--cyan`, `--gold`, `--pink`, `--surface`, …), radii (`--r-lg/md/sm`) and a type scale:
+
+| Token | Desktop | Short screens | Used for |
+|---|---|---|---|
+| `--fs-display` | 84px | 46px | Logo only |
+| `--fs-h1` | 56px | 32px | Result screens (game over, level complete, finale) |
+| `--fs-h2` | 40px | 24px | Screen titles (missions, levels, characters, …) |
+| `--fs-card` | 22px | 17px | Big card labels (mode cards, Continue / Dive again) |
+| `--fs-h3` | 18px | 14px | Section and card titles |
+| `--fs-body` | 16px | 13px | Paragraphs, list items |
+| `--fs-small` | 13px | 11px | Secondary lines, notes |
+| `--fs-xs` | 12px | 10px | Dense card copy |
+| `--fs-micro` | 11px | 9px | Uppercase labels |
+| `--fs-btn` / `-sm` / `-xs` | 18 / 15 / 13px | 15 / 13 / 11px | Buttons |
+
+Titles are white, weight 900, with a navy depth shadow (`--title-shadow`); the gradient wordmark is reserved for the logo. Cards use the dark translucent `--surface` with a hairline border. The compact layout only changes the token values, so every page scales together. The shared rules live in the "Design system" block at the end of the stylesheet.
+
 ## 🌐 Language
 English only. All UI text lives in `src/i18n.js` (`t(key, vars)` for templated UI text, `data-i18n="key"` in the HTML); names, facts and labels are written directly in the data files.
 
