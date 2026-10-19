@@ -23,8 +23,10 @@
     #skill .sk-name { font-size: 11px; font-weight: 800; line-height: 1.1; max-width: 88px; }
     #skill .sk-cd { font-size: 22px; font-weight: 900; }
     .char-card .skill { font-size: 12px; line-height: 1.35; margin: 0; color: #9ff0ff; }
-    #pause { position: fixed; top: 10px; right: 76px; z-index: 5; font-size: 20px; padding: 8px 14px;
-      background: rgba(255,255,255,.15); }
+    #pause { position: fixed; top: 10px; right: 76px; z-index: 5; width: 50px; height: 42px; padding: 0;
+      display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,.15); }
+    #pause.hidden { display: none !important; }
+    .pause-bars { width: 16px; height: 18px; box-sizing: border-box; border-left: 5px solid #fff; border-right: 5px solid #fff; }
     #swap { position: fixed; top: 10px; left: 10px; z-index: 5; font-size: 18px; padding: 8px 14px;
       background: rgba(255,255,255,.18); }
     #swap:disabled { opacity: .55; cursor: default; }
@@ -286,7 +288,7 @@
   <div id="toast" class="hidden"></div>
   <button id="mute" data-i18n-aria="sound"></button>
   <div id="rotate" class="hidden"><div>📱↻</div><p data-i18n="rotate"></p></div>
-  <button id="pause" class="hidden keyhint" data-key="P" data-i18n-aria="pause">⏸</button>
+  <button id="pause" class="hidden keyhint" data-key="P" data-i18n-aria="pause"><span class="pause-bars"></span></button>
   <div id="pause-panel" class="panel hidden">
     <h2 data-i18n="paused"></h2>
     <p data-i18n="pausedSub"></p>
