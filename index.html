@@ -23,8 +23,10 @@
     #skill .sk-name { font-size: 11px; font-weight: 800; line-height: 1.1; max-width: 88px; }
     #skill .sk-cd { font-size: 22px; font-weight: 900; }
     .char-card .skill { font-size: 12px; line-height: 1.35; margin: 0; color: #9ff0ff; }
-    #pause { position: fixed; top: 10px; right: 76px; z-index: 5; font-size: 20px; padding: 8px 14px;
-      background: rgba(255,255,255,.15); }
+    #pause { position: fixed; top: 10px; right: 76px; z-index: 5; width: 50px; height: 42px; padding: 0;
+      display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,.15); }
+    #pause.hidden { display: none !important; }
+    .pause-bars { width: 16px; height: 18px; box-sizing: border-box; border-left: 5px solid #fff; border-right: 5px solid #fff; }
     #swap { position: fixed; top: 10px; left: 10px; z-index: 5; font-size: 18px; padding: 8px 14px;
       background: rgba(255,255,255,.18); }
     #swap:disabled { opacity: .55; cursor: default; }
@@ -131,6 +133,13 @@
     .done-reward { font-weight: 800; color: #ffe27a; margin-top: 4px; }
     .reward { font-size: 15px; color: #ffe27a; }
     .char-card .price { font-size: 14px; font-weight: 700; opacity: 1; }
+    /* Keyboard hints on the in-game buttons; only shown where a keyboard + mouse is likely. */
+    .keyhint::after { content: attr(data-key); display: none; position: absolute; bottom: -9px; right: -7px;
+      min-width: 20px; height: 20px; padding: 0 5px; box-sizing: border-box; border-radius: 6px;
+      background: #04122a; color: #fff; border: 1.5px solid rgba(255,255,255,.8); box-shadow: 0 2px 0 rgba(255,255,255,.3);
+      font: 800 12px/17px system-ui, sans-serif; text-align: center; pointer-events: none; }
+    #skill.keyhint::after { bottom: 0; right: 0; }
+    @media (hover: hover) and (pointer: fine) { .keyhint::after { display: block; } }
     /* ---------- Main menu ---------- */
     #menu { gap: 14px; }
     .logo { display: flex; align-items: center; gap: 4px; margin-bottom: -4px; }
@@ -279,7 +288,7 @@
   <div id="toast" class="hidden"></div>
   <button id="mute" data-i18n-aria="sound"></button>
   <div id="rotate" class="hidden"><div>📱↻</div><p data-i18n="rotate"></p></div>
-  <button id="pause" class="hidden" data-i18n-aria="pause">⏸</button>
+  <button id="pause" class="hidden keyhint" data-key="P" data-i18n-aria="pause"><span class="pause-bars"></span></button>
   <div id="pause-panel" class="panel hidden">
     <h2 data-i18n="paused"></h2>
     <p data-i18n="pausedSub"></p>
@@ -287,8 +296,8 @@
     <button class="open-settings ghost" data-i18n="settings"></button>
     <button id="pause-quit" class="ghost" data-i18n="mainMenu"></button>
   </div>
-  <button id="skill" class="hidden" aria-label="Skill"></button>
-  <button id="swap" class="hidden" data-i18n-aria="swapTitle"></button>
+  <button id="skill" class="hidden keyhint" data-key="X" aria-label="Skill"></button>
+  <button id="swap" class="hidden keyhint" data-key="C" data-i18n-aria="swapTitle"></button>
 
   <div id="swap-panel" class="panel hidden">
     <h2 data-i18n="swapTitle"></h2>
