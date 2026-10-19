@@ -284,7 +284,7 @@ function resumeGame() {
 
 // Leave the current dive without a Game Over (pearls already earned are kept).
 function quitToMenu() {
-  show($("pause-panel"), false); show($("progress"), false);
+  show($("pause-panel"), false); show(ui.over, false); show($("progress"), false);
   if (autoPaused) platform.gameplayStop(); // the dive is really over now
   autoPaused = false;
   showHint(""); tut = null;
@@ -797,14 +797,18 @@ function finishGameOver() {
   }
   mission("depth", depth);
   mission("flips", player.flips);
+  const prevBest = save.best;
   if (mode === "endless") save.best = Math.max(save.best, depth);
   platform.save(save);
+  show($("over-newbest"), mode === "endless" && depth > prevBest && depth > 0);
+  $("retry-sub").textContent = mode === "level" ? t("retrySubLevel", { n: lvl.n }) : t("retrySubFree");
   show($("over-stats"), mode === "endless");
   show($("over-level"), mode === "level");
   show($("over-map"), mode === "level");
   if (mode === "level") {
     const done = Math.max(0, Math.round((scroll + player.x - (world.finishX - lvl.meters * PX_PER_M)) / PX_PER_M));
-    $("over-level").textContent = t("overLevel", { n: lvl.n, name: lvl.name, done: Math.min(done, lvl.meters), total: lvl.meters });
+    $("over-level-text").textContent = t("overLevel", { n: lvl.n, name: lvl.name, done: Math.min(done, lvl.meters), total: lvl.meters });
+    $("over-level-bar").style.width = `${Math.min(100, (done / lvl.meters) * 100)}%`;
   }
   $("over-title").textContent = t("overTitle", { name: hero().name });
   $("over-cause").textContent = dying ? dying.label : "";
@@ -1057,6 +1061,27 @@ function renderMenu() {
   $("menu-stats").innerHTML =
     stat("🦪", save.pearls, "statPearls") + stat("📏", `${save.best} m`, "statBest") +
     stat("★", `${stars}/${maxStars}`, "statStars", "st") + stat("📖", `${save.dex.length}/${CREATURES.length}`, "statDex");
+}
+
+// Game over: the character, dazed, with stars circling its head.
+function drawOverHero() {
+  const cv = $("over-hero"), g = cv.getContext("2d");
+  if (!cv.offsetParent) return;                       // hidden on short screens
+  g.clearRect(0, 0, cv.width, cv.height);
+  g.save();
+  g.translate(cv.width / 2, cv.height / 2 + 14 + Math.sin(time * 1.5) * 4);
+  g.rotate(Math.sin(time * 1.2) * 0.12);
+  g.scale(1.2, 1.2);
+  hero().draw(g, { t: time, up: false, vy: 0, mood: "dead", pulse: 0, flash: 0, near: 0 });
+  g.restore();
+  for (let i = 0; i < 3; i++) {                       // dizzy stars
+    const a = time * 2.4 + (i / 3) * Math.PI * 2;
+    const x = cv.width / 2 + Math.cos(a) * 44, y = 34 + Math.sin(a) * 10;
+    g.globalAlpha = 0.55 + 0.45 * Math.sin(a);
+    g.fillStyle = "#ffe27a"; g.font = "900 22px system-ui"; g.textAlign = "center"; g.textBaseline = "middle";
+    g.fillText("★", x, y);
+  }
+  g.globalAlpha = 1;
 }
 
 // The selected character bobs next to the logo, puffing up and down.
@@ -1492,7 +1517,7 @@ function draw(dt) {
   } else if (state !== "over" && state !== "ad") drawPlayer();
   ctx.restore();
 
-  if (!["play", "paused", "swap", "dying", "over", "ad", "done"].includes(state)) ui.hud.textContent = "";
+  if (!["play", "paused", "swap", "dying", "ad"].includes(state)) ui.hud.textContent = "";
   else if (mode === "level") {
     const startX = world.finishX - lvl.meters * PX_PER_M;
     const k = Math.max(0, Math.min(1, (scroll + player.x - startX) / (world.finishX - startX)));
@@ -1542,6 +1567,7 @@ function loop(now) {
   if (state === "shop") drawPreviews(shopCanvases);
   else if (state === "finale") drawPreviews(finaleCanvases);
   else if (state === "dex") drawDexPreviews();
+  else if (state === "over") drawOverHero();
   else if (state === "menu") {
     drawMenuLogo();
     if (time - menuRenderedAt > 0.5 || time < menuRenderedAt) { menuRenderedAt = time; renderMenu(); }
@@ -1641,6 +1667,7 @@ async function boot() {
   $("pause").onclick = (e) => { e.stopPropagation(); $("pause").blur(); pauseGame(); };
   $("pause-resume").onclick = resumeGame;
   $("pause-quit").onclick = quitToMenu;
+  $("over-home").onclick = () => { sfx.click(); quitToMenu(); };
 
   // Dev helper (?debug): lets automated tests read the boss & player state.
   if (devFlag("debug")) window.__dbg = () => ({ boss, bossCtx, player, state, world, scroll, time, gameOver, levelComplete, save, unlockSecret });
