@@ -233,7 +233,7 @@ On a phone held upright a "Turn your phone sideways" screen appears (the game pa
 `?start=`, `?hazard=`, `?finish=`, `?moment=`, `?debug` **only work on localhost** (`src/dev.js`). On a portal these parameters are ignored so they can't be used to cheat. `?platform=` stays active.
 
 ## Controls
-Tap/click/Space: rise/sink · **X**: skill (Free Dive) · **C**: swap character (Free Dive) · **P / Esc / ⏸**: pause. Switching tabs pauses the game automatically.
+Tap/click/Space: rise/sink · **X**: skill (Free Dive) · **C**: swap character (Free Dive) · **P / Esc / ⏸**: pause. Switching tabs pauses the game automatically. On desktop the ⚡, 🐠 and ⏸ buttons show a small key label (X, C, P); it is hidden on touch screens.
 
 ## Structure
 - `src/game.js`: game flow, Puffy physics, shields, discoveries, UI
