@@ -27,7 +27,7 @@ const UI = {
   missions: "🎯 Missions",
   sound: "Sound",
   pause: "Pause",
-  paused: "⏸ Paused",
+  paused: "Paused",
   pausedSub: "Take a breather, Puffy 🐡",
   resume: "▶ Resume",
   mainMenu: "🏠 Main menu",
