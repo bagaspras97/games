@@ -140,6 +140,32 @@
       font: 800 12px/17px system-ui, sans-serif; text-align: center; pointer-events: none; }
     #skill.keyhint::after { bottom: 0; right: 0; }
     @media (hover: hover) and (pointer: fine) { .keyhint::after { display: block; } }
+    /* ---------- Game over ---------- */
+    #over { gap: 12px; }
+    #over-hero { width: 120px; height: 100px; margin-bottom: -10px; }
+    .over-title { font-size: 66px !important; font-weight: 900; letter-spacing: -1px;
+      background: linear-gradient(180deg, #ffffff 15%, #ffd3df 55%, #ff7a9c 95%); -webkit-background-clip: text; background-clip: text;
+      color: transparent; -webkit-text-stroke: 3px #0b3a6e; paint-order: stroke fill; filter: drop-shadow(0 5px 0 rgba(4,18,42,.55)); }
+    .over-cause { background: rgba(4,18,42,.6); border: 1px solid rgba(255,209,220,.35); border-radius: 999px;
+      padding: 5px 16px; font-style: italic; font-weight: 600; color: #ffd1dc; opacity: 1 !important; }
+    .over-stats { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+    .ostat { position: relative; display: flex; flex-direction: column; align-items: center; min-width: 118px; padding: 8px 18px;
+      background: rgba(4,18,42,.6); border: 1px solid rgba(255,255,255,.18); border-radius: 18px; }
+    .ostat .ol { font-size: 11px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; opacity: .75; }
+    .ostat b { font-size: 24px; font-variant-numeric: tabular-nums; }
+    .ostat.main { border-color: rgba(127,240,255,.6); }
+    .ostat.main b { font-size: 34px; color: #7ff0ff; }
+    .newbest { position: absolute; top: -12px; right: -14px; transform: rotate(8deg); background: #ffe27a; color: #04122a;
+      font-style: normal; font-size: 11px; font-weight: 900; letter-spacing: .06em; border-radius: 999px; padding: 3px 9px;
+      box-shadow: 0 0 14px rgba(255,226,122,.7); animation: bestpulse 1s ease-in-out infinite alternate; }
+    @keyframes bestpulse { to { transform: rotate(8deg) scale(1.1); } }
+    .over-level { width: min(460px, 90vw); background: rgba(4,18,42,.6); border: 1px solid rgba(255,255,255,.18);
+      border-radius: 16px; padding: 8px 16px 12px; font-weight: 700; }
+    .over-bar { height: 10px; margin-top: 8px; border-radius: 5px; background: rgba(0,0,0,.35); overflow: hidden; }
+    .over-bar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #7ff0ff, #ffe27a); border-radius: 5px; }
+    .over-actions { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; }
+    .over-actions .mode-card { width: 270px; }
+    @media (prefers-reduced-motion: reduce) { .newbest { animation: none; } }
     /* ---------- Main menu ---------- */
     #menu { gap: 14px; }
     .logo { display: flex; align-items: center; gap: 4px; margin-bottom: -4px; }
@@ -255,6 +281,18 @@
       .tile { width: 86px; padding: 4px 4px 3px; font-size: 11px; border-radius: 12px; }
       .tile-icon { font-size: 18px; }
       .menu-intro { display: none; }
+      #over-hero { display: none; }
+      .over-title { font-size: 34px !important; -webkit-text-stroke-width: 2px; }
+      .over-cause { font-size: 13px; padding: 2px 12px; }
+      .ostat { min-width: 86px; padding: 2px 10px; border-radius: 12px; }
+      .ostat .ol { font-size: 9px; }
+      .ostat b { font-size: 16px; }
+      .ostat.main b { font-size: 20px; }
+      .newbest { top: -9px; right: -10px; font-size: 9px; padding: 1px 6px; }
+      .over-level { padding: 4px 12px 6px; font-size: 13px; }
+      .over-bar { height: 6px; margin-top: 4px; }
+      .over-actions { gap: 8px; }
+      .over-actions .mode-card { width: 210px; }
       #finale-chars canvas { width: 52px; height: 52px; }
       #finale-stats .chip { padding: 3px 8px; min-width: 70px; }
       #finale-stats .chip b { font-size: 16px; }
@@ -330,18 +368,26 @@
   </div>
 
   <div id="over" class="panel hidden">
-    <h1 id="over-title">Aduh!</h1>
-    <p id="over-cause" class="cause"></p>
-    <p id="over-stats"><span data-i18n="depthLbl"></span> <b id="final">0</b> m &nbsp; <span data-i18n="bestLbl"></span> <b id="best">0</b> m &nbsp; 🦪 <b id="pearls">0</b></p>
-    <p id="over-level" class="hidden"></p>
-    <button id="revive" class="alt" data-i18n="revive"></button>
-    <button id="retry" data-i18n="retry"></button>
-    <button class="shield-start ghost" data-i18n="retryShield"></button>
-    <button id="over-map" class="ghost hidden" data-i18n="levelMap"></button>
-    <div class="row">
-      <button class="open-shop ghost" data-i18n="characters"></button>
-      <button class="open-dex ghost" data-i18n="encyclopedia"></button>
-      <button class="open-missions ghost" data-i18n="missions"></button>
+    <canvas id="over-hero" width="180" height="150"></canvas>
+    <h1 id="over-title" class="over-title">Oops!</h1>
+    <p id="over-cause" class="over-cause"></p>
+    <div id="over-stats" class="over-stats">
+      <div class="ostat main"><span class="ol" data-i18n="statDepth"></span><b><span id="final">0</span> m</b><em id="over-newbest" class="newbest hidden" data-i18n="newBest"></em></div>
+      <div class="ostat"><span class="ol" data-i18n="statBest"></span><b><span id="best">0</span> m</b></div>
+      <div class="ostat"><span class="ol" data-i18n="statPearls"></span><b>🦪 <span id="pearls">0</span></b></div>
+    </div>
+    <div id="over-level" class="over-level hidden"><div id="over-level-text"></div><div class="over-bar"><i id="over-level-bar"></i></div></div>
+    <div class="over-actions">
+      <button id="revive" class="mode-card free"><span class="mode-icon">▶️</span><span class="mode-text"><span class="mode-name" data-i18n="reviveName"></span><span class="mode-sub" data-i18n="reviveSub"></span></span></button>
+      <button id="retry" class="mode-card adv"><span class="mode-icon">🔄</span><span class="mode-text"><span class="mode-name" data-i18n="retryName"></span><span class="mode-sub" id="retry-sub"></span></span></button>
+    </div>
+    <button class="shield-start ghost small" data-i18n="retryShield"></button>
+    <div class="tiles">
+      <button id="over-home" class="tile"><span class="tile-icon">🏠</span><span data-i18n="tileHome"></span></button>
+      <button id="over-map" class="tile hidden"><span class="tile-icon">🗺️</span><span data-i18n="tileMap"></span></button>
+      <button class="open-shop tile"><span class="tile-icon">🐠</span><span data-i18n="tileChars"></span></button>
+      <button class="open-dex tile"><span class="tile-icon">📖</span><span data-i18n="tileDex"></span></button>
+      <button class="open-missions tile"><span class="tile-icon">🎯</span><span data-i18n="tileMissions"></span></button>
     </div>
   </div>
 
