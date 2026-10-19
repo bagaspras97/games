@@ -60,6 +60,8 @@ let player, world, scroll, speed, depth, last, time = 0, zone = 0;
 let shake = 0;
 let shopCanvases = [];         // animated character previews in the shop
 let finaleCanvases = [];       // ...and on the finale screen
+let dexCanvases = [];          // animated creatures in the encyclopedia
+let menuRenderedAt = -1;       // last time the menu stats were refreshed
 let pendingFinale = false;     // finale unlocked but not shown yet
 const hero = () => getCharacter(save.char);
 
@@ -1001,24 +1003,74 @@ function renderDex() {
   $("dex-reward").innerHTML = left > 0
     ? t("dexLeft", { n: left })
     : t("dexDone");
+  $("dex-bar").style.width = `${(save.dex.length / CREATURES.length) * 100}%`;
   ui.dexGrid.innerHTML = "";
-  for (const c of CREATURES) {
+  dexCanvases = [];
+  CREATURES.forEach((c, i) => {
     const found = save.dex.includes(c.id);
+    const zone = ZONES[c.zone];
     const card = document.createElement("div");
-    card.className = "card dex-card" + (found ? "" : " unknown");
-    if (found) {
-      const cv = document.createElement("canvas");
-      cv.width = cv.height = 96;
-      const cx = cv.getContext("2d");
-      cx.translate(48, 48);
-      c.draw(cx, 76);
-      card.append(cv);
-      card.insertAdjacentHTML("beforeend", `<b>${c.name}</b><span>${c.fact}</span>`);
-    } else {
-      card.insertAdjacentHTML("beforeend", `<div class="q">❓</div><b>???</b><span>${t("dexFindIn", { zone: ZONES[c.zone].icon + " " + ZONES[c.zone].name })}</span>`);
-    }
+    card.className = `card dex-card zone-${c.zone} ${found ? "found" : "unknown"}`;
+    card.insertAdjacentHTML("beforeend",
+      `<div class="dex-head"><span class="dex-no">No. ${String(i + 1).padStart(2, "0")}</span><span class="dex-zone">${zone.icon} ${zone.name}</span></div>`);
+    const cv = document.createElement("canvas");
+    cv.width = 240; cv.height = 160;
+    card.append(cv);
+    dexCanvases.push({ cv, c, found, phase: i * 0.9 });
+    card.insertAdjacentHTML("beforeend", found
+      ? `<b>${c.name}</b><span class="fact">${c.fact}</span>`
+      : `<b>???</b><span class="fact">${t("dexFindIn", { zone: zone.icon + " " + zone.name })}</span>`);
     ui.dexGrid.append(card);
+  });
+  drawDexPreviews();
+}
+
+// Discovered creatures swim in place; undiscovered ones show as a dark silhouette.
+function drawDexPreviews() {
+  for (const { cv, c, found, phase } of dexCanvases) {
+    const g = cv.getContext("2d");
+    g.clearRect(0, 0, cv.width, cv.height);
+    g.save();
+    g.translate(cv.width / 2, cv.height / 2 + Math.sin(time * 1.6 + phase) * 4);
+    c.draw(g, 150, time + phase);
+    g.restore();
+    if (!found) {
+      g.globalCompositeOperation = "source-atop";
+      g.fillStyle = "rgba(4,12,32,0.94)";
+      g.fillRect(0, 0, cv.width, cv.height);
+      g.globalCompositeOperation = "source-over";
+      g.fillStyle = "rgba(255,255,255,0.75)"; g.font = "900 40px system-ui"; g.textAlign = "center"; g.textBaseline = "middle";
+      g.fillText("?", cv.width / 2, cv.height / 2);
+    }
   }
+}
+
+// ---------- Main menu ----------
+function renderMenu() {
+  const stars = totalStars(save), maxStars = LEVELS.length * 3;
+  const cleared = LEVELS.filter((L) => (save.levels?.[L.n] || 0) >= 1).length;
+  $("menu-adv-sub").textContent = cleared >= LEVELS.length
+    ? t("advSubDone", { s: stars, max: maxStars })
+    : t("advSub", { n: cleared + 1, s: stars, max: maxStars });
+  $("menu-free-sub").textContent = save.best > 0 ? t("freeSub", { m: save.best }) : t("freeSubNew");
+  const stat = (icon, value, label, cls = "") => `<span class="stat" title="${t(label)}"><i>${icon}</i><span class="${cls}">${value}</span></span>`;
+  $("menu-stats").innerHTML =
+    stat("🦪", save.pearls, "statPearls") + stat("📏", `${save.best} m`, "statBest") +
+    stat("★", `${stars}/${maxStars}`, "statStars", "st") + stat("📖", `${save.dex.length}/${CREATURES.length}`, "statDex");
+}
+
+// The selected character bobs next to the logo, puffing up and down.
+function drawMenuLogo() {
+  const cv = $("logo-hero"), g = cv.getContext("2d");
+  g.clearRect(0, 0, cv.width, cv.height);
+  const ch = hero();
+  const phase = Math.floor(time / 1.6) % 2 === 0;
+  g.save();
+  g.translate(cv.width / 2, cv.height / 2 + Math.sin(time * 2) * 6);
+  g.scale(1.35, 1.35);
+  ch.draw(g, { t: time, up: phase, vy: ch.mode === "glide" ? (phase ? -300 : 300) : Math.sin(time * 2) * 300, mood: "happy",
+    pulse: Math.max(0, 1 - (time % 1.6) * 2), flash: 0, near: 0 });
+  g.restore();
 }
 
 // ---------- Gameplay ----------
@@ -1440,7 +1492,7 @@ function draw(dt) {
   } else if (state !== "over" && state !== "ad") drawPlayer();
   ctx.restore();
 
-  if (state === "menu" || state === "finale") ui.hud.textContent = "";
+  if (!["play", "paused", "swap", "dying", "over", "ad", "done"].includes(state)) ui.hud.textContent = "";
   else if (mode === "level") {
     const startX = world.finishX - lvl.meters * PX_PER_M;
     const k = Math.max(0, Math.min(1, (scroll + player.x - startX) / (world.finishX - startX)));
@@ -1489,6 +1541,11 @@ function loop(now) {
   draw(dt);
   if (state === "shop") drawPreviews(shopCanvases);
   else if (state === "finale") drawPreviews(finaleCanvases);
+  else if (state === "dex") drawDexPreviews();
+  else if (state === "menu") {
+    drawMenuLogo();
+    if (time - menuRenderedAt > 0.5 || time < menuRenderedAt) { menuRenderedAt = time; renderMenu(); }
+  }
   requestAnimationFrame(loop);
 }
 
