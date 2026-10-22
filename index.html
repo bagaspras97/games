@@ -396,6 +396,50 @@
     .lv.exam.cleared { background: linear-gradient(160deg, #c99bff, #7a3f9e); }
     .lv.locked { background: var(--surface); box-shadow: none; border: 1px dashed var(--line); color: rgba(255,255,255,.55); }
     .lv span { font-size: var(--fs-xs); color: var(--gold); }
+    /* ---------- Characters (shop) ---------- */
+    #shop .grid { display: flex; grid-template-columns: none; gap: 14px; width: min(1060px, 94vw); max-height: none;
+      overflow-x: auto; overflow-y: hidden; padding: 6px 4px 12px; scroll-snap-type: x proximity; }
+    #shop .char-card { flex: 0 0 240px; scroll-snap-align: start; align-items: stretch; text-align: left; gap: 8px;
+      padding: 0 0 14px; overflow: hidden; cursor: pointer; }
+    #shop .card.locked { opacity: 1; cursor: pointer; }
+    #shop .card.locked .cc-stage canvas { opacity: .75; }
+    #shop .card.equipped { box-shadow: 0 0 18px rgba(127,240,255,.35); }
+    .cc-stage { display: flex; align-items: center; justify-content: center; height: 120px; border-bottom: 1px solid var(--line);
+      background: radial-gradient(circle at 50% 62%, color-mix(in srgb, var(--cc, #7ff0ff) 45%, transparent), transparent 68%),
+        linear-gradient(180deg, rgba(255,255,255,.1), rgba(255,255,255,0)); }
+    .cc-stage canvas { width: 154px; height: 120px; }
+    #shop .char-card > :not(.cc-stage) { margin: 0 14px; }
+    .cc-name { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+    .cc-name b { font-size: var(--fs-h3); font-weight: 900; }
+    .cc-name small { font-size: var(--fs-small); font-weight: 600; color: var(--text-dim); }
+    #shop .char-card .desc { min-height: 0; color: var(--text-dim); }
+    .cc-row { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; }
+    .cc-row p { margin: 0; color: var(--white) !important; font-weight: 600 !important; }
+    .cc-tag { font-size: var(--fs-micro); font-weight: 800; letter-spacing: .12em; text-transform: uppercase;
+      color: var(--gold); background: rgba(255,226,122,.14); border-radius: 999px; padding: 2px 8px; }
+    .cc-tag.sk { color: var(--cyan); background: rgba(127,240,255,.13); letter-spacing: .02em; text-transform: none; font-size: var(--fs-xs); }
+    .cc-tag.sk i { font-style: normal; font-weight: 600; opacity: .75; }
+    .cc-action { margin-top: auto !important; align-self: stretch; text-align: center; border-radius: 999px; padding: 8px 10px;
+      font-size: var(--fs-btn-xs); font-weight: 800; }
+    .cc-action.select { border: 2px solid rgba(255,255,255,.85); }
+    .cc-action.selected { background: var(--cyan); color: var(--ink); }
+    .cc-action.buy { background: linear-gradient(160deg, #fff0a8, #ffc94a); color: var(--ink); box-shadow: 0 3px 0 rgba(0,0,0,.25); }
+    .cc-action.buy.short { background: none; box-shadow: none; color: var(--text-dim); border: 1px dashed var(--line); }
+    .cc-action.locked { background: none; color: var(--gold); border: 1px dashed rgba(255,226,122,.6); }
+    #shop .char-card.secret .cc-stage { background: radial-gradient(circle at 50% 62%, rgba(255,226,122,.25), transparent 68%); }
+    .shop-purse .stat { display: inline-flex; font-size: var(--fs-body); }
+    #free-pearls { font-size: var(--fs-btn-sm); padding: 9px 22px; }
+    .shop-foot { align-items: center; }
+    @media (max-height: 520px) {
+      #shop > p[data-i18n="shopSub"] { display: none; }
+      #shop .grid { padding: 2px 2px 6px; gap: 8px; }
+      #shop .char-card { flex: 0 0 200px; gap: 4px; padding-bottom: 8px; }
+      #shop .char-card > :not(.cc-stage) { margin: 0 10px; }
+      .cc-stage { height: 64px; }
+      .cc-stage canvas { width: 82px; height: 64px; }
+      .cc-action { padding: 4px 8px; }
+      #free-pearls { padding: 5px 14px; }
+    }
   </style>
 </head>
 <body>
@@ -476,10 +520,12 @@
   <div id="shop" class="panel hidden">
     <h2 data-i18n="shopTitle"></h2>
     <p data-i18n="shopSub"></p>
-    <p>🦪 <b id="shop-pearls">0</b></p>
+    <p class="shop-purse"><span class="stat"><i>🦪</i><b id="shop-pearls">0</b></span></p>
     <div id="shop-grid" class="grid"></div>
-    <button id="free-pearls" class="alt"></button>
-    <button id="shop-close" class="ghost" data-i18n="back"></button>
+    <div class="row shop-foot">
+      <button id="free-pearls" class="alt"></button>
+      <button id="shop-close" class="ghost" data-i18n="back"></button>
+    </div>
   </div>
 
   <div id="progress" class="hidden"><i id="progress-fill"></i><span>🏁</span></div>
