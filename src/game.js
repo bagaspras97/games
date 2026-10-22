@@ -918,18 +918,33 @@ function renderShop() {
     const owned = save.owned.includes(ch.id);
     const equipped = save.char === ch.id;
     const hidden = ch.secret && !owned;
+    const short = !owned && !hidden && save.pearls < ch.price;
     const card = document.createElement("button");
-    card.className = "card char-card" + (equipped ? " equipped" : "") + (ch.secret ? " secret" : "");
+    card.className = "card char-card" + (equipped ? " equipped" : "") + (ch.secret ? " secret" : "") + (hidden ? " hidden-char" : "");
+    card.style.setProperty("--cc", ch.color);
+    // Action pill: what a tap on this card does.
+    const [actCls, actLabel] = equipped ? ["selected", "✓ " + t("inUse")]
+      : owned ? ["select", t("use")]
+      : hidden ? ["locked", t("lockedDex", { n: save.dex.length, total: CREATURES.length })]
+      : short ? ["buy short", t("needMore", { price: ch.price, n: ch.price - save.pearls })]
+      : ["buy", t("buyFor", { price: ch.price })];
+    const stage = document.createElement("div");
+    stage.className = "cc-stage";
     const c = document.createElement("canvas");
-    c.width = c.height = 120;
+    c.width = 180; c.height = 140;
+    stage.append(c);
+    card.append(stage);
     shopCanvases.push({ c, ch, hidden });
-    const label = equipped ? t("inUse") : owned ? t("use")
-      : hidden ? t("lockedDex", { n: save.dex.length, total: CREATURES.length }) : `🦪 ${ch.price}`;
-    card.append(c);
     card.insertAdjacentHTML("beforeend", hidden
-      ? `<b>??? <small>${t("secretTitle")}</small></b><p class="desc">${t("secretDesc")}</p><p class="ability">⚡ ???</p><span class="price">${label}</span>`
-      : `<b>${ch.name} <small>${ch.species}</small></b><p class="desc">${ch.desc}</p><p class="ability">⚡ ${ch.ability}</p><p class="skill">${ch.skill.icon} <b>${ch.skill.name}</b> ${t("skillFree")}: ${ch.skill.desc}</p><span class="price">${label}</span>`);
-    if (hidden || (!owned && save.pearls < ch.price)) card.classList.add("locked");
+      ? `<div class="cc-name"><b>???</b><small>${t("secretTitle")}</small></div>
+         <p class="desc">${t("secretDesc")}</p>
+         <span class="cc-action ${actCls}">${actLabel}</span>`
+      : `<div class="cc-name"><b>${ch.name}</b><small>${ch.species}</small></div>
+         <p class="desc">${ch.desc}</p>
+         <div class="cc-row"><span class="cc-tag">${t("tagPassive")}</span><p class="ability">${ch.ability}</p></div>
+         <div class="cc-row"><span class="cc-tag sk">${ch.skill.icon} ${ch.skill.name} <i>· ${t("modeFree")}</i></span><p class="skill">${ch.skill.desc}</p></div>
+         <span class="cc-action ${actCls}">${actLabel}</span>`);
+    if (hidden || short) card.classList.add("locked");
     card.onclick = () => selectCharacter(ch);
     ui.shopGrid.append(card);
   }
@@ -942,8 +957,10 @@ function drawPreviews(list) {
     cx.clearRect(0, 0, c.width, c.height);
     const phase = Math.floor(time / 1.4) % 2 === 0;
     const vy = ch.mode === "glide" ? (phase ? -300 : 300) : Math.sin(time * 2) * 400;
+    const k = c.width / 120;
     cx.save();
-    cx.translate(60, 64);
+    cx.translate(c.width / 2, c.height / 2 + 4 * k);
+    cx.scale(k, k);
     ch.draw(cx, { t: time, up: phase, vy, mood: "normal", pulse: Math.max(0, 1 - (time % 1.4) * 2), flash: Math.max(0, 1 - (time % 1.4) * 2), near: phase ? 0.6 : 0 });
     cx.restore();
     if (hidden) { // silhouette for the locked secret character
@@ -951,8 +968,8 @@ function drawPreviews(list) {
       cx.fillStyle = "#0b1e3a";
       cx.fillRect(0, 0, c.width, c.height);
       cx.globalCompositeOperation = "source-over";
-      cx.fillStyle = "#fff"; cx.font = "bold 34px system-ui"; cx.textAlign = "center";
-      cx.fillText("?", 60, 76);
+      cx.fillStyle = "#fff"; cx.font = `bold ${Math.round(34 * k)}px system-ui`; cx.textAlign = "center"; cx.textBaseline = "middle";
+      cx.fillText("?", c.width / 2, c.height / 2 + 4 * k);
     }
   }
 }
