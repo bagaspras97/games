@@ -2,6 +2,8 @@
 
 A one-button hyper-casual web game (HTML5 + Canvas, no build step, no asset files) with an **SDK adapter** for Poki, CrazyGames, YouTube Playables and Facebook Instant Games. The game is English only.
 
+📚 **Full documentation:** [Game Design Document](docs/GAME_DESIGN.md) (non-technical) · [Technical Guide](docs/TECHNICAL.md) (architecture, SDKs, saving, testing, build) · [docs index](docs/README.md)
+
 ![screenshot](docs/screenshot.png)
 
 ## Concept
